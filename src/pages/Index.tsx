@@ -6,10 +6,11 @@ import Team from "@/components/Team";
 import Testimonials from "@/components/Testimonials";
 import Contact from "@/components/Contact";
 import Blog from "@/components/Blog";
+import FooterMenu from "@/components/FooterMenu";
 
 const Index = () => {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pb-16">
       <Navbar />
       <Hero />
       <Stats />
@@ -18,6 +19,7 @@ const Index = () => {
       <Testimonials />
       <Blog />
       <Contact />
+      <FooterMenu />
     </div>
   );
 };
