@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { CheckCircle2, AlertCircle } from "lucide-react";
 
 const profileSchema = z.object({
   firstName: z.string(),
@@ -33,6 +35,11 @@ const profileSchema = z.object({
 });
 
 const StudentProfile = () => {
+  // Cette date devrait venir de votre backend
+  const membershipPaidDate = new Date("2024-01-15");
+  const currentSchoolYear = "2023-2024";
+  const isMembershipActive = true; // À calculer en fonction de la date de paiement et l'année scolaire
+
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
@@ -51,11 +58,34 @@ const StudentProfile = () => {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Mon profil</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <div className="space-y-6">
+      <Alert className={isMembershipActive ? "bg-green-50" : "bg-red-50"}>
+        <div className="flex items-center gap-2">
+          {isMembershipActive ? (
+            <CheckCircle2 className="h-5 w-5 text-green-600" />
+          ) : (
+            <AlertCircle className="h-5 w-5 text-red-600" />
+          )}
+          <div>
+            <AlertTitle>
+              {isMembershipActive
+                ? "Adhésion active"
+                : "Adhésion expirée"}
+            </AlertTitle>
+            <AlertDescription>
+              Cotisation payée le {membershipPaidDate.toLocaleDateString()}
+              <br />
+              Valable jusqu'à la fin de l'année scolaire {currentSchoolYear}
+            </AlertDescription>
+          </div>
+        </div>
+      </Alert>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Mon profil</CardTitle>
+        </CardHeader>
+        <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2">
@@ -171,8 +201,9 @@ const StudentProfile = () => {
             </Button>
           </form>
         </Form>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
