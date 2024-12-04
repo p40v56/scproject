@@ -19,10 +19,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { CheckCircle2, AlertCircle } from "lucide-react";
+import MembershipStatus from "./profile/MembershipStatus";
+import TransportationSection from "./profile/TransportationSection";
 
 const profileSchema = z.object({
   firstName: z.string(),
@@ -31,14 +30,14 @@ const profileSchema = z.object({
   studyYear: z.string(),
   specialization: z.string(),
   hasDriverLicense: z.boolean(),
+  transportation: z.string().optional(),
   campus: z.string(),
 });
 
 const StudentProfile = () => {
-  // Cette date devrait venir de votre backend
   const membershipPaidDate = new Date("2024-01-15");
   const currentSchoolYear = "2023-2024";
-  const isMembershipActive = true; // À calculer en fonction de la date de paiement et l'année scolaire
+  const isMembershipActive = true;
 
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
@@ -49,6 +48,7 @@ const StudentProfile = () => {
       studyYear: "M1",
       specialization: "Marketing",
       hasDriverLicense: false,
+      transportation: "none",
       campus: "Paris",
     },
   });
@@ -59,42 +59,54 @@ const StudentProfile = () => {
 
   return (
     <div className="space-y-6">
-      <Alert className={isMembershipActive ? "bg-green-50" : "bg-red-50"}>
-        <div className="flex items-center gap-2">
-          {isMembershipActive ? (
-            <CheckCircle2 className="h-5 w-5 text-green-600" />
-          ) : (
-            <AlertCircle className="h-5 w-5 text-red-600" />
-          )}
-          <div>
-            <AlertTitle>
-              {isMembershipActive
-                ? "Adhésion active"
-                : "Adhésion expirée"}
-            </AlertTitle>
-            <AlertDescription>
-              Cotisation payée le {membershipPaidDate.toLocaleDateString()}
-              <br />
-              Valable jusqu'à la fin de l'année scolaire {currentSchoolYear}
-            </AlertDescription>
-          </div>
-        </div>
-      </Alert>
+      <MembershipStatus
+        membershipPaidDate={membershipPaidDate}
+        currentSchoolYear={currentSchoolYear}
+        isMembershipActive={isMembershipActive}
+      />
 
       <Card>
         <CardHeader>
           <CardTitle>Mon profil</CardTitle>
         </CardHeader>
         <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-2">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div className="grid gap-4 md:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="firstName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Prénom</FormLabel>
+                      <FormControl>
+                        <Input {...field} disabled />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="lastName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nom</FormLabel>
+                      <FormControl>
+                        <Input {...field} disabled />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
               <FormField
                 control={form.control}
-                name="firstName"
+                name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Prénom</FormLabel>
+                    <FormLabel>Email SKEMA</FormLabel>
                     <FormControl>
                       <Input {...field} disabled />
                     </FormControl>
@@ -102,105 +114,64 @@ const StudentProfile = () => {
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
-                name="lastName"
+                name="studyYear"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nom</FormLabel>
-                    <FormControl>
-                      <Input {...field} disabled />
-                    </FormControl>
+                    <FormLabel>Année d'études</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionnez votre année" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="L3">L3</SelectItem>
+                        <SelectItem value="M1">M1</SelectItem>
+                        <SelectItem value="M2">M2</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            </div>
 
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email SKEMA</FormLabel>
-                  <FormControl>
-                    <Input {...field} disabled />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="specialization"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Spécialisation</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionnez votre spécialisation" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Marketing">Marketing</SelectItem>
+                        <SelectItem value="Finance">Finance</SelectItem>
+                        <SelectItem value="Management">Management</SelectItem>
+                        <SelectItem value="Digital">Digital</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="studyYear"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Année d'études</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionnez votre année" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="L3">L3</SelectItem>
-                      <SelectItem value="M1">M1</SelectItem>
-                      <SelectItem value="M2">M2</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <TransportationSection 
+                control={form.control}
+                hasDriverLicense={form.watch("hasDriverLicense")}
+              />
 
-            <FormField
-              control={form.control}
-              name="specialization"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Spécialisation</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionnez votre spécialisation" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Marketing">Marketing</SelectItem>
-                      <SelectItem value="Finance">Finance</SelectItem>
-                      <SelectItem value="Management">Management</SelectItem>
-                      <SelectItem value="Digital">Digital</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="hasDriverLicense"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-base">Permis de conduire</FormLabel>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <Button type="submit" className="w-full">
-              Mettre à jour
-            </Button>
-          </form>
-        </Form>
+              <Button type="submit" className="w-full">
+                Mettre à jour
+              </Button>
+            </form>
+          </Form>
         </CardContent>
       </Card>
     </div>

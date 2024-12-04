@@ -44,6 +44,7 @@ const menuItems = [
 ];
 
 const StudentSidebar = () => {
+  const navigate = useNavigate();
   // Normally this would come from your auth context
   const studentName = "Jean Dupont";
 
@@ -61,15 +62,15 @@ const StudentSidebar = () => {
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton
                 asChild
-                className="group"
+                className="group transition-all duration-200 ease-in-out"
               >
-                <a
-                  href={`#${item.value}`}
-                  className="flex items-center gap-3 px-4 py-2 rounded-md transition-colors duration-200 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground group-data-[active=true]:bg-sidebar-accent group-data-[active=true]:text-sidebar-accent-foreground"
+                <button
+                  onClick={() => navigate(`#${item.value}`)}
+                  className="flex items-center gap-3 px-4 py-2 rounded-md w-full transition-colors duration-200 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground group-data-[active=true]:bg-sidebar-accent group-data-[active=true]:text-sidebar-accent-foreground"
                 >
-                  <item.icon className="w-5 h-5" />
+                  <item.icon className="w-5 h-5 transition-transform duration-200 group-hover:scale-110" />
                   <span className="font-medium">{item.title}</span>
-                </a>
+                </button>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
