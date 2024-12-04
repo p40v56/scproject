@@ -22,7 +22,11 @@ const formSchema = z.object({
   cv: z.instanceof(File).optional(),
 });
 
-const StudentRegistration = () => {
+interface StudentRegistrationProps {
+  onComplete: () => void;
+}
+
+const StudentRegistration = ({ onComplete }: StudentRegistrationProps) => {
   const { toast } = useToast();
   const [files, setFiles] = useState<{ [key: string]: File | null }>({
     idCard: null,
@@ -50,6 +54,7 @@ const StudentRegistration = () => {
       title: "Inscription envoyée",
       description: "Un email de confirmation a été envoyé à votre adresse SKEMA.",
     });
+    onComplete();
   };
 
   return (
