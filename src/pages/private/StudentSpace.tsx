@@ -1,8 +1,9 @@
 import { useState } from "react";
-import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import StudentRegistration from "@/components/student/StudentRegistration";
 import StudentFirstLogin from "@/components/student/StudentFirstLogin";
 import StudentDashboard from "@/components/student/StudentDashboard";
+import StudentSidebar from "@/components/student/StudentSidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 const StudentSpace = () => {
   const [isRegistered, setIsRegistered] = useState(false);
@@ -19,15 +20,20 @@ const StudentSpace = () => {
   };
 
   return (
-    <DashboardLayout>
-      {!isRegistered ? (
-        <StudentRegistration onComplete={handleRegistrationComplete} />
-      ) : isFirstLogin && !hasCompletedFirstLogin ? (
-        <StudentFirstLogin onComplete={handleFirstLoginComplete} />
-      ) : (
-        <StudentDashboard />
-      )}
-    </DashboardLayout>
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full">
+        {(isRegistered && !isFirstLogin) && <StudentSidebar />}
+        <main className="flex-1">
+          {!isRegistered ? (
+            <StudentRegistration onComplete={handleRegistrationComplete} />
+          ) : isFirstLogin && !hasCompletedFirstLogin ? (
+            <StudentFirstLogin onComplete={handleFirstLoginComplete} />
+          ) : (
+            <StudentDashboard />
+          )}
+        </main>
+      </div>
+    </SidebarProvider>
   );
 };
 
