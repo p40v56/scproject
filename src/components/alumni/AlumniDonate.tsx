@@ -80,14 +80,20 @@ const AlumniDonate = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Input placeholder="Numéro de carte" icon={CreditCard} />
+              <div className="relative">
+                <Input placeholder="Numéro de carte" className="pl-10" />
+                <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+              </div>
               <div className="grid grid-cols-2 gap-4">
-                <Input placeholder="MM/AA" icon={Calendar} />
+                <div className="relative">
+                  <Input placeholder="MM/AA" className="pl-10" />
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                </div>
                 <Input placeholder="CVC" type="password" />
               </div>
             </div>
             <Button onClick={handleDonate} className="w-full">
-              <Heart className="mr-2" /> Faire un don
+              <Heart className="mr-2 h-4 w-4" /> Faire un don
             </Button>
           </CardContent>
         </Card>
