@@ -5,17 +5,20 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 
 interface AlumniFirstLoginProps {
-  onComplete: () => void;
+  onComplete: (data: {
+    hasSkemaAccount: boolean;
+    acceptedDataSharing: boolean;
+    subscribedNewsletter: boolean;
+  }) => void;
 }
 
 const AlumniFirstLogin = ({ onComplete }: AlumniFirstLoginProps) => {
-  const [acceptSkemaAlumni, setAcceptSkemaAlumni] = useState(false);
-  const [subscribeNewsletter, setSubscribeNewsletter] = useState(false);
   const [hasSkemaAccount, setHasSkemaAccount] = useState<boolean | null>(null);
+  const [acceptDataSharing, setAcceptDataSharing] = useState(false);
+  const [subscribeNewsletter, setSubscribeNewsletter] = useState(false);
 
   const handleContinue = () => {
-    // TODO: Implement actual data synchronization with SKEMA Alumni
-    if (acceptSkemaAlumni) {
+    if (acceptDataSharing) {
       toast.success(
         "Vos informations seront synchronisées avec SKEMA Alumni"
       );
@@ -23,7 +26,11 @@ const AlumniFirstLogin = ({ onComplete }: AlumniFirstLoginProps) => {
     if (subscribeNewsletter) {
       toast.success("Vous êtes inscrit à la newsletter");
     }
-    onComplete();
+    onComplete({
+      hasSkemaAccount: hasSkemaAccount || false,
+      acceptedDataSharing: acceptDataSharing,
+      subscribedNewsletter: subscribeNewsletter,
+    });
   };
 
   return (
@@ -51,6 +58,7 @@ const AlumniFirstLogin = ({ onComplete }: AlumniFirstLoginProps) => {
                 <div className="bg-muted p-4 rounded-lg">
                   <p className="text-sm text-muted-foreground">
                     Vous pourrez créer votre espace avec vos données personnelles.
+                    La synchronisation avec SKEMA Alumni sera possible ultérieurement.
                   </p>
                 </div>
               )}
@@ -59,8 +67,8 @@ const AlumniFirstLogin = ({ onComplete }: AlumniFirstLoginProps) => {
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="skema-alumni"
-                    checked={acceptSkemaAlumni}
-                    onCheckedChange={(checked) => setAcceptSkemaAlumni(checked as boolean)}
+                    checked={acceptDataSharing}
+                    onCheckedChange={(checked) => setAcceptDataSharing(checked as boolean)}
                   />
                   <label
                     htmlFor="skema-alumni"
