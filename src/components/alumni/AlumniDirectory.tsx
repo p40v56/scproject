@@ -12,8 +12,8 @@ import {
 
 const AlumniDirectory = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedYear, setSelectedYear] = useState("");
-  const [selectedLocation, setSelectedLocation] = useState("");
+  const [selectedYear, setSelectedYear] = useState("all");
+  const [selectedLocation, setSelectedLocation] = useState("all");
 
   const alumni = [
     {
@@ -50,8 +50,8 @@ const AlumniDirectory = () => {
       alum.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
       alum.currentPosition.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesYear = !selectedYear || alum.graduationYear === selectedYear;
-    const matchesLocation = !selectedLocation || alum.location === selectedLocation;
+    const matchesYear = selectedYear === "all" || alum.graduationYear === selectedYear;
+    const matchesLocation = selectedLocation === "all" || alum.location === selectedLocation;
 
     return matchesSearch && matchesYear && matchesLocation;
   });
@@ -78,7 +78,7 @@ const AlumniDirectory = () => {
             <SelectValue placeholder="Année de sortie" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Toutes les années</SelectItem>
+            <SelectItem value="all">Toutes les années</SelectItem>
             {years.map((year) => (
               <SelectItem key={year} value={year}>
                 {year}
@@ -92,7 +92,7 @@ const AlumniDirectory = () => {
             <SelectValue placeholder="Localisation" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Toutes les villes</SelectItem>
+            <SelectItem value="all">Toutes les villes</SelectItem>
             {locations.map((location) => (
               <SelectItem key={location} value={location}>
                 {location}
