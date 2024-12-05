@@ -21,10 +21,10 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/client" element={<ClientSpace />} />
-          <Route path="/student" element={<StudentSpace />} />
-          <Route path="/alumni" element={<AlumniSpace />} />
-          <Route path="/member" element={<MemberSpace />} />
+          <Route path="/client/*" element={<ClientSpace />} />
+          <Route path="/student/*" element={<StudentSpace />} />
+          <Route path="/alumni/*" element={<AlumniSpace />} />
+          <Route path="/member/*" element={<MemberSpace />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>

@@ -13,38 +13,39 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const menuItems = [
   {
     title: "Profil",
     icon: User,
-    value: "profile",
+    path: "/student/profile",
   },
   {
     title: "Documents",
     icon: FileText,
-    value: "documents",
+    path: "/student/documents",
   },
   {
     title: "Missions disponibles",
     icon: Briefcase,
-    value: "missions",
+    path: "/student/missions",
   },
   {
     title: "Études en cours",
     icon: BookOpen,
-    value: "current-studies",
+    path: "/student/current-studies",
   },
   {
     title: "Études finies",
     icon: Book,
-    value: "completed-studies",
+    path: "/student/completed-studies",
   },
 ];
 
 const StudentSidebar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   // Normally this would come from your auth context
   const studentName = "Jean Dupont";
 
@@ -65,8 +66,12 @@ const StudentSidebar = () => {
                 className="group transition-all duration-200 ease-in-out"
               >
                 <button
-                  onClick={() => navigate(`#${item.value}`)}
-                  className="flex items-center gap-3 px-4 py-2 rounded-md w-full transition-colors duration-200 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground group-data-[active=true]:bg-sidebar-accent group-data-[active=true]:text-sidebar-accent-foreground"
+                  onClick={() => navigate(item.path)}
+                  className={`flex items-center gap-3 px-4 py-2 rounded-md w-full transition-colors duration-200 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground ${
+                    location.pathname === item.path
+                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                      : ""
+                  }`}
                 >
                   <item.icon className="w-5 h-5 transition-transform duration-200 group-hover:scale-110" />
                   <span className="font-medium">{item.title}</span>
