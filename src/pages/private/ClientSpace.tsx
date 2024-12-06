@@ -1,49 +1,64 @@
 import { useState } from "react";
-import DashboardLayout from "@/components/dashboard/DashboardLayout";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Routes, Route } from "react-router-dom";
+import ClientSidebar from "@/components/client/ClientSidebar";
 import FirstLogin from "@/components/client/FirstLogin";
 import ClientDashboard from "@/components/client/ClientDashboard";
+import Documents from "@/components/client/Documents";
+import Appointments from "@/components/client/Appointments";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 const ClientSpace = () => {
   const [isFirstLogin, setIsFirstLogin] = useState(true);
 
-  return (
-    <DashboardLayout>
-      {isFirstLogin ? (
-        <FirstLogin onComplete={() => setIsFirstLogin(false)} />
-      ) : (
-        <div className="container mx-auto p-6 space-y-6">
-          <h1 className="text-2xl font-bold">Espace Client</h1>
-          <Tabs defaultValue="overview" className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
-              <TabsTrigger value="study">Mon étude</TabsTrigger>
-              <TabsTrigger value="documents">Documents</TabsTrigger>
-              <TabsTrigger value="profile">Profil</TabsTrigger>
-            </TabsList>
+  if (isFirstLogin) {
+    return <FirstLogin onComplete={() => setIsFirstLogin(false)} />;
+  }
 
-            <TabsContent value="overview">
-              <ClientDashboard />
-            </TabsContent>
-            <TabsContent value="study">
-              <div className="text-center p-8 text-muted-foreground">
-                Suivi de l'étude en cours de développement
-              </div>
-            </TabsContent>
-            <TabsContent value="documents">
-              <div className="text-center p-8 text-muted-foreground">
-                Documents en cours de développement
-              </div>
-            </TabsContent>
-            <TabsContent value="profile">
-              <div className="text-center p-8 text-muted-foreground">
-                Profil en cours de développement
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
-      )}
-    </DashboardLayout>
+  return (
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full">
+        <ClientSidebar />
+        <main className="flex-1 p-6">
+          <Routes>
+            <Route path="/" element={<ClientDashboard />} />
+            <Route path="/documents" element={<Documents />} />
+            <Route path="/appointments" element={<Appointments />} />
+            <Route
+              path="/study"
+              element={
+                <div className="text-center p-8 text-muted-foreground">
+                  Suivi de l'étude en cours de développement
+                </div>
+              }
+            />
+            <Route
+              path="/messages"
+              element={
+                <div className="text-center p-8 text-muted-foreground">
+                  Messagerie en cours de développement
+                </div>
+              }
+            />
+            <Route
+              path="/alerts"
+              element={
+                <div className="text-center p-8 text-muted-foreground">
+                  Système d'alertes en cours de développement
+                </div>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <div className="text-center p-8 text-muted-foreground">
+                  Paramètres en cours de développement
+                </div>
+              }
+            />
+          </Routes>
+        </main>
+      </div>
+    </SidebarProvider>
   );
 };
 
