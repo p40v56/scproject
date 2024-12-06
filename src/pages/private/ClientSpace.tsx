@@ -1,17 +1,18 @@
-import { useState } from "react";
-import { Routes, Route } from "react-router-dom";
-import ClientSidebar from "@/components/client/ClientSidebar";
-import FirstLogin from "@/components/client/FirstLogin";
-import ClientDashboard from "@/components/client/ClientDashboard";
-import Documents from "@/components/client/Documents";
-import Appointments from "@/components/client/Appointments";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { useState } from "react"
+import { Routes, Route } from "react-router-dom"
+import ClientSidebar from "@/components/client/ClientSidebar"
+import FirstLogin from "@/components/client/FirstLogin"
+import ClientDashboard from "@/components/client/ClientDashboard"
+import Documents from "@/components/client/Documents"
+import Appointments from "@/components/client/Appointments"
+import StudyDetails from "@/components/client/StudyDetails"
+import { SidebarProvider } from "@/components/ui/sidebar"
 
 const ClientSpace = () => {
-  const [isFirstLogin, setIsFirstLogin] = useState(true);
+  const [isFirstLogin, setIsFirstLogin] = useState(true)
 
   if (isFirstLogin) {
-    return <FirstLogin onComplete={() => setIsFirstLogin(false)} />;
+    return <FirstLogin onComplete={() => setIsFirstLogin(false)} />
   }
 
   return (
@@ -21,16 +22,9 @@ const ClientSpace = () => {
         <main className="flex-1 p-6">
           <Routes>
             <Route path="/" element={<ClientDashboard />} />
+            <Route path="/study" element={<StudyDetails />} />
             <Route path="/documents" element={<Documents />} />
             <Route path="/appointments" element={<Appointments />} />
-            <Route
-              path="/study"
-              element={
-                <div className="text-center p-8 text-muted-foreground">
-                  Suivi de l'étude en cours de développement
-                </div>
-              }
-            />
             <Route
               path="/messages"
               element={
@@ -59,7 +53,7 @@ const ClientSpace = () => {
         </main>
       </div>
     </SidebarProvider>
-  );
-};
+  )
+}
 
-export default ClientSpace;
+export default ClientSpace
