@@ -1,25 +1,9 @@
-import Navbar from "@/components/Navbar";
-import Hero from "@/components/Hero";
-import Stats from "@/components/Stats";
-import Services from "@/components/Services";
-import Team from "@/components/Team";
-import Testimonials from "@/components/Testimonials";
-import Contact from "@/components/Contact";
-import Blog from "@/components/Blog";
-import FooterMenu from "@/components/FooterMenu";
+import LoginForm from "@/components/auth/LoginForm";
 
 const Index = () => {
   return (
-    <div className="min-h-screen pb-16">
-      <Navbar />
-      <Hero />
-      <Stats />
-      <Services />
-      <Team />
-      <Testimonials />
-      <Blog />
-      <Contact />
-      <FooterMenu />
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <LoginForm />
     </div>
   );
 };
