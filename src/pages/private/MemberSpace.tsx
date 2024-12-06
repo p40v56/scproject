@@ -2,6 +2,8 @@ import { Routes, Route } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import MemberSidebar from "@/components/member/MemberSidebar";
 import AccessManagement from "@/components/member/access/AccessManagement";
+import MissionsList from "@/components/member/missions/MissionsList";
+import CommonIntranet from "@/components/member/intranet/CommonIntranet";
 
 const MemberSpace = () => {
   return (
@@ -28,7 +30,14 @@ const MemberSpace = () => {
                 path="/access-management"
                 element={<AccessManagement />}
               />
-              {/* Les autres routes seront ajoutées ici */}
+              <Route
+                path="/missions"
+                element={<MissionsList />}
+              />
+              <Route
+                path="/common-intranet"
+                element={<CommonIntranet />}
+              />
             </Routes>
           </div>
         </main>
