@@ -1,77 +1,65 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Calendar as CalendarIcon } from "lucide-react";
-import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 
 const Appointments = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
+  const [subject, setSubject] = useState("");
+  const [description, setDescription] = useState("");
 
-  const appointments = [
-    {
-      id: 1,
-      date: "15 Avril 2024",
-      time: "14:00",
-      type: "Présentation des résultats",
-      with: "Jean Dupont",
-    },
-    {
-      id: 2,
-      date: "20 Avril 2024",
-      time: "10:00",
-      type: "Point d'avancement",
-      with: "Marie Martin",
-    },
-  ];
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!date || !subject) {
+      toast.error("Veuillez remplir tous les champs obligatoires");
+      return;
+    }
+    toast.success("Demande de rendez-vous envoyée");
+  };
 
   return (
-    <div className="grid gap-6 md:grid-cols-2">
+    <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Prochains rendez-vous</CardTitle>
+          <CardTitle>Planifier un rendez-vous</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {appointments.map((appointment) => (
-              <div
-                key={appointment.id}
-                className="flex items-center justify-between p-4 border rounded-lg"
-              >
-                <div>
-                  <p className="font-medium">{appointment.type}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {appointment.date} à {appointment.time}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    avec {appointment.with}
-                  </p>
-                </div>
-                <Button variant="outline" size="sm">
-                  Annuler
-                </Button>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Date souhaitée</label>
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={setDate}
+                className="rounded-md border"
+              />
+            </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Prendre rendez-vous</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={setDate}
-              className="rounded-md border"
-            />
-            <Button className="w-full gap-2">
-              <CalendarIcon className="w-4 h-4" />
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Sujet</label>
+              <Input
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                placeholder="Ex: Point d'avancement"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Description</label>
+              <Textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Détails supplémentaires..."
+              />
+            </div>
+
+            <Button type="submit" className="w-full">
               Demander un rendez-vous
             </Button>
-          </div>
+          </form>
         </CardContent>
       </Card>
     </div>
