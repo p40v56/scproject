@@ -14,8 +14,8 @@ import {
 
 const AlumniArchives = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [selectedYear, setSelectedYear] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedYear, setSelectedYear] = useState("all");
 
   const archives = [
     {
@@ -45,7 +45,33 @@ const AlumniArchives = () => {
       size: "1.2 MB",
       category: "Documents Juridiques",
     },
-    // ... keep existing code (other archives)
+    {
+      id: 4,
+      title: "Compte-rendu AG 2023",
+      type: "PDF",
+      date: "10/12/2023",
+      year: "2023",
+      size: "3.0 MB",
+      category: "Assemblées Générales",
+    },
+    {
+      id: 5,
+      title: "Rapport d'activité 2022",
+      type: "PDF",
+      date: "01/03/2023",
+      year: "2023",
+      size: "4.5 MB",
+      category: "Rapports Annuels",
+    },
+    {
+      id: 6,
+      title: "Statuts 2022",
+      type: "PDF",
+      date: "15/02/2023",
+      year: "2023",
+      size: "1.0 MB",
+      category: "Documents Juridiques",
+    },
   ];
 
   const categories = [
@@ -59,8 +85,8 @@ const AlumniArchives = () => {
 
   const filteredArchives = archives.filter((doc) => {
     const matchesSearch = doc.title.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = !selectedCategory || doc.category === selectedCategory;
-    const matchesYear = !selectedYear || doc.year === selectedYear;
+    const matchesCategory = selectedCategory === "all" || doc.category === selectedCategory;
+    const matchesYear = selectedYear === "all" || doc.year === selectedYear;
 
     return matchesSearch && matchesCategory && matchesYear;
   });
@@ -90,7 +116,7 @@ const AlumniArchives = () => {
             <SelectValue placeholder="Catégorie" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Toutes les catégories</SelectItem>
+            <SelectItem value="all">Toutes les catégories</SelectItem>
             {categories.map((category) => (
               <SelectItem key={category} value={category}>
                 {category}
@@ -104,7 +130,7 @@ const AlumniArchives = () => {
             <SelectValue placeholder="Année" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Toutes</SelectItem>
+            <SelectItem value="all">Toutes</SelectItem>
             {years.map((year) => (
               <SelectItem key={year} value={year}>
                 {year}
