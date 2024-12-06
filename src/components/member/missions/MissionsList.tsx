@@ -12,36 +12,40 @@ import { Briefcase, Eye, FileEdit, Trash2 } from "lucide-react";
 type Mission = {
   id: string;
   title: string;
-  department: string;
+  studyLevel: string;
   status: "open" | "closed" | "in-progress";
   applicants: number;
   postedDate: string;
+  compensation: number;
 };
 
 const missions: Mission[] = [
   {
     id: "1",
-    title: "Développeur Frontend React",
-    department: "IT",
+    title: "Distribution de questionnaires",
+    studyLevel: "Tous",
     status: "open",
     applicants: 5,
     postedDate: "2024-03-15",
+    compensation: 150,
   },
   {
     id: "2",
-    title: "Consultant Marketing Digital",
-    department: "Marketing",
+    title: "Sondages téléphoniques",
+    studyLevel: "Tous",
     status: "in-progress",
     applicants: 3,
     postedDate: "2024-03-14",
+    compensation: 200,
   },
   {
     id: "3",
-    title: "Analyste Financier",
-    department: "Finance",
+    title: "Analyse qualitative",
+    studyLevel: "M2 - Luxe",
     status: "closed",
     applicants: 8,
     postedDate: "2024-03-10",
+    compensation: 300,
   },
 ];
 
@@ -82,10 +86,11 @@ export default function MissionsList() {
         <TableHeader>
           <TableRow>
             <TableHead>Titre</TableHead>
-            <TableHead>Département</TableHead>
+            <TableHead>Niveau d'étude</TableHead>
             <TableHead>Statut</TableHead>
             <TableHead>Candidats</TableHead>
             <TableHead>Date de publication</TableHead>
+            <TableHead>Rémunération</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -93,7 +98,7 @@ export default function MissionsList() {
           {missions.map((mission) => (
             <TableRow key={mission.id}>
               <TableCell className="font-medium">{mission.title}</TableCell>
-              <TableCell>{mission.department}</TableCell>
+              <TableCell>{mission.studyLevel}</TableCell>
               <TableCell>
                 <span
                   className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(
@@ -105,6 +110,7 @@ export default function MissionsList() {
               </TableCell>
               <TableCell>{mission.applicants}</TableCell>
               <TableCell>{mission.postedDate}</TableCell>
+              <TableCell>{mission.compensation} €</TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-2">
                   <Button variant="ghost" size="icon">
