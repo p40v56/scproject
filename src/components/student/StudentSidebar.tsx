@@ -14,6 +14,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { useNavigate, useLocation } from "react-router-dom";
+import LogoutButton from "../auth/LogoutButton";
 
 const menuItems = [
   {
@@ -46,7 +47,6 @@ const menuItems = [
 const StudentSidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  // Normally this would come from your auth context
   const studentName = "Jean Dupont";
 
   return (
@@ -81,6 +81,9 @@ const StudentSidebar = () => {
           ))}
         </SidebarMenu>
       </SidebarContent>
+      <div className="mt-auto p-4 border-t">
+        <LogoutButton />
+      </div>
     </Sidebar>
   );
 };

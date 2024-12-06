@@ -8,6 +8,7 @@ import {
   ClipboardList,
   AlertCircle,
 } from "lucide-react";
+import LogoutButton from "../auth/LogoutButton";
 
 const ClientSidebar = () => {
   const location = useLocation();
@@ -75,6 +76,9 @@ const ClientSidebar = () => {
           ))}
         </ul>
       </nav>
+      <div className="p-4 border-t">
+        <LogoutButton />
+      </div>
     </div>
   );
 };

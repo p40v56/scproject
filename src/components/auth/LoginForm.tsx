@@ -2,16 +2,22 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
+import { LogOut } from "lucide-react";
 
 const LoginForm = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (password !== "password") {
+      toast.error("Mot de passe incorrect");
+      return;
+    }
+
     if (email.startsWith("client")) {
       navigate("/client");
       toast.success("Connexion en tant que client");
@@ -41,9 +47,16 @@ const LoginForm = () => {
             className="w-full transition-all duration-200 focus:ring-2 focus:ring-blue-500"
             required
           />
-          <p className="text-sm text-slate-500">
-            Format test : client@test.com, student@test.com, alumni@test.com, member@test.com
-          </p>
+        </div>
+        <div className="space-y-2">
+          <Input
+            type="password"
+            placeholder="Votre mot de passe"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full transition-all duration-200 focus:ring-2 focus:ring-blue-500"
+            required
+          />
         </div>
         <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 transition-colors">
           Se connecter
@@ -57,7 +70,7 @@ const LoginForm = () => {
           </div>
           <div className="relative flex justify-center text-xs uppercase">
             <span className="bg-background px-2 text-muted-foreground">
-              Accès direct (phase de test)
+              Accès direct
             </span>
           </div>
         </div>

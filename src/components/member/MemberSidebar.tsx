@@ -19,6 +19,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import LogoutButton from "../auth/LogoutButton";
 
 const menuItems = [
   {
@@ -103,6 +104,9 @@ const MemberSidebar = () => {
           ))}
         </SidebarMenu>
       </SidebarContent>
+      <div className="mt-auto p-4 border-t">
+        <LogoutButton />
+      </div>
     </Sidebar>
   );
 };
