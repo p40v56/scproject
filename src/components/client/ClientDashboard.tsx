@@ -5,7 +5,11 @@ import StudyProgress from "./StudyProgress";
 import { toast } from "sonner";
 
 const ClientDashboard = () => {
-  const studyPhases = [
+  const studyPhases: {
+    name: string;
+    status: "completed" | "in-progress" | "pending";
+    progress: number;
+  }[] = [
     { name: "Phase préparatoire", status: "completed", progress: 100 },
     { name: "Phase quantitative", status: "in-progress", progress: 60 },
     { name: "Phase qualitative", status: "pending", progress: 0 },
