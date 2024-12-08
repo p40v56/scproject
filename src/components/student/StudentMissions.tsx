@@ -2,32 +2,62 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Briefcase, Clock, GraduationCap, MapPin } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+
+type Mission = {
+  id: number;
+  title: string;
+  type: string;
+  level: string;
+  location: string;
+  duration: string;
+  specialization: string;
+  description: string;
+  compensation: string;
+  status: "open" | "in-progress" | "attributed";
+  hasApplied?: boolean;
+};
 
 const StudentMissions = () => {
-  const missions = [
+  const [missions, setMissions] = useState<Mission[]>([
     {
       id: 1,
-      title: "Étude de marché secteur luxe",
+      title: "Distribution de questionnaires",
       type: "Étude de marché",
-      level: "M1/M2",
+      level: "Tous",
       location: "Paris",
       duration: "2 semaines",
       specialization: "Marketing",
       description: "Analyse du marché du luxe en France pour un client prestigieux.",
       compensation: "400€",
+      status: "open",
+      hasApplied: false,
     },
     {
       id: 2,
-      title: "Analyse financière startup",
+      title: "Sondages téléphoniques",
       type: "Finance",
-      level: "M2",
+      level: "Tous",
       location: "Remote",
       duration: "1 semaine",
       specialization: "Finance",
       description: "Due diligence pour une startup en série A.",
       compensation: "300€",
+      status: "open",
+      hasApplied: false,
     },
-  ];
+  ]);
+
+  const handleApply = (missionId: number) => {
+    setMissions(missions.map(mission => {
+      if (mission.id === missionId) {
+        return { ...mission, hasApplied: true };
+      }
+      return mission;
+    }));
+    toast.success("Votre candidature a été envoyée avec succès");
+  };
 
   return (
     <div className="space-y-6">
@@ -73,7 +103,13 @@ const StudentMissions = () => {
                   </div>
                 </div>
 
-                <Button className="w-full">Postuler</Button>
+                <Button 
+                  className="w-full" 
+                  onClick={() => handleApply(mission.id)}
+                  disabled={mission.hasApplied}
+                >
+                  {mission.hasApplied ? "Candidature envoyée" : "Postuler"}
+                </Button>
               </div>
             ))}
           </div>

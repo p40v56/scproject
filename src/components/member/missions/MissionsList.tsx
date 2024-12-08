@@ -7,14 +7,30 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Briefcase, Eye, FileEdit, Trash2 } from "lucide-react";
+import { Briefcase, Eye, FileEdit, Trash2, UserCheck } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { useState } from "react";
+import { toast } from "sonner";
+
+type Applicant = {
+  id: string;
+  name: string;
+  level: string;
+  appliedDate: string;
+};
 
 type Mission = {
   id: string;
   title: string;
   studyLevel: string;
   status: "open" | "closed" | "in-progress";
-  applicants: number;
+  applicants: Applicant[];
   postedDate: string;
   compensation: number;
 };
@@ -25,7 +41,10 @@ const missions: Mission[] = [
     title: "Distribution de questionnaires",
     studyLevel: "Tous",
     status: "open",
-    applicants: 5,
+    applicants: [
+      { id: "1", name: "Jean Dupont", level: "M1", appliedDate: "2024-03-15" },
+      { id: "2", name: "Marie Martin", level: "M2", appliedDate: "2024-03-16" },
+    ],
     postedDate: "2024-03-15",
     compensation: 150,
   },
@@ -34,7 +53,9 @@ const missions: Mission[] = [
     title: "Sondages téléphoniques",
     studyLevel: "Tous",
     status: "in-progress",
-    applicants: 3,
+    applicants: [
+      { id: "3", name: "Pierre Durant", level: "M1", appliedDate: "2024-03-14" },
+    ],
     postedDate: "2024-03-14",
     compensation: 200,
   },
@@ -43,7 +64,7 @@ const missions: Mission[] = [
     title: "Analyse qualitative",
     studyLevel: "M2 - Luxe",
     status: "closed",
-    applicants: 8,
+    applicants: [],
     postedDate: "2024-03-10",
     compensation: 300,
   },
@@ -71,7 +92,53 @@ const getStatusText = (status: Mission["status"]) => {
   }
 };
 
+const ApplicantsList = ({ applicants, missionId }: { applicants: Applicant[], missionId: string }) => {
+  const handleSelectApplicant = (applicantId: string) => {
+    toast.success("Le candidat a été sélectionné pour la mission");
+  };
+
+  return (
+    <div className="space-y-4">
+      {applicants.length === 0 ? (
+        <p className="text-muted-foreground">Aucune candidature pour le moment</p>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Nom</TableHead>
+              <TableHead>Niveau</TableHead>
+              <TableHead>Date de candidature</TableHead>
+              <TableHead>Action</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {applicants.map((applicant) => (
+              <TableRow key={applicant.id}>
+                <TableCell>{applicant.name}</TableCell>
+                <TableCell>{applicant.level}</TableCell>
+                <TableCell>{applicant.appliedDate}</TableCell>
+                <TableCell>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleSelectApplicant(applicant.id)}
+                  >
+                    <UserCheck className="w-4 h-4 mr-2" />
+                    Sélectionner
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
+    </div>
+  );
+};
+
 export default function MissionsList() {
+  const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -88,7 +155,7 @@ export default function MissionsList() {
             <TableHead>Titre</TableHead>
             <TableHead>Niveau d'étude</TableHead>
             <TableHead>Statut</TableHead>
-            <TableHead>Candidats</TableHead>
+            <TableHead>Candidatures</TableHead>
             <TableHead>Date de publication</TableHead>
             <TableHead>Rémunération</TableHead>
             <TableHead className="text-right">Actions</TableHead>
@@ -108,14 +175,31 @@ export default function MissionsList() {
                   {getStatusText(mission.status)}
                 </span>
               </TableCell>
-              <TableCell>{mission.applicants}</TableCell>
+              <TableCell>{mission.applicants.length}</TableCell>
               <TableCell>{mission.postedDate}</TableCell>
-              <TableCell>{mission.compensation} €</TableCell>
+              <TableCell>{mission.compensation}€</TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-2">
-                  <Button variant="ghost" size="icon">
-                    <Eye className="h-4 w-4" />
-                  </Button>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => setSelectedMission(mission)}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-3xl">
+                      <DialogHeader>
+                        <DialogTitle>Candidatures - {mission.title}</DialogTitle>
+                      </DialogHeader>
+                      <ApplicantsList 
+                        applicants={mission.applicants} 
+                        missionId={mission.id} 
+                      />
+                    </DialogContent>
+                  </Dialog>
                   <Button variant="ghost" size="icon">
                     <FileEdit className="h-4 w-4" />
                   </Button>
