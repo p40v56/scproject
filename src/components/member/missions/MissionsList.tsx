@@ -63,8 +63,51 @@ const missions: Mission[] = [
     studyLevel: "Tous",
     status: "open",
     applicants: [
-      { id: "1", name: "Jean Dupont", level: "M1", appliedDate: "2024-03-15" },
-      { id: "2", name: "Marie Martin", level: "M2", appliedDate: "2024-03-16" },
+      { 
+        id: "1", 
+        name: "Jean Dupont", 
+        level: "M1", 
+        appliedDate: "2024-03-15",
+        email: "jean.dupont@skema.edu",
+        phone: "06 12 34 56 78",
+        school: "SKEMA Business School",
+        campus: "Paris",
+        specialization: "Marketing Digital",
+        experience: "Stage de 6 mois en tant que chargé d'études marketing",
+        availability: "Disponible 2 jours par semaine",
+        documents: [
+          {
+            id: "doc1",
+            name: "CV",
+            type: "PDF",
+          },
+          {
+            id: "doc2",
+            name: "Lettre de motivation",
+            type: "PDF",
+          }
+        ]
+      },
+      { 
+        id: "2", 
+        name: "Marie Martin", 
+        level: "M2", 
+        appliedDate: "2024-03-16",
+        email: "marie.martin@skema.edu",
+        phone: "06 98 76 54 32",
+        school: "SKEMA Business School",
+        campus: "Lille",
+        specialization: "Data Analytics",
+        experience: "Alternance en analyse de données",
+        availability: "Disponible à partir de mai 2024",
+        documents: [
+          {
+            id: "doc3",
+            name: "CV",
+            type: "PDF",
+          }
+        ]
+      }
     ],
     postedDate: "2024-03-15",
     compensation: 150,
