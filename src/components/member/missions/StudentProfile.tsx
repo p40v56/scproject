@@ -1,6 +1,7 @@
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
@@ -43,6 +44,9 @@ export default function StudentProfile({ student, onClose }: StudentProfileProps
     <DialogContent className="sm:max-w-[600px]">
       <DialogHeader>
         <DialogTitle className="text-xl font-bold">Profil de {student.name}</DialogTitle>
+        <DialogDescription>
+          Informations détaillées et documents du candidat
+        </DialogDescription>
       </DialogHeader>
       
       <div className="space-y-6">
