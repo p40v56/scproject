@@ -1,10 +1,17 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { FileText, Download, MessageSquare } from "lucide-react"
+import { FileText, Download, MessageSquare, Phone } from "lucide-react"
 import StudyProgress from "./StudyProgress"
 import { Separator } from "@/components/ui/separator"
+import { useState } from "react"
+import { Textarea } from "@/components/ui/textarea"
+import { useToast } from "@/components/ui/use-toast"
 
 const StudyDetails = () => {
+  const [showCallbackForm, setShowCallbackForm] = useState(false)
+  const [callbackReason, setCallbackReason] = useState("")
+  const { toast } = useToast()
+
   const studyPhases: {
     name: string;
     status: "completed" | "in-progress" | "pending";
@@ -20,8 +27,12 @@ const StudyDetails = () => {
     title: "Étude de marché - Secteur IT",
     startDate: "01/03/2024",
     endDate: "30/06/2024",
-    consultant: "Marie Dupont",
-    budget: "15000€",
+    consultant: {
+      name: "Marie Dupont",
+      phone: "+33 6 12 34 56 78",
+      email: "marie.dupont@example.com"
+    },
+    budget: "15 000 000",
     currentPhase: "Phase quantitative",
   }
 
@@ -38,6 +49,29 @@ const StudyDetails = () => {
     },
   ]
 
+  const handleCallbackRequest = () => {
+    if (callbackReason.trim().length < 10) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez décrire la raison de votre demande (minimum 10 caractères)",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // TODO: Implement actual callback request logic here
+    toast({
+      title: "Demande envoyée",
+      description: "Nous vous recontacterons dans les plus brefs délais",
+    })
+    setShowCallbackForm(false)
+    setCallbackReason("")
+  }
+
+  const formatBudget = (budget: string) => {
+    return budget.replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " €"
+  }
+
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -53,14 +87,18 @@ const StudyDetails = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium">Consultant principal</CardTitle>
+            <CardTitle className="text-sm font-medium">Chargé de projet</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{studyDetails.consultant}</div>
-            <Button variant="link" className="p-0 h-auto text-xs text-muted-foreground">
-              <MessageSquare className="h-3 w-3 mr-1" />
-              Contacter
-            </Button>
+            <div className="text-2xl font-bold">{studyDetails.consultant.name}</div>
+            <div className="space-y-1 mt-2">
+              <p className="text-sm text-muted-foreground">{studyDetails.consultant.phone}</p>
+              <p className="text-sm text-muted-foreground">{studyDetails.consultant.email}</p>
+              <Button variant="link" className="p-0 h-auto text-xs">
+                <MessageSquare className="h-3 w-3 mr-1" />
+                Contacter
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
@@ -69,7 +107,7 @@ const StudyDetails = () => {
             <CardTitle className="text-sm font-medium">Budget</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{studyDetails.budget}</div>
+            <div className="text-2xl font-bold">{formatBudget(studyDetails.budget)}</div>
             <p className="text-xs text-muted-foreground">Budget total</p>
           </CardContent>
         </Card>
@@ -160,6 +198,45 @@ const StudyDetails = () => {
               </div>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Phone className="h-5 w-5" />
+            Besoin d'être rappelé ?
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {!showCallbackForm ? (
+            <Button onClick={() => setShowCallbackForm(true)}>
+              Demander à être rappelé
+            </Button>
+          ) : (
+            <div className="space-y-4">
+              <Textarea
+                placeholder="Décrivez brièvement la raison de votre demande..."
+                value={callbackReason}
+                onChange={(e) => setCallbackReason(e.target.value)}
+                className="min-h-[100px]"
+              />
+              <div className="flex gap-2">
+                <Button onClick={handleCallbackRequest}>
+                  Envoyer la demande
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setShowCallbackForm(false)
+                    setCallbackReason("")
+                  }}
+                >
+                  Annuler
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
