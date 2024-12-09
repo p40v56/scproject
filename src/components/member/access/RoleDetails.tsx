@@ -7,6 +7,15 @@ import {
 } from "@/components/ui/card";
 
 const roleDescriptions: Record<string, { title: string; description: string; permissions: string[] }> = {
+  client: {
+    title: "Client",
+    description: "Accès aux études et communications",
+    permissions: [
+      "Consultation des études assignées",
+      "Communication avec les chargés d'études",
+      "Accès aux documents partagés",
+    ],
+  },
   member: {
     title: "Membre",
     description: "Accès limité à la consultation",

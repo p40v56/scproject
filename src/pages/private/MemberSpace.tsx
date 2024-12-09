@@ -4,8 +4,6 @@ import MemberSidebar from "@/components/member/MemberSidebar";
 import AccessManagement from "@/components/member/access/AccessManagement";
 import MissionsList from "@/components/member/missions/MissionsList";
 import CommonIntranet from "@/components/member/intranet/CommonIntranet";
-import JuniorIntranet from "@/components/member/intranet/JuniorIntranet";
-import GroupSpace from "@/components/member/group/GroupSpace";
 import CurrentStudies from "@/components/member/studies/CurrentStudies";
 import MemberCalendar from "@/components/member/calendar/MemberCalendar";
 import Objectives from "@/components/member/objectives/Objectives";
@@ -35,8 +33,6 @@ const MemberSpace = () => {
               <Route path="/access-management" element={<AccessManagement />} />
               <Route path="/missions" element={<MissionsList />} />
               <Route path="/common-intranet" element={<CommonIntranet />} />
-              <Route path="/junior-intranet" element={<JuniorIntranet />} />
-              <Route path="/group-space" element={<GroupSpace />} />
               <Route path="/current-studies" element={<CurrentStudies />} />
               <Route path="/calendar" element={<MemberCalendar />} />
               <Route path="/objectives" element={<Objectives />} />
@@ -47,6 +43,6 @@ const MemberSpace = () => {
       </div>
     </SidebarProvider>
   );
-}
+};
 
 export default MemberSpace;

@@ -3,8 +3,6 @@ import {
   UserCog,
   Briefcase,
   Link,
-  FolderOpen,
-  Building2,
   Calendar,
   BookOpen,
   Target,
@@ -36,16 +34,6 @@ const menuItems = [
     title: "Intranet commun",
     icon: Link,
     path: "/member/common-intranet",
-  },
-  {
-    title: "Intranet Junior",
-    icon: FolderOpen,
-    path: "/member/junior-intranet",
-  },
-  {
-    title: "Espace groupe",
-    icon: Building2,
-    path: "/member/group-space",
   },
   {
     title: "Études en cours",
