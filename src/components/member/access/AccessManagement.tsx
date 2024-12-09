@@ -18,14 +18,22 @@ import { Button } from "@/components/ui/button";
 import { UserList } from "./UserList";
 import { RoleDetails } from "./RoleDetails";
 import { useToast } from "@/components/ui/use-toast";
+import { CreateAccountForm } from "./CreateAccountForm";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const AccessManagement = () => {
   const [selectedRole, setSelectedRole] = useState<string>("member");
   const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   const handleRoleChange = async (userId: string, newRole: string) => {
-    // Simulation d'une mise à jour
     console.log(`Changing role for user ${userId} to ${newRole}`);
     toast({
       title: "Rôle mis à jour",
@@ -37,16 +45,30 @@ const AccessManagement = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Gestion des accès</h1>
-        <Button
-          onClick={() => {
-            toast({
-              title: "Synchronisation terminée",
-              description: "La liste des utilisateurs a été mise à jour.",
-            });
-          }}
-        >
-          Synchroniser les utilisateurs
-        </Button>
+        <div className="flex gap-2">
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>Créer un compte</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Créer un nouveau compte</DialogTitle>
+              </DialogHeader>
+              <CreateAccountForm />
+            </DialogContent>
+          </Dialog>
+          <Button
+            variant="outline"
+            onClick={() => {
+              toast({
+                title: "Synchronisation terminée",
+                description: "La liste des utilisateurs a été mise à jour.",
+              });
+            }}
+          >
+            Synchroniser les utilisateurs
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -68,6 +90,7 @@ const AccessManagement = () => {
                   <SelectValue placeholder="Sélectionner un rôle" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="client">Client</SelectItem>
                   <SelectItem value="member">Membre</SelectItem>
                   <SelectItem value="project-manager">Chargé de projet</SelectItem>
                   <SelectItem value="moderator">Modérateur</SelectItem>

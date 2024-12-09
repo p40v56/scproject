@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -6,15 +6,15 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Briefcase, Eye, FileEdit, Trash2, UserCheck, User } from "lucide-react"
+} from "@/components/ui/table";
+import { Briefcase, Eye, FileEdit, Trash2, UserCheck, User } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,11 +25,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import { useState } from "react"
-import { toast } from "sonner"
-import MissionForm from "./MissionForm"
-import StudentProfile from "./StudentProfile"
+} from "@/components/ui/alert-dialog";
+import { useState } from "react";
+import { toast } from "sonner";
+import MissionForm from "./MissionForm";
+import StudentProfile from "./StudentProfile";
+import { MissionFilters } from "./MissionFilters";
+import { Mission } from "./types";
 
 type Applicant = {
   id: string
@@ -137,31 +139,39 @@ const missions: Mission[] = [
 const getStatusColor = (status: Mission["status"]) => {
   switch (status) {
     case "open":
-      return "text-green-600 bg-green-100"
+      return "text-green-600 bg-green-100";
     case "in-progress":
-      return "text-yellow-600 bg-yellow-100"
+      return "text-yellow-600 bg-yellow-100";
     case "closed":
-      return "text-red-600 bg-red-100"
+      return "text-red-600 bg-red-100";
   }
-}
+};
 
 const getStatusText = (status: Mission["status"]) => {
   switch (status) {
     case "open":
-      return "Ouverte"
+      return "Ouverte";
     case "in-progress":
-      return "En cours"
+      return "En cours";
     case "closed":
-      return "Fermée"
+      return "Fermée";
   }
-}
+};
 
-const ApplicantsList = ({ applicants, missionId }: { applicants: Applicant[], missionId: string }) => {
-  const [selectedStudent, setSelectedStudent] = useState<Applicant | null>(null)
+const ApplicantsList = ({
+  applicants,
+  missionId,
+}: {
+  applicants: Mission["applicants"];
+  missionId: string;
+}) => {
+  const [selectedStudent, setSelectedStudent] = useState<Mission["applicants"][0] | null>(
+    null
+  );
 
   const handleSelectApplicant = (applicantId: string) => {
-    toast.success("Le candidat a été sélectionné pour la mission")
-  }
+    toast.success("Le candidat a été sélectionné pour la mission");
+  };
 
   return (
     <div className="space-y-4">
@@ -209,35 +219,56 @@ const ApplicantsList = ({ applicants, missionId }: { applicants: Applicant[], mi
       )}
 
       {selectedStudent && (
-        <Dialog open={!!selectedStudent} onOpenChange={() => setSelectedStudent(null)}>
-          <StudentProfile student={selectedStudent} onClose={() => setSelectedStudent(null)} />
+        <Dialog
+          open={!!selectedStudent}
+          onOpenChange={() => setSelectedStudent(null)}
+        >
+          <StudentProfile
+            student={selectedStudent}
+            onClose={() => setSelectedStudent(null)}
+          />
         </Dialog>
       )}
     </div>
-  )
-}
+  );
+};
 
 export default function MissionsList() {
-  const [selectedMission, setSelectedMission] = useState<Mission | null>(null)
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [levelFilter, setLevelFilter] = useState("all");
 
   const handleCreateMission = (data: any) => {
-    console.log("Nouvelle mission:", data)
-    toast.success("Mission créée avec succès")
-    setIsCreateDialogOpen(false)
-  }
+    console.log("Nouvelle mission:", data);
+    toast.success("Mission créée avec succès");
+    setIsCreateDialogOpen(false);
+  };
 
   const handleEditMission = (data: any) => {
-    console.log("Mission modifiée:", data)
-    toast.success("Mission modifiée avec succès")
-    setIsEditDialogOpen(false)
-  }
+    console.log("Mission modifiée:", data);
+    toast.success("Mission modifiée avec succès");
+    setIsEditDialogOpen(false);
+  };
 
   const handleDeleteMission = (missionId: string) => {
-    console.log("Suppression de la mission:", missionId)
-    toast.success("Mission supprimée avec succès")
-  }
+    console.log("Suppression de la mission:", missionId);
+    toast.success("Mission supprimée avec succès");
+  };
+
+  const filteredMissions = missions.filter((mission) => {
+    const matchesSearch = mission.title
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+    const matchesStatus =
+      statusFilter === "all" || mission.status === statusFilter;
+    const matchesLevel =
+      levelFilter === "all" ||
+      mission.studyLevel.toLowerCase().includes(levelFilter.toLowerCase());
+    return matchesSearch && matchesStatus && matchesLevel;
+  });
 
   return (
     <div className="space-y-6">
@@ -259,6 +290,15 @@ export default function MissionsList() {
         </Dialog>
       </div>
 
+      <MissionFilters
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        statusFilter={statusFilter}
+        onStatusChange={setStatusFilter}
+        levelFilter={levelFilter}
+        onLevelChange={setLevelFilter}
+      />
+
       <Table>
         <TableHeader>
           <TableRow>
@@ -272,7 +312,7 @@ export default function MissionsList() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {missions.map((mission) => (
+          {filteredMissions.map((mission) => (
             <TableRow key={mission.id}>
               <TableCell className="font-medium">{mission.title}</TableCell>
               <TableCell>{mission.studyLevel}</TableCell>
@@ -292,8 +332,8 @@ export default function MissionsList() {
                 <div className="flex justify-end gap-2">
                   <Dialog>
                     <DialogTrigger asChild>
-                      <Button 
-                        variant="ghost" 
+                      <Button
+                        variant="ghost"
                         size="icon"
                         onClick={() => setSelectedMission(mission)}
                       >
@@ -304,17 +344,20 @@ export default function MissionsList() {
                       <DialogHeader>
                         <DialogTitle>Candidatures - {mission.title}</DialogTitle>
                       </DialogHeader>
-                      <ApplicantsList 
-                        applicants={mission.applicants} 
-                        missionId={mission.id} 
+                      <ApplicantsList
+                        applicants={mission.applicants}
+                        missionId={mission.id}
                       />
                     </DialogContent>
                   </Dialog>
 
-                  <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                  <Dialog
+                    open={isEditDialogOpen}
+                    onOpenChange={setIsEditDialogOpen}
+                  >
                     <DialogTrigger asChild>
-                      <Button 
-                        variant="ghost" 
+                      <Button
+                        variant="ghost"
                         size="icon"
                         onClick={() => setSelectedMission(mission)}
                       >
@@ -325,7 +368,7 @@ export default function MissionsList() {
                       <DialogHeader>
                         <DialogTitle>Modifier la mission</DialogTitle>
                       </DialogHeader>
-                      <MissionForm 
+                      <MissionForm
                         onSubmit={handleEditMission}
                         mode="edit"
                         initialData={{
@@ -348,12 +391,15 @@ export default function MissionsList() {
                       <AlertDialogHeader>
                         <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Cette action ne peut pas être annulée. La mission sera définitivement supprimée.
+                          Cette action ne peut pas être annulée. La mission sera
+                          définitivement supprimée.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Annuler</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDeleteMission(mission.id)}>
+                        <AlertDialogAction
+                          onClick={() => handleDeleteMission(mission.id)}
+                        >
                           Supprimer
                         </AlertDialogAction>
                       </AlertDialogFooter>
@@ -366,5 +412,5 @@ export default function MissionsList() {
         </TableBody>
       </Table>
     </div>
-  )
+  );
 }
