@@ -1,12 +1,10 @@
 import { Link, useLocation } from "react-router-dom";
 import {
-  BarChart,
   FileText,
   Calendar,
   Settings,
   MessageSquare,
-  ClipboardList,
-  AlertCircle,
+  Bell,
 } from "lucide-react";
 import LogoutButton from "../auth/LogoutButton";
 
@@ -16,13 +14,8 @@ const ClientSidebar = () => {
 
   const menuItems = [
     {
-      title: "Vue d'ensemble",
-      icon: BarChart,
-      path: "/client",
-    },
-    {
       title: "Mon étude",
-      icon: ClipboardList,
+      icon: FileText,
       path: "/client/study",
     },
     {
@@ -41,9 +34,9 @@ const ClientSidebar = () => {
       path: "/client/messages",
     },
     {
-      title: "Alertes",
-      icon: AlertCircle,
-      path: "/client/alerts",
+      title: "Notifications",
+      icon: Bell,
+      path: "/client/notifications",
     },
     {
       title: "Paramètres",
