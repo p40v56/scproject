@@ -1,14 +1,44 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Mail, Linkedin, Phone } from "lucide-react";
+import { Mail, Linkedin, Phone, Plus, Calendar } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 const AlumniDashboard = () => {
+  const navigate = useNavigate();
+
   const revenueData = [
     { year: '2019', amount: 120000 },
     { year: '2020', amount: 150000 },
     { year: '2021', amount: 180000 },
     { year: '2022', amount: 220000 },
     { year: '2023', amount: 280000 },
+  ];
+
+  const studiesData = [
+    { year: '2019', count: 25 },
+    { year: '2020', count: 30 },
+    { year: '2021', count: 35 },
+    { year: '2022', count: 42 },
+    { year: '2023', count: 50 },
+  ];
+
+  const keyDates = [
+    {
+      date: "2024-03-25",
+      title: "Assemblée Générale",
+      type: "Événement important"
+    },
+    {
+      date: "2024-04-15",
+      title: "Afterwork Alumni",
+      type: "Networking"
+    },
+    {
+      date: "2024-05-01",
+      title: "Conférence Annuelle",
+      type: "Formation"
+    }
   ];
 
   const teamMembers = [
@@ -48,11 +78,17 @@ const AlumniDashboard = () => {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Tableau de bord</h1>
-        <p className="text-muted-foreground">
-          Vue d'ensemble des performances et de l'organisation
-        </p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">Tableau de bord</h1>
+          <p className="text-muted-foreground">
+            Vue d'ensemble des performances et de l'organisation
+          </p>
+        </div>
+        <Button onClick={() => navigate("/client/request-study")} size="lg">
+          <Plus className="mr-2 h-5 w-5" />
+          Demander une étude
+        </Button>
       </div>
 
       <Card>
@@ -81,6 +117,59 @@ const AlumniDashboard = () => {
                 />
               </LineChart>
             </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Évolution du nombre d'études</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={studiesData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="year" />
+                <YAxis />
+                <Tooltip />
+                <Line 
+                  type="monotone" 
+                  dataKey="count" 
+                  stroke="#10B981" 
+                  strokeWidth={2}
+                  dot={{ fill: "#10B981" }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Prochaines dates clés</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {keyDates.map((event, index) => (
+              <div key={index} className="flex items-center gap-4 p-4 border rounded-lg">
+                <Calendar className="h-5 w-5 text-primary" />
+                <div>
+                  <h3 className="font-semibold">{event.title}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {new Date(event.date).toLocaleDateString('fr-FR', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric'
+                    })}
+                  </p>
+                  <Badge variant="secondary" className="mt-1">
+                    {event.type}
+                  </Badge>
+                </div>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>

@@ -28,4 +28,6 @@ export type Mission = {
   postedDate: string;
   compensation: number;
   description?: string;
+  startDate?: string;
+  endDate?: string;
 };

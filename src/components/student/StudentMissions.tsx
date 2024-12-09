@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Briefcase, Clock, GraduationCap, MapPin } from "lucide-react";
+import { Briefcase, Clock, GraduationCap, MapPin, Calendar } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -12,6 +12,8 @@ type Mission = {
   level: string;
   location: string;
   duration: string;
+  startDate: string;
+  endDate: string;
   specialization: string;
   description: string;
   compensation: string;
@@ -28,6 +30,8 @@ const StudentMissions = () => {
       level: "Tous",
       location: "Paris",
       duration: "2 semaines",
+      startDate: "2024-04-01",
+      endDate: "2024-04-15",
       specialization: "Marketing",
       description: "Analyse du marché du luxe en France pour un client prestigieux.",
       compensation: "400€",
@@ -41,6 +45,8 @@ const StudentMissions = () => {
       level: "Tous",
       location: "Remote",
       duration: "1 semaine",
+      startDate: "2024-04-20",
+      endDate: "2024-04-27",
       specialization: "Finance",
       description: "Due diligence pour une startup en série A.",
       compensation: "300€",
@@ -57,6 +63,14 @@ const StudentMissions = () => {
       return mission;
     }));
     toast.success("Votre candidature a été envoyée avec succès");
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('fr-FR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
   };
 
   return (
@@ -98,8 +112,10 @@ const StudentMissions = () => {
                     <span>{mission.duration}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Briefcase className="w-4 h-4" />
-                    <span>{mission.specialization}</span>
+                    <Calendar className="w-4 h-4" />
+                    <span>
+                      {formatDate(mission.startDate)} - {formatDate(mission.endDate)}
+                    </span>
                   </div>
                 </div>
 
