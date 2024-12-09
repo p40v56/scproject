@@ -31,32 +31,7 @@ import { toast } from "sonner";
 import MissionForm from "./MissionForm";
 import StudentProfile from "./StudentProfile";
 import { MissionFilters } from "./MissionFilters";
-import { Mission } from "./types";
-
-type Applicant = {
-  id: string
-  name: string
-  level: string
-  appliedDate: string
-  email?: string
-  phone?: string
-  documents?: Array<{
-    id: string
-    name: string
-    type: string
-  }>
-}
-
-type Mission = {
-  id: string
-  title: string
-  studyLevel: string
-  status: "open" | "closed" | "in-progress"
-  applicants: Applicant[]
-  postedDate: string
-  compensation: number
-  description?: string
-}
+import type { Mission, Applicant } from "./types";
 
 const missions: Mission[] = [
   {
