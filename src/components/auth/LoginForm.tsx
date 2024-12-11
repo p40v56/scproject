@@ -23,7 +23,9 @@ const LoginForm = () => {
 
       if (error) {
         if (error.message === "Invalid login credentials") {
-          toast.error("Email ou mot de passe incorrect. Si vous n'avez pas de compte, inscrivez-vous d'abord.");
+          toast.error(
+            "Email ou mot de passe incorrect. Si vous venez de créer votre compte, vérifiez d'abord vos emails pour confirmer votre inscription."
+          );
         } else {
           toast.error(error.message);
         }
@@ -44,7 +46,6 @@ const LoginForm = () => {
       return;
     }
 
-    // Vérification du format de l'email
     const emailDomain = email.split('@')[1];
     let userType = '';
     
@@ -71,7 +72,9 @@ const LoginForm = () => {
         return;
       }
 
-      toast.success(`Inscription réussie en tant que ${userType} ! Vérifiez vos emails.`);
+      toast.success(
+        `Inscription réussie en tant que ${userType} ! Vérifiez vos emails pour confirmer votre compte avant de vous connecter.`
+      );
     } catch (error) {
       toast.error("Une erreur est survenue lors de l'inscription");
     } finally {
