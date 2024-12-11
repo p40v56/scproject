@@ -3,35 +3,62 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { LogOut } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const LoginForm = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (password !== "password") {
-      toast.error("Mot de passe incorrect");
+    setIsLoading(true);
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+
+      // La redirection sera gérée par useRedirectByUserType
+      toast.success("Connexion réussie");
+    } catch (error) {
+      toast.error("Une erreur est survenue");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignUp = async () => {
+    if (password.length < 6) {
+      toast.error("Le mot de passe doit contenir au moins 6 caractères");
       return;
     }
 
-    if (email.startsWith("client")) {
-      navigate("/client");
-      toast.success("Connexion en tant que client");
-    } else if (email.startsWith("student")) {
-      navigate("/student");
-      toast.success("Connexion en tant qu'étudiant");
-    } else if (email.startsWith("alumni")) {
-      navigate("/alumni");
-      toast.success("Connexion en tant qu'alumni");
-    } else if (email.startsWith("member")) {
-      navigate("/member");
-      toast.success("Connexion en tant que membre");
-    } else {
-      toast.error("Format d'email non reconnu");
+    setIsLoading(true);
+
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+
+      toast.success("Inscription réussie ! Vérifiez vos emails.");
+    } catch (error) {
+      toast.error("Une erreur est survenue");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -56,10 +83,15 @@ const LoginForm = () => {
             onChange={(e) => setPassword(e.target.value)}
             className="w-full transition-all duration-200 focus:ring-2 focus:ring-blue-500"
             required
+            minLength={6}
           />
         </div>
-        <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 transition-colors">
-          Se connecter
+        <Button 
+          type="submit" 
+          className="w-full bg-blue-600 hover:bg-blue-700 transition-colors"
+          disabled={isLoading}
+        >
+          {isLoading ? "Chargement..." : "Se connecter"}
         </Button>
       </form>
 
@@ -70,45 +102,19 @@ const LoginForm = () => {
           </div>
           <div className="relative flex justify-center text-xs uppercase">
             <span className="bg-background px-2 text-muted-foreground">
-              Accès direct
+              Ou
             </span>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
-          <Button
-            variant="outline"
-            onClick={() => navigate("/client")}
-            className="hover:bg-blue-50 transition-colors slide-in"
-            style={{ animationDelay: "0ms" }}
-          >
-            Espace Client
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => navigate("/student")}
-            className="hover:bg-blue-50 transition-colors slide-in"
-            style={{ animationDelay: "100ms" }}
-          >
-            Espace Étudiant
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => navigate("/alumni")}
-            className="hover:bg-blue-50 transition-colors slide-in"
-            style={{ animationDelay: "200ms" }}
-          >
-            Espace Alumni
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => navigate("/member")}
-            className="hover:bg-blue-50 transition-colors slide-in"
-            style={{ animationDelay: "300ms" }}
-          >
-            Espace Membre
-          </Button>
-        </div>
+        <Button 
+          onClick={handleSignUp} 
+          variant="outline" 
+          className="w-full"
+          disabled={isLoading}
+        >
+          {isLoading ? "Chargement..." : "S'inscrire"}
+        </Button>
       </div>
     </div>
   );
