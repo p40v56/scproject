@@ -10,6 +10,7 @@ interface PrivateRouteProps {
 const PrivateRoute = ({ children, allowedUserType }: PrivateRouteProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isAllowed, setIsAllowed] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
@@ -17,9 +18,12 @@ const PrivateRoute = ({ children, allowedUserType }: PrivateRouteProps) => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
+        setIsAuthenticated(false);
         setIsLoading(false);
         return;
       }
+
+      setIsAuthenticated(true);
 
       const { data: profile } = await supabase
         .from('profiles')
@@ -32,6 +36,15 @@ const PrivateRoute = ({ children, allowedUserType }: PrivateRouteProps) => {
     };
 
     checkAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') {
+        setIsAuthenticated(false);
+        setIsAllowed(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, [allowedUserType]);
 
   if (isLoading) {
@@ -40,8 +53,12 @@ const PrivateRoute = ({ children, allowedUserType }: PrivateRouteProps) => {
     </div>;
   }
 
-  if (!isAllowed) {
+  if (!isAuthenticated) {
     return <Navigate to="/" state={{ from: location }} replace />;
+  }
+
+  if (!isAllowed) {
+    return <Navigate to="/dashboard" state={{ from: location }} replace />;
   }
 
   return <>{children}</>;
