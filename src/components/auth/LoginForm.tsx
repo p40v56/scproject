@@ -22,14 +22,17 @@ const LoginForm = () => {
       });
 
       if (error) {
-        toast.error(error.message);
+        if (error.message === "Invalid login credentials") {
+          toast.error("Email ou mot de passe incorrect. Si vous n'avez pas de compte, inscrivez-vous d'abord.");
+        } else {
+          toast.error(error.message);
+        }
         return;
       }
 
-      // La redirection sera gérée par useRedirectByUserType
       toast.success("Connexion réussie");
     } catch (error) {
-      toast.error("Une erreur est survenue");
+      toast.error("Une erreur est survenue lors de la connexion");
     } finally {
       setIsLoading(false);
     }
@@ -39,6 +42,20 @@ const LoginForm = () => {
     if (password.length < 6) {
       toast.error("Le mot de passe doit contenir au moins 6 caractères");
       return;
+    }
+
+    // Vérification du format de l'email
+    const emailDomain = email.split('@')[1];
+    let userType = '';
+    
+    if (emailDomain === 'skema.edu') {
+      userType = 'étudiant';
+    } else if (emailDomain === 'alumni.skema.edu') {
+      userType = 'alumni';
+    } else if (emailDomain === 'junior-conseil.com') {
+      userType = 'membre';
+    } else {
+      userType = 'client';
     }
 
     setIsLoading(true);
@@ -54,9 +71,9 @@ const LoginForm = () => {
         return;
       }
 
-      toast.success("Inscription réussie ! Vérifiez vos emails.");
+      toast.success(`Inscription réussie en tant que ${userType} ! Vérifiez vos emails.`);
     } catch (error) {
-      toast.error("Une erreur est survenue");
+      toast.error("Une erreur est survenue lors de l'inscription");
     } finally {
       setIsLoading(false);
     }
@@ -64,6 +81,18 @@ const LoginForm = () => {
 
   return (
     <div className="space-y-6">
+      <div className="space-y-2 text-center">
+        <p className="text-sm text-muted-foreground">
+          Utilisez votre email institutionnel pour être automatiquement redirigé vers le bon espace :
+        </p>
+        <ul className="text-xs text-muted-foreground space-y-1">
+          <li>@skema.edu pour les étudiants</li>
+          <li>@alumni.skema.edu pour les alumni</li>
+          <li>@junior-conseil.com pour les membres</li>
+          <li>Autre email pour les clients</li>
+        </ul>
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Input
