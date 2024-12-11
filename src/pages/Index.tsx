@@ -1,6 +1,11 @@
-import LoginForm from "@/components/auth/LoginForm";
+import { Auth } from "@supabase/auth-ui-react";
+import { ThemeSupa } from "@supabase/auth-ui-shared";
+import { supabase } from "@/integrations/supabase/client";
+import { useRedirectByUserType } from "@/hooks/useRedirectByUserType";
 
 const Index = () => {
+  useRedirectByUserType();
+
   return (
     <div className="min-h-screen flex items-center justify-center honeycomb-bg">
       <div className="w-full max-w-md space-y-8 p-8 glass-effect rounded-2xl shadow-2xl fade-in relative mx-4">
@@ -13,7 +18,21 @@ const Index = () => {
           </p>
         </div>
         <div className="scale-in">
-          <LoginForm />
+          <Auth
+            supabaseClient={supabase}
+            appearance={{
+              theme: ThemeSupa,
+              variables: {
+                default: {
+                  colors: {
+                    brand: '#2563eb',
+                    brandAccent: '#1d4ed8',
+                  },
+                },
+              },
+            }}
+            providers={[]}
+          />
         </div>
       </div>
     </div>
