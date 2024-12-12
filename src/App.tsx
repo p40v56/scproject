@@ -13,15 +13,24 @@ import AlumniSpace from "./pages/private/AlumniSpace";
 import MemberSpace from "./pages/private/MemberSpace";
 import PrivateRoute from "./components/auth/PrivateRoute";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => {
   const [session, setSession] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
+      setIsLoading(false);
     });
 
     // Listen for auth changes
@@ -33,6 +42,14 @@ const App = () => {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <QueryClientProvider client={queryClient}>

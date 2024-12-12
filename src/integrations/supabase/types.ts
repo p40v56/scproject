@@ -9,6 +9,176 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      documents: {
+        Row: {
+          created_at: string
+          file_path: string
+          file_type: string
+          id: string
+          name: string
+          study_id: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_path: string
+          file_type: string
+          id?: string
+          name: string
+          study_id?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_path?: string
+          file_type?: string
+          id?: string
+          name?: string
+          study_id?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_study_id_fkey"
+            columns: ["study_id"]
+            isOneToOne: false
+            referencedRelation: "studies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          sender_id: string | null
+          study_id: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          sender_id?: string | null
+          study_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          sender_id?: string | null
+          study_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_study_id_fkey"
+            columns: ["study_id"]
+            isOneToOne: false
+            referencedRelation: "studies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mission_applications: {
+        Row: {
+          created_at: string
+          id: string
+          mission_id: string | null
+          status: string
+          student_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mission_id?: string | null
+          status?: string
+          student_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mission_id?: string | null
+          status?: string
+          student_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mission_applications_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mission_applications_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      missions: {
+        Row: {
+          compensation: number | null
+          created_at: string
+          description: string | null
+          id: string
+          status: string
+          study_id: string | null
+          study_level: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          compensation?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          status?: string
+          study_id?: string | null
+          study_level?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          compensation?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          status?: string
+          study_id?: string | null
+          study_level?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "missions_study_id_fkey"
+            columns: ["study_id"]
+            isOneToOne: false
+            referencedRelation: "studies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -38,6 +208,63 @@ export type Database = {
           user_type?: Database["public"]["Enums"]["user_type"]
         }
         Relationships: []
+      }
+      studies: {
+        Row: {
+          assigned_member_id: string | null
+          budget: number | null
+          client_id: string | null
+          created_at: string
+          description: string | null
+          end_date: string | null
+          id: string
+          start_date: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_member_id?: string | null
+          budget?: number | null
+          client_id?: string | null
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          start_date?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_member_id?: string | null
+          budget?: number | null
+          client_id?: string | null
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          start_date?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "studies_assigned_member_id_fkey"
+            columns: ["assigned_member_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "studies_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
