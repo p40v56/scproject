@@ -46,19 +46,6 @@ const LoginForm = () => {
       return;
     }
 
-    const emailDomain = email.split('@')[1];
-    let userType = '';
-    
-    if (emailDomain === 'skema.edu') {
-      userType = 'étudiant';
-    } else if (emailDomain === 'alumni.skema.edu') {
-      userType = 'alumni';
-    } else if (emailDomain === 'junior-conseil.com') {
-      userType = 'membre';
-    } else {
-      userType = 'client';
-    }
-
     setIsLoading(true);
 
     try {
@@ -72,9 +59,7 @@ const LoginForm = () => {
         return;
       }
 
-      toast.success(
-        `Inscription réussie en tant que ${userType} ! Vérifiez vos emails pour confirmer votre compte avant de vous connecter.`
-      );
+      toast.success("Inscription réussie ! Vérifiez vos emails pour confirmer votre compte avant de vous connecter.");
     } catch (error) {
       toast.error("Une erreur est survenue lors de l'inscription");
     } finally {
@@ -86,14 +71,8 @@ const LoginForm = () => {
     <div className="space-y-6">
       <div className="space-y-2 text-center">
         <p className="text-sm text-muted-foreground">
-          Utilisez votre email institutionnel pour être automatiquement redirigé vers le bon espace :
+          Connectez-vous ou inscrivez-vous pour accéder à votre espace
         </p>
-        <ul className="text-xs text-muted-foreground space-y-1">
-          <li>@skema.edu pour les étudiants</li>
-          <li>@alumni.skema.edu pour les alumni</li>
-          <li>@junior-conseil.com pour les membres</li>
-          <li>Autre email pour les clients</li>
-        </ul>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">

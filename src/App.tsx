@@ -62,6 +62,7 @@ const App = () => {
         .single();
 
       if (error) throw error;
+      console.log("User profile:", profile); // Debug log
       setUserProfile(profile);
       setIsLoading(false);
     } catch (error) {
@@ -77,8 +78,6 @@ const App = () => {
       </div>
     );
   }
-
-  const isAdmin = userProfile?.roles?.includes('admin');
 
   // Function to determine where to redirect based on user type
   const getRedirectPath = () => {
@@ -136,13 +135,9 @@ const App = () => {
             <Route
               path="/member/*"
               element={
-                isAdmin ? (
+                <PrivateRoute allowedUserType="member">
                   <MemberSpace />
-                ) : (
-                  <PrivateRoute allowedUserType="member">
-                    <MemberSpace />
-                  </PrivateRoute>
-                )
+                </PrivateRoute>
               }
             />
             {/* Catch any other routes and redirect to appropriate space */}
