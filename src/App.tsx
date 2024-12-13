@@ -25,12 +25,17 @@ const queryClient = new QueryClient({
 const App = () => {
   const [session, setSession] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState(null);
 
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      setIsLoading(false);
+      if (session) {
+        fetchUserProfile(session.user.id);
+      } else {
+        setIsLoading(false);
+      }
     });
 
     // Listen for auth changes
@@ -38,10 +43,33 @@ const App = () => {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      if (session) {
+        fetchUserProfile(session.user.id);
+      } else {
+        setUserProfile(null);
+        setIsLoading(false);
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const fetchUserProfile = async (userId) => {
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('user_type, roles')
+        .eq('id', userId)
+        .single();
+
+      if (error) throw error;
+      setUserProfile(profile);
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      setIsLoading(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -50,6 +78,8 @@ const App = () => {
       </div>
     );
   }
+
+  const isAdmin = userProfile?.roles?.includes('admin');
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -99,9 +129,13 @@ const App = () => {
             <Route
               path="/member/*"
               element={
-                <PrivateRoute allowedUserType="member">
+                isAdmin ? (
                   <MemberSpace />
-                </PrivateRoute>
+                ) : (
+                  <PrivateRoute allowedUserType="member">
+                    <MemberSpace />
+                  </PrivateRoute>
+                )
               }
             />
           </Routes>
