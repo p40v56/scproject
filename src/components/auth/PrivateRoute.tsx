@@ -29,7 +29,7 @@ const PrivateRoute = ({ children, allowedUserType }: PrivateRouteProps) => {
 
         const { data: profile, error } = await supabase
           .from('profiles')
-          .select('user_type')
+          .select('user_type, roles')
           .eq('id', session.user.id)
           .single();
 
@@ -37,7 +37,9 @@ const PrivateRoute = ({ children, allowedUserType }: PrivateRouteProps) => {
           throw error;
         }
 
-        setIsAllowed(profile?.user_type === allowedUserType);
+        // Allow access if user has the correct user_type OR if they are an admin
+        const isAdmin = profile?.roles?.includes('admin');
+        setIsAllowed(profile?.user_type === allowedUserType || isAdmin);
         setIsLoading(false);
       } catch (error) {
         console.error('Error checking authentication:', error);
