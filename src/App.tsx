@@ -6,7 +6,6 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
-import Dashboard from "./pages/Dashboard";
 import ClientSpace from "./pages/private/ClientSpace";
 import StudentSpace from "./pages/private/StudentSpace";
 import AlumniSpace from "./pages/private/AlumniSpace";
@@ -81,6 +80,24 @@ const App = () => {
 
   const isAdmin = userProfile?.roles?.includes('admin');
 
+  // Function to determine where to redirect based on user type
+  const getRedirectPath = () => {
+    if (!userProfile) return '/';
+    
+    switch (userProfile.user_type) {
+      case 'client':
+        return '/client';
+      case 'student':
+        return '/student';
+      case 'alumni':
+        return '/alumni';
+      case 'member':
+        return '/member';
+      default:
+        return '/';
+    }
+  };
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -90,17 +107,7 @@ const App = () => {
           <Routes>
             <Route 
               path="/" 
-              element={session ? <Navigate to="/dashboard" /> : <Index />} 
-            />
-            <Route
-              path="/dashboard"
-              element={
-                session ? (
-                  <Dashboard />
-                ) : (
-                  <Navigate to="/" replace />
-                )
-              }
+              element={session ? <Navigate to={getRedirectPath()} /> : <Index />} 
             />
             <Route
               path="/client/*"
@@ -137,6 +144,11 @@ const App = () => {
                   </PrivateRoute>
                 )
               }
+            />
+            {/* Catch any other routes and redirect to appropriate space */}
+            <Route
+              path="*"
+              element={<Navigate to={getRedirectPath()} replace />}
             />
           </Routes>
         </BrowserRouter>
