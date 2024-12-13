@@ -17,7 +17,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { UserList } from "./UserList";
 import { RoleDetails } from "./RoleDetails";
-import { useToast } from "@/components/ui/use-toast";
 import { CreateAccountForm } from "./CreateAccountForm";
 import {
   Dialog,
@@ -26,19 +25,22 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 const AccessManagement = () => {
   const [selectedRole, setSelectedRole] = useState<string>("member");
   const [searchQuery, setSearchQuery] = useState("");
-  const { toast } = useToast();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   const handleRoleChange = async (userId: string, newRole: string) => {
     console.log(`Changing role for user ${userId} to ${newRole}`);
-    toast({
-      title: "Rôle mis à jour",
-      description: "Le rôle de l'utilisateur a été modifié avec succès.",
-    });
+  };
+
+  const handleSyncUsers = async () => {
+    await queryClient.invalidateQueries({ queryKey: ['users'] });
+    toast.success("La liste des utilisateurs a été synchronisée");
   };
 
   return (
@@ -57,15 +59,7 @@ const AccessManagement = () => {
               <CreateAccountForm />
             </DialogContent>
           </Dialog>
-          <Button
-            variant="outline"
-            onClick={() => {
-              toast({
-                title: "Synchronisation terminée",
-                description: "La liste des utilisateurs a été mise à jour.",
-              });
-            }}
-          >
+          <Button variant="outline" onClick={handleSyncUsers}>
             Synchroniser les utilisateurs
           </Button>
         </div>

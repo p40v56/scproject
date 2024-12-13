@@ -14,34 +14,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-
-// Données simulées pour l'exemple
-const mockUsers = [
-  {
-    id: "1",
-    name: "Jean Dupont",
-    email: "jean.dupont@junior-entreprise.com",
-    role: "member",
-    entity: "Junior ISEP",
-    lastActive: "2024-02-20",
-  },
-  {
-    id: "2",
-    name: "Marie Martin",
-    email: "marie.martin@junior-entreprise.com",
-    role: "project-manager",
-    entity: "Junior ISEP",
-    lastActive: "2024-02-19",
-  },
-  {
-    id: "3",
-    name: "Pierre Durand",
-    email: "pierre.durand@junior-entreprise.com",
-    role: "admin",
-    entity: "Junior ISEP",
-    lastActive: "2024-02-18",
-  },
-];
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface UserListProps {
   role: string;
@@ -49,13 +24,60 @@ interface UserListProps {
   onRoleChange: (userId: string, newRole: string) => void;
 }
 
-export const UserList = ({ role, searchQuery, onRoleChange }: UserListProps) => {
-  const filteredUsers = mockUsers.filter(
+export const UserList = ({ role, searchQuery }: UserListProps) => {
+  const queryClient = useQueryClient();
+
+  const { data: users, isLoading } = useQuery({
+    queryKey: ['users'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        toast.error("Erreur lors du chargement des utilisateurs");
+        throw error;
+      }
+
+      return data;
+    },
+  });
+
+  const updateUserRole = useMutation({
+    mutationFn: async ({ userId, newRole }: { userId: string; newRole: string }) => {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ roles: [newRole] })
+        .eq('id', userId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      toast.success("Rôle mis à jour avec succès");
+    },
+    onError: (error) => {
+      console.error('Error updating role:', error);
+      toast.error("Erreur lors de la mise à jour du rôle");
+    },
+  });
+
+  const filteredUsers = users?.filter(
     (user) =>
-      (role === "all" || user.role === role) &&
-      (user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchQuery.toLowerCase()))
+      (role === "all" || (user.roles && user.roles.includes(role))) &&
+      (user.first_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.last_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.email?.toLowerCase().includes(searchQuery.toLowerCase()))
   );
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-4">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-md border">
@@ -65,20 +87,24 @@ export const UserList = ({ role, searchQuery, onRoleChange }: UserListProps) => 
             <TableHead>Nom</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Rôle</TableHead>
-            <TableHead>Entité</TableHead>
+            <TableHead>Type</TableHead>
             <TableHead>Dernière activité</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {filteredUsers.map((user) => (
+          {filteredUsers?.map((user) => (
             <TableRow key={user.id}>
-              <TableCell>{user.name}</TableCell>
+              <TableCell>
+                {user.first_name} {user.last_name}
+              </TableCell>
               <TableCell>{user.email}</TableCell>
               <TableCell>
                 <Select
-                  value={user.role}
-                  onValueChange={(newRole) => onRoleChange(user.id, newRole)}
+                  value={user.roles?.[0] || "member"}
+                  onValueChange={(newRole) => {
+                    updateUserRole.mutate({ userId: user.id, newRole });
+                  }}
                 >
                   <SelectTrigger className="w-[180px]">
                     <SelectValue />
@@ -102,9 +128,9 @@ export const UserList = ({ role, searchQuery, onRoleChange }: UserListProps) => 
                 </Select>
               </TableCell>
               <TableCell>
-                <Badge variant="secondary">{user.entity}</Badge>
+                <Badge variant="secondary">{user.user_type}</Badge>
               </TableCell>
-              <TableCell>{new Date(user.lastActive).toLocaleDateString()}</TableCell>
+              <TableCell>{new Date(user.updated_at).toLocaleDateString()}</TableCell>
               <TableCell>
                 <Select defaultValue="more">
                   <SelectTrigger className="w-[130px]">
