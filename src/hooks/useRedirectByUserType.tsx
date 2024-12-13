@@ -8,13 +8,13 @@ export const useRedirectByUserType = () => {
 
   useEffect(() => {
     const checkUserType = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        return;
-      }
-
       try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          return;
+        }
+
         const { data: profile, error } = await supabase
           .from('profiles')
           .select('user_type')
@@ -41,6 +41,7 @@ export const useRedirectByUserType = () => {
               break;
             default:
               toast.error("Type d'utilisateur non reconnu");
+              break;
           }
         }
       } catch (error) {
