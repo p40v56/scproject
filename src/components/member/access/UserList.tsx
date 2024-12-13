@@ -17,6 +17,8 @@ import { Badge } from "@/components/ui/badge";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 interface UserListProps {
   role: string;
@@ -26,6 +28,7 @@ interface UserListProps {
 
 export const UserList = ({ role, searchQuery }: UserListProps) => {
   const queryClient = useQueryClient();
+  const [pendingChanges, setPendingChanges] = useState<Record<string, { role?: string; userType?: string }>>({});
 
   const { data: users, isLoading } = useQuery({
     queryKey: ['users'],
@@ -44,24 +47,54 @@ export const UserList = ({ role, searchQuery }: UserListProps) => {
     },
   });
 
-  const updateUserRole = useMutation({
-    mutationFn: async ({ userId, newRole }: { userId: string; newRole: string }) => {
+  const updateUser = useMutation({
+    mutationFn: async ({ userId, changes }: { userId: string; changes: { roles?: string[]; user_type?: string } }) => {
       const { error } = await supabase
         .from('profiles')
-        .update({ roles: [newRole] })
+        .update(changes)
         .eq('id', userId);
 
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
-      toast.success("Rôle mis à jour avec succès");
+      toast.success("Utilisateur mis à jour avec succès");
+      setPendingChanges({});
     },
     onError: (error) => {
-      console.error('Error updating role:', error);
-      toast.error("Erreur lors de la mise à jour du rôle");
+      console.error('Error updating user:', error);
+      toast.error("Erreur lors de la mise à jour de l'utilisateur");
     },
   });
+
+  const handleRoleChange = (userId: string, newRole: string) => {
+    setPendingChanges((prev) => ({
+      ...prev,
+      [userId]: { ...prev[userId], role: newRole },
+    }));
+  };
+
+  const handleUserTypeChange = (userId: string, newUserType: string) => {
+    setPendingChanges((prev) => ({
+      ...prev,
+      [userId]: { ...prev[userId], userType: newUserType },
+    }));
+  };
+
+  const handleSaveChanges = (userId: string) => {
+    const changes = pendingChanges[userId];
+    if (!changes) return;
+
+    const updates: { roles?: string[]; user_type?: string } = {};
+    if (changes.role) {
+      updates.roles = [changes.role];
+    }
+    if (changes.userType) {
+      updates.user_type = changes.userType;
+    }
+
+    updateUser.mutate({ userId, changes: updates });
+  };
 
   const filteredUsers = users?.filter(
     (user) =>
@@ -101,24 +134,18 @@ export const UserList = ({ role, searchQuery }: UserListProps) => {
               <TableCell>{user.email}</TableCell>
               <TableCell>
                 <Select
-                  value={user.roles?.[0] || "member"}
-                  onValueChange={(newRole) => {
-                    updateUserRole.mutate({ userId: user.id, newRole });
-                  }}
+                  value={pendingChanges[user.id]?.role || user.roles?.[0] || "member"}
+                  onValueChange={(newRole) => handleRoleChange(user.id, newRole)}
                 >
                   <SelectTrigger className="w-[180px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="member">Membre</SelectItem>
-                    <SelectItem value="project-manager">
-                      Chargé de projet
-                    </SelectItem>
+                    <SelectItem value="project-manager">Chargé de projet</SelectItem>
                     <SelectItem value="moderator">Modérateur</SelectItem>
                     <SelectItem value="treasurer">Trésorier</SelectItem>
-                    <SelectItem value="commercial">
-                      Responsable Commercial
-                    </SelectItem>
+                    <SelectItem value="commercial">Responsable Commercial</SelectItem>
                     <SelectItem value="hr">Responsable RH</SelectItem>
                     <SelectItem value="quality">Responsable Qualité</SelectItem>
                     <SelectItem value="secretary">Secrétaire Général</SelectItem>
@@ -128,21 +155,45 @@ export const UserList = ({ role, searchQuery }: UserListProps) => {
                 </Select>
               </TableCell>
               <TableCell>
-                <Badge variant="secondary">{user.user_type}</Badge>
-              </TableCell>
-              <TableCell>{new Date(user.updated_at).toLocaleDateString()}</TableCell>
-              <TableCell>
-                <Select defaultValue="more">
-                  <SelectTrigger className="w-[130px]">
+                <Select
+                  value={pendingChanges[user.id]?.userType || user.user_type}
+                  onValueChange={(newType) => handleUserTypeChange(user.id, newType)}
+                >
+                  <SelectTrigger className="w-[180px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="more">Plus d'actions</SelectItem>
-                    <SelectItem value="view">Voir le profil</SelectItem>
-                    <SelectItem value="disable">Désactiver</SelectItem>
-                    <SelectItem value="delete">Supprimer</SelectItem>
+                    <SelectItem value="client">Client</SelectItem>
+                    <SelectItem value="student">Étudiant</SelectItem>
+                    <SelectItem value="alumni">Alumni</SelectItem>
+                    <SelectItem value="member">Membre</SelectItem>
                   </SelectContent>
                 </Select>
+              </TableCell>
+              <TableCell>{new Date(user.updated_at).toLocaleDateString()}</TableCell>
+              <TableCell>
+                <div className="flex gap-2">
+                  {pendingChanges[user.id] && (
+                    <Button 
+                      variant="default" 
+                      size="sm"
+                      onClick={() => handleSaveChanges(user.id)}
+                    >
+                      Valider
+                    </Button>
+                  )}
+                  <Select defaultValue="more">
+                    <SelectTrigger className="w-[130px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="more">Plus d'actions</SelectItem>
+                      <SelectItem value="view">Voir le profil</SelectItem>
+                      <SelectItem value="disable">Désactiver</SelectItem>
+                      <SelectItem value="delete">Supprimer</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </TableCell>
             </TableRow>
           ))}
