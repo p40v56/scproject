@@ -83,6 +83,12 @@ const App = () => {
   const getRedirectPath = () => {
     if (!userProfile) return '/';
     
+    // Si l'utilisateur a le rôle admin, on le redirige vers l'espace membre
+    if (userProfile.roles?.includes('admin')) {
+      return '/member';
+    }
+    
+    // Sinon, on redirige selon le user_type
     switch (userProfile.user_type) {
       case 'client':
         return '/client';

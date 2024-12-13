@@ -37,9 +37,12 @@ const PrivateRoute = ({ children, allowedUserType }: PrivateRouteProps) => {
           throw error;
         }
 
-        // Allow access if user has the correct user_type OR if they are an admin
+        // Allow access if user has the correct user_type OR if they are an admin AND trying to access member space
         const isAdmin = profile?.roles?.includes('admin');
-        setIsAllowed(profile?.user_type === allowedUserType || isAdmin);
+        setIsAllowed(
+          profile?.user_type === allowedUserType || 
+          (isAdmin && allowedUserType === 'member')
+        );
         setIsLoading(false);
       } catch (error) {
         console.error('Error checking authentication:', error);
