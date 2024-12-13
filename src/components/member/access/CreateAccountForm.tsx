@@ -21,12 +21,14 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 
+type UserType = "client" | "student" | "alumni" | "member";
+
 interface CreateAccountFormData {
   email: string;
   firstName: string;
   lastName: string;
   role: string;
-  userType: string;
+  userType: UserType;
 }
 
 export const CreateAccountForm = () => {
