@@ -6,13 +6,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -23,12 +16,13 @@ import { UserTypeSelect } from "./UserTypeSelect";
 import { UserRoleSelect } from "./UserRoleSelect";
 
 interface UserListProps {
+  userType: string;
   role: string;
   searchQuery: string;
   onRoleChange: (userId: string, newRole: string) => void;
 }
 
-export const UserList = ({ role, searchQuery }: UserListProps) => {
+export const UserList = ({ userType, role, searchQuery }: UserListProps) => {
   const queryClient = useQueryClient();
   const [pendingChanges, setPendingChanges] = useState<Record<string, { role?: string; userType?: string }>>({});
 
@@ -50,7 +44,7 @@ export const UserList = ({ role, searchQuery }: UserListProps) => {
   });
 
   const updateUser = useMutation({
-    mutationFn: async ({ userId, changes }: { userId: string; changes: { roles?: string[]; user_type?: string } }) => {
+    mutationFn: async ({ userId, changes }: { userId: string; changes: { roles?: string[]; user_type?: "client" | "student" | "alumni" | "member" } }) => {
       const { error } = await supabase
         .from('profiles')
         .update(changes)
@@ -82,7 +76,6 @@ export const UserList = ({ role, searchQuery }: UserListProps) => {
       [userId]: { 
         ...prev[userId], 
         userType: newUserType,
-        // Clear role if new type is not 'member'
         role: newUserType !== 'member' ? undefined : prev[userId]?.role,
       },
     }));
@@ -92,17 +85,15 @@ export const UserList = ({ role, searchQuery }: UserListProps) => {
     const changes = pendingChanges[userId];
     if (!changes) return;
 
-    const updates: { roles?: string[]; user_type?: string } = {};
+    const updates: { roles?: string[]; user_type?: "client" | "student" | "alumni" | "member" } = {};
     
     if (changes.userType) {
-      updates.user_type = changes.userType;
-      // Clear roles if user type is not member
+      updates.user_type = changes.userType as "client" | "student" | "alumni" | "member";
       if (changes.userType !== 'member') {
         updates.roles = [];
       }
     }
     
-    // Only update roles if user type is member
     if (changes.role && (changes.userType === 'member' || (!changes.userType && users?.find(u => u.id === userId)?.user_type === 'member'))) {
       updates.roles = [changes.role];
     }
@@ -110,13 +101,16 @@ export const UserList = ({ role, searchQuery }: UserListProps) => {
     updateUser.mutate({ userId, changes: updates });
   };
 
-  const filteredUsers = users?.filter(
-    (user) =>
-      (role === "all" || (user.roles && user.roles.includes(role))) &&
-      (user.first_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.last_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.email?.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const filteredUsers = users?.filter(user => {
+    const matchesType = userType === 'all' || user.user_type === userType;
+    const matchesRole = userType !== 'member' || role === 'all' || (user.roles && user.roles.includes(role));
+    const matchesSearch = 
+      user.first_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.last_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    return matchesType && matchesRole && matchesSearch;
+  });
 
   if (isLoading) {
     return (
@@ -133,8 +127,8 @@ export const UserList = ({ role, searchQuery }: UserListProps) => {
           <TableRow>
             <TableHead>Nom</TableHead>
             <TableHead>Email</TableHead>
-            <TableHead>Rôle</TableHead>
             <TableHead>Type</TableHead>
+            <TableHead>Rôle</TableHead>
             <TableHead>Dernière activité</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
@@ -147,18 +141,18 @@ export const UserList = ({ role, searchQuery }: UserListProps) => {
               </TableCell>
               <TableCell>{user.email}</TableCell>
               <TableCell>
-                {user.user_type === 'member' && (
+                <UserTypeSelect
+                  value={pendingChanges[user.id]?.userType || user.user_type}
+                  onChange={(newType) => handleUserTypeChange(user.id, newType)}
+                />
+              </TableCell>
+              <TableCell>
+                {(pendingChanges[user.id]?.userType || user.user_type) === 'member' && (
                   <UserRoleSelect
                     value={pendingChanges[user.id]?.role || user.roles?.[0] || "member"}
                     onChange={(newRole) => handleRoleChange(user.id, newRole)}
                   />
                 )}
-              </TableCell>
-              <TableCell>
-                <UserTypeSelect
-                  value={pendingChanges[user.id]?.userType || user.user_type}
-                  onChange={(newType) => handleUserTypeChange(user.id, newType)}
-                />
               </TableCell>
               <TableCell>{new Date(user.updated_at).toLocaleDateString()}</TableCell>
               <TableCell>

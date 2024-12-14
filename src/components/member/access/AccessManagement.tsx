@@ -6,13 +6,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { UserList } from "./UserList";
@@ -27,8 +20,11 @@ import {
 } from "@/components/ui/dialog";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { UserTypeSelect } from "./UserTypeSelect";
+import { UserRoleSelect } from "./UserRoleSelect";
 
 const AccessManagement = () => {
+  const [selectedType, setSelectedType] = useState<string>("member");
   const [selectedRole, setSelectedRole] = useState<string>("member");
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -70,34 +66,26 @@ const AccessManagement = () => {
           <CardHeader>
             <CardTitle>Filtres</CardTitle>
             <CardDescription>
-              Filtrez les utilisateurs par rôle et nom
+              Filtrez les utilisateurs par type et rôle
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Rôle</label>
-              <Select
-                value={selectedRole}
-                onValueChange={setSelectedRole}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un rôle" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="client">Client</SelectItem>
-                  <SelectItem value="member">Membre</SelectItem>
-                  <SelectItem value="project-manager">Chargé de projet</SelectItem>
-                  <SelectItem value="moderator">Modérateur</SelectItem>
-                  <SelectItem value="treasurer">Trésorier</SelectItem>
-                  <SelectItem value="commercial">Responsable Commercial</SelectItem>
-                  <SelectItem value="hr">Responsable RH</SelectItem>
-                  <SelectItem value="quality">Responsable Qualité</SelectItem>
-                  <SelectItem value="secretary">Secrétaire Général</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="super-admin">Super Admin</SelectItem>
-                </SelectContent>
-              </Select>
+              <label className="text-sm font-medium">Type d'utilisateur</label>
+              <UserTypeSelect 
+                value={selectedType} 
+                onChange={setSelectedType}
+              />
             </div>
+            {selectedType === 'member' && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Rôle</label>
+                <UserRoleSelect 
+                  value={selectedRole} 
+                  onChange={setSelectedRole}
+                />
+              </div>
+            )}
             <div className="space-y-2">
               <label className="text-sm font-medium">Rechercher</label>
               <Input
@@ -114,6 +102,7 @@ const AccessManagement = () => {
       </div>
 
       <UserList
+        userType={selectedType}
         role={selectedRole}
         searchQuery={searchQuery}
         onRoleChange={handleRoleChange}
