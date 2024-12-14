@@ -19,6 +19,8 @@ const PrivateRoute = ({ children, allowedUserType }: PrivateRouteProps) => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         
+        console.log("PrivateRoute - Session check:", session); // Debug log
+        
         if (!session) {
           setIsAuthenticated(false);
           setIsLoading(false);
@@ -39,10 +41,16 @@ const PrivateRoute = ({ children, allowedUserType }: PrivateRouteProps) => {
 
         // Allow access if user has the correct user_type OR if they are an admin AND trying to access member space
         const isAdmin = profile?.roles?.includes('admin');
-        setIsAllowed(
-          profile?.user_type === allowedUserType || 
-          (isAdmin && allowedUserType === 'member')
-        );
+        const hasAccess = profile?.user_type === allowedUserType || 
+                         (isAdmin && allowedUserType === 'member');
+        
+        console.log("PrivateRoute - Access check:", { 
+          profile, 
+          allowedUserType, 
+          hasAccess 
+        }); // Debug log
+        
+        setIsAllowed(hasAccess);
         setIsLoading(false);
       } catch (error) {
         console.error('Error checking authentication:', error);
@@ -53,7 +61,9 @@ const PrivateRoute = ({ children, allowedUserType }: PrivateRouteProps) => {
 
     checkAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("PrivateRoute - Auth state change:", { event, session }); // Debug log
+      
       if (event === 'SIGNED_OUT') {
         setIsAuthenticated(false);
         setIsAllowed(false);
@@ -77,7 +87,7 @@ const PrivateRoute = ({ children, allowedUserType }: PrivateRouteProps) => {
 
   if (!isAllowed) {
     toast.error("Vous n'avez pas accès à cette page");
-    return <Navigate to="/dashboard" state={{ from: location }} replace />;
+    return <Navigate to="/" state={{ from: location }} replace />;
   }
 
   return <>{children}</>;

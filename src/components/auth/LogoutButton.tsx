@@ -2,13 +2,22 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const LogoutButton = () => {
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    navigate("/");
-    toast.success("Déconnexion réussie");
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      navigate("/");
+      toast.success("Déconnexion réussie");
+    } catch (error) {
+      console.error('Error logging out:', error);
+      toast.error("Erreur lors de la déconnexion");
+    }
   };
 
   return (
