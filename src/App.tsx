@@ -3,8 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { AuthProvider, useAuth } from "@/components/auth/AuthProvider";
 import Index from "./pages/Index";
 import ClientSpace from "./pages/private/ClientSpace";
 import StudentSpace from "./pages/private/StudentSpace";
@@ -21,57 +20,8 @@ const queryClient = new QueryClient({
   },
 });
 
-const App = () => {
-  const [session, setSession] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [userProfile, setUserProfile] = useState(null);
-
-  useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("Initial session check:", session); // Debug log
-      setSession(session);
-      if (session) {
-        fetchUserProfile(session.user.id);
-      } else {
-        setIsLoading(false);
-      }
-    });
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log("Auth state change:", session); // Debug log
-      setSession(session);
-      if (session) {
-        fetchUserProfile(session.user.id);
-      } else {
-        setUserProfile(null);
-        setIsLoading(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const fetchUserProfile = async (userId) => {
-    try {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('user_type, roles')
-        .eq('id', userId)
-        .single();
-
-      if (error) throw error;
-      console.log("User profile:", profile); // Debug log
-      setUserProfile(profile);
-      setIsLoading(false);
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-      setIsLoading(false);
-    }
-  };
+const AppRoutes = () => {
+  const { session, userProfile, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -81,16 +31,13 @@ const App = () => {
     );
   }
 
-  // Function to determine where to redirect based on user type
   const getRedirectPath = () => {
     if (!userProfile) return '/';
     
-    // Si l'utilisateur a le rôle admin, on le redirige vers l'espace membre
     if (userProfile.roles?.includes('admin')) {
       return '/member';
     }
     
-    // Sinon, on redirige selon le user_type
     switch (userProfile.user_type) {
       case 'client':
         return '/client';
@@ -106,87 +53,92 @@ const App = () => {
   };
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            {/* Si l'utilisateur n'est pas connecté, on le redirige vers la page d'accueil */}
-            <Route 
-              path="/" 
-              element={
-                session ? (
-                  <Navigate to={getRedirectPath()} replace />
-                ) : (
-                  <Index />
-                )
-              } 
-            />
+    <Routes>
+      <Route 
+        path="/" 
+        element={
+          session ? (
+            <Navigate to={getRedirectPath()} replace />
+          ) : (
+            <Index />
+          )
+        } 
+      />
 
-            {/* Routes protégées qui nécessitent une authentification */}
-            <Route
-              path="/client/*"
-              element={
-                !session ? (
-                  <Navigate to="/" replace />
-                ) : (
-                  <PrivateRoute allowedUserType="client">
-                    <ClientSpace />
-                  </PrivateRoute>
-                )
-              }
-            />
-            <Route
-              path="/student/*"
-              element={
-                !session ? (
-                  <Navigate to="/" replace />
-                ) : (
-                  <PrivateRoute allowedUserType="student">
-                    <StudentSpace />
-                  </PrivateRoute>
-                )
-              }
-            />
-            <Route
-              path="/alumni/*"
-              element={
-                !session ? (
-                  <Navigate to="/" replace />
-                ) : (
-                  <PrivateRoute allowedUserType="alumni">
-                    <AlumniSpace />
-                  </PrivateRoute>
-                )
-              }
-            />
-            <Route
-              path="/member/*"
-              element={
-                !session ? (
-                  <Navigate to="/" replace />
-                ) : (
-                  <PrivateRoute allowedUserType="member">
-                    <MemberSpace />
-                  </PrivateRoute>
-                )
-              }
-            />
-            {/* Catch any other routes and redirect to home if not authenticated */}
-            <Route
-              path="*"
-              element={
-                !session ? (
-                  <Navigate to="/" replace />
-                ) : (
-                  <Navigate to={getRedirectPath()} replace />
-                )
-              }
-            />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+      <Route
+        path="/client/*"
+        element={
+          !session ? (
+            <Navigate to="/" replace />
+          ) : (
+            <PrivateRoute allowedUserType="client">
+              <ClientSpace />
+            </PrivateRoute>
+          )
+        }
+      />
+      <Route
+        path="/student/*"
+        element={
+          !session ? (
+            <Navigate to="/" replace />
+          ) : (
+            <PrivateRoute allowedUserType="student">
+              <StudentSpace />
+            </PrivateRoute>
+          )
+        }
+      />
+      <Route
+        path="/alumni/*"
+        element={
+          !session ? (
+            <Navigate to="/" replace />
+          ) : (
+            <PrivateRoute allowedUserType="alumni">
+              <AlumniSpace />
+            </PrivateRoute>
+          )
+        }
+      />
+      <Route
+        path="/member/*"
+        element={
+          !session ? (
+            <Navigate to="/" replace />
+          ) : (
+            <PrivateRoute allowedUserType="member">
+              <MemberSpace />
+            </PrivateRoute>
+          )
+        }
+      />
+      <Route
+        path="*"
+        element={
+          !session ? (
+            <Navigate to="/" replace />
+          ) : (
+            <Navigate to={getRedirectPath()} replace />
+          )
+        }
+      />
+    </Routes>
+  );
+};
+
+const App = () => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AppRoutes />
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 };

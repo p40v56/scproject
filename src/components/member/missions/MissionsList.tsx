@@ -9,7 +9,32 @@ import { MissionItem } from "./MissionItem";
 import MissionForm from "./MissionForm";
 import type { Mission } from "./types";
 
+// Données de test pour le développement
+const mockMissions: Mission[] = [
+  {
+    id: "1",
+    title: "Distribution de questionnaires",
+    studyLevel: "Tous",
+    status: "open",
+    applicants: [],
+    postedDate: "2024-03-01",
+    compensation: 400,
+    description: "Analyse du marché du luxe en France",
+  },
+  {
+    id: "2",
+    title: "Sondages téléphoniques",
+    studyLevel: "M1",
+    status: "in-progress",
+    applicants: [],
+    postedDate: "2024-03-02",
+    compensation: 300,
+    description: "Étude de satisfaction client",
+  },
+];
+
 export default function MissionsList() {
+  const [missions] = useState<Mission[]>(mockMissions);
   const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
