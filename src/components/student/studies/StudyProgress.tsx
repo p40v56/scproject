@@ -1,15 +1,18 @@
 import { Progress } from "@/components/ui/progress";
 
 interface StudyProgressProps {
-  progress: number;
+  currentStep: number;
+  totalSteps: number;
 }
 
-const StudyProgress = ({ progress }: StudyProgressProps) => {
+const StudyProgress = ({ currentStep, totalSteps }: StudyProgressProps) => {
+  const progress = (currentStep / totalSteps) * 100;
+
   return (
-    <div>
-      <div className="flex justify-between mb-2">
-        <span className="text-sm font-medium">Progression</span>
-        <span className="text-sm font-medium">{progress}%</span>
+    <div className="space-y-2">
+      <div className="flex justify-between text-sm">
+        <span>Étape {currentStep}/{totalSteps}</span>
+        <span>{Math.round(progress)}%</span>
       </div>
       <Progress value={progress} className="h-2" />
     </div>

@@ -1,5 +1,6 @@
-import { CheckCircle, AlertCircle } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { CheckCircle2, AlertCircle } from "lucide-react";
 
 interface SatisfactionSurveyStatusProps {
   isCompleted: boolean;
@@ -8,25 +9,31 @@ interface SatisfactionSurveyStatusProps {
 
 const SatisfactionSurveyStatus = ({ isCompleted, onComplete }: SatisfactionSurveyStatusProps) => {
   return (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2">
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg">Questionnaire de satisfaction</CardTitle>
+      </CardHeader>
+      <CardContent>
         {isCompleted ? (
-          <CheckCircle className="w-5 h-5 text-green-500" />
+          <div className="flex items-center gap-2 text-green-600">
+            <CheckCircle2 className="h-5 w-5" />
+            <span>Questionnaire complété</span>
+          </div>
         ) : (
-          <AlertCircle className="w-5 h-5 text-yellow-500" />
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-amber-600">
+              <AlertCircle className="h-5 w-5" />
+              <span>Questionnaire en attente</span>
+            </div>
+            {onComplete && (
+              <Button onClick={onComplete} className="w-full">
+                Remplir le questionnaire
+              </Button>
+            )}
+          </div>
         )}
-        <span>
-          {isCompleted
-            ? "Questionnaire de satisfaction complété"
-            : "Questionnaire de satisfaction en attente"}
-        </span>
-      </div>
-      {!isCompleted && (
-        <Button variant="outline" size="sm" onClick={onComplete}>
-          Compléter le questionnaire
-        </Button>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 
