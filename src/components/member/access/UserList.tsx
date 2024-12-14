@@ -166,7 +166,7 @@ export const UserList = ({ userType, role, searchQuery }: UserListProps) => {
                       Valider
                     </Button>
                   )}
-                  <UserActions userId={user.id} />
+                  <UserActions userId={user.id} userProfile={user} />
                 </div>
               </TableCell>
             </TableRow>

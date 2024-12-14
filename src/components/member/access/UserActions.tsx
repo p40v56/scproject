@@ -8,58 +8,189 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface UserActionsProps {
   userId: string;
+  userProfile: {
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    user_type?: string;
+    roles?: string[];
+  };
 }
 
-export const UserActions = ({ userId }: UserActionsProps) => {
+export const UserActions = ({ userId, userProfile }: UserActionsProps) => {
   const queryClient = useQueryClient();
+  const [showProfileDialog, setShowProfileDialog] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleAction = async (action: string) => {
-    switch (action) {
-      case "view":
-        toast.info("Fonctionnalité à venir");
-        break;
-      case "disable":
-        try {
-          const { error } = await supabase.auth.admin.updateUserById(
-            userId,
-            { user_metadata: { disabled: true } }
-          );
-          if (error) throw error;
+    setIsLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-user-actions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session?.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action, userId }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Une erreur est survenue');
+      }
+
+      switch (action) {
+        case 'disable':
           toast.success("Utilisateur désactivé");
-          queryClient.invalidateQueries({ queryKey: ['users'] });
-        } catch (error) {
-          console.error('Error disabling user:', error);
-          toast.error("Erreur lors de la désactivation de l'utilisateur");
-        }
-        break;
-      case "delete":
-        try {
-          const { error } = await supabase.auth.admin.deleteUser(userId);
-          if (error) throw error;
+          break;
+        case 'delete':
           toast.success("Utilisateur supprimé");
-          queryClient.invalidateQueries({ queryKey: ['users'] });
-        } catch (error) {
-          console.error('Error deleting user:', error);
-          toast.error("Erreur lors de la suppression de l'utilisateur");
-        }
-        break;
+          break;
+        case 'sendMagicLink':
+          toast.success("Magic link envoyé");
+          break;
+      }
+      
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    } catch (error) {
+      console.error(`Error ${action} user:`, error);
+      toast.error(error.message);
+    } finally {
+      setIsLoading(false);
+      setShowProfileDialog(false);
     }
   };
 
   return (
-    <Select defaultValue="more" onValueChange={handleAction}>
-      <SelectTrigger className="w-[130px]">
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="more">Plus d'actions</SelectItem>
-        <SelectItem value="view">Voir le profil</SelectItem>
-        <SelectItem value="disable">Désactiver</SelectItem>
-        <SelectItem value="delete">Supprimer</SelectItem>
-      </SelectContent>
-    </Select>
+    <div className="flex gap-2">
+      <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
+        <DialogTrigger asChild>
+          <Button variant="outline" size="sm">
+            Voir le profil
+          </Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Profil utilisateur</DialogTitle>
+          </DialogHeader>
+          <Card>
+            <CardHeader>
+              <CardTitle>Informations</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <p className="text-sm font-medium">Nom complet</p>
+                <p className="text-sm text-muted-foreground">
+                  {userProfile.first_name} {userProfile.last_name}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm font-medium">Email</p>
+                <p className="text-sm text-muted-foreground">{userProfile.email}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium">Type</p>
+                <p className="text-sm text-muted-foreground">{userProfile.user_type}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium">Rôles</p>
+                <p className="text-sm text-muted-foreground">
+                  {userProfile.roles?.join(', ') || 'Aucun'}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+          <DialogFooter className="mt-4">
+            <Button
+              variant="outline"
+              onClick={() => handleAction('sendMagicLink')}
+              disabled={isLoading}
+            >
+              Envoyer un magic link
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button variant="destructive" size="sm">
+            Désactiver
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Désactiver l'utilisateur</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir désactiver cet utilisateur ? 
+              Il ne pourra plus se connecter à l'application.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => handleAction('disable')}
+              disabled={isLoading}
+            >
+              Désactiver
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button variant="destructive" size="sm">
+            Supprimer
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer l'utilisateur</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir supprimer cet utilisateur ? 
+              Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => handleAction('delete')}
+              disabled={isLoading}
+            >
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
   );
 };
