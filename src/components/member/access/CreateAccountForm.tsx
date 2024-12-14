@@ -53,7 +53,8 @@ export const CreateAccountForm = () => {
         .update({
           first_name: data.firstName,
           last_name: data.lastName,
-          roles: [data.role],
+          // Only set roles if userType is 'member'
+          roles: data.userType === 'member' ? [data.role] : [],
           user_type: data.userType,
         })
         .eq('id', authData.user!.id);
@@ -70,6 +71,9 @@ export const CreateAccountForm = () => {
       setIsLoading(false);
     }
   };
+
+  // Watch userType to conditionally show role field
+  const userType = form.watch("userType");
 
   return (
     <Form {...form}>
@@ -140,35 +144,38 @@ export const CreateAccountForm = () => {
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="role"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Rôle</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un rôle" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="member">Membre</SelectItem>
-                  <SelectItem value="project-manager">Chargé de projet</SelectItem>
-                  <SelectItem value="moderator">Modérateur</SelectItem>
-                  <SelectItem value="treasurer">Trésorier</SelectItem>
-                  <SelectItem value="commercial">Responsable Commercial</SelectItem>
-                  <SelectItem value="hr">Responsable RH</SelectItem>
-                  <SelectItem value="quality">Responsable Qualité</SelectItem>
-                  <SelectItem value="secretary">Secrétaire Général</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="super-admin">Super Admin</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {/* Only show role field if userType is 'member' */}
+        {userType === 'member' && (
+          <FormField
+            control={form.control}
+            name="role"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Rôle</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner un rôle" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="member">Membre</SelectItem>
+                    <SelectItem value="project-manager">Chargé de projet</SelectItem>
+                    <SelectItem value="moderator">Modérateur</SelectItem>
+                    <SelectItem value="treasurer">Trésorier</SelectItem>
+                    <SelectItem value="commercial">Responsable Commercial</SelectItem>
+                    <SelectItem value="hr">Responsable RH</SelectItem>
+                    <SelectItem value="quality">Responsable Qualité</SelectItem>
+                    <SelectItem value="secretary">Secrétaire Général</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="super-admin">Super Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
         <Button type="submit" disabled={isLoading}>
           {isLoading ? "Création..." : "Créer le compte"}

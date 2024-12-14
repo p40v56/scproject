@@ -13,12 +13,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { UserActions } from "./UserActions";
+import { UserTypeSelect } from "./UserTypeSelect";
+import { UserRoleSelect } from "./UserRoleSelect";
 
 interface UserListProps {
   role: string;
@@ -77,7 +79,12 @@ export const UserList = ({ role, searchQuery }: UserListProps) => {
   const handleUserTypeChange = (userId: string, newUserType: string) => {
     setPendingChanges((prev) => ({
       ...prev,
-      [userId]: { ...prev[userId], userType: newUserType },
+      [userId]: { 
+        ...prev[userId], 
+        userType: newUserType,
+        // Clear role if new type is not 'member'
+        role: newUserType !== 'member' ? undefined : prev[userId]?.role,
+      },
     }));
   };
 
@@ -86,11 +93,18 @@ export const UserList = ({ role, searchQuery }: UserListProps) => {
     if (!changes) return;
 
     const updates: { roles?: string[]; user_type?: string } = {};
-    if (changes.role) {
-      updates.roles = [changes.role];
-    }
+    
     if (changes.userType) {
       updates.user_type = changes.userType;
+      // Clear roles if user type is not member
+      if (changes.userType !== 'member') {
+        updates.roles = [];
+      }
+    }
+    
+    // Only update roles if user type is member
+    if (changes.role && (changes.userType === 'member' || (!changes.userType && users?.find(u => u.id === userId)?.user_type === 'member'))) {
+      updates.roles = [changes.role];
     }
 
     updateUser.mutate({ userId, changes: updates });
@@ -133,42 +147,18 @@ export const UserList = ({ role, searchQuery }: UserListProps) => {
               </TableCell>
               <TableCell>{user.email}</TableCell>
               <TableCell>
-                <Select
-                  value={pendingChanges[user.id]?.role || user.roles?.[0] || "member"}
-                  onValueChange={(newRole) => handleRoleChange(user.id, newRole)}
-                >
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="member">Membre</SelectItem>
-                    <SelectItem value="project-manager">Chargé de projet</SelectItem>
-                    <SelectItem value="moderator">Modérateur</SelectItem>
-                    <SelectItem value="treasurer">Trésorier</SelectItem>
-                    <SelectItem value="commercial">Responsable Commercial</SelectItem>
-                    <SelectItem value="hr">Responsable RH</SelectItem>
-                    <SelectItem value="quality">Responsable Qualité</SelectItem>
-                    <SelectItem value="secretary">Secrétaire Général</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="super-admin">Super Admin</SelectItem>
-                  </SelectContent>
-                </Select>
+                {user.user_type === 'member' && (
+                  <UserRoleSelect
+                    value={pendingChanges[user.id]?.role || user.roles?.[0] || "member"}
+                    onChange={(newRole) => handleRoleChange(user.id, newRole)}
+                  />
+                )}
               </TableCell>
               <TableCell>
-                <Select
+                <UserTypeSelect
                   value={pendingChanges[user.id]?.userType || user.user_type}
-                  onValueChange={(newType) => handleUserTypeChange(user.id, newType)}
-                >
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="client">Client</SelectItem>
-                    <SelectItem value="student">Étudiant</SelectItem>
-                    <SelectItem value="alumni">Alumni</SelectItem>
-                    <SelectItem value="member">Membre</SelectItem>
-                  </SelectContent>
-                </Select>
+                  onChange={(newType) => handleUserTypeChange(user.id, newType)}
+                />
               </TableCell>
               <TableCell>{new Date(user.updated_at).toLocaleDateString()}</TableCell>
               <TableCell>
@@ -182,17 +172,7 @@ export const UserList = ({ role, searchQuery }: UserListProps) => {
                       Valider
                     </Button>
                   )}
-                  <Select defaultValue="more">
-                    <SelectTrigger className="w-[130px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="more">Plus d'actions</SelectItem>
-                      <SelectItem value="view">Voir le profil</SelectItem>
-                      <SelectItem value="disable">Désactiver</SelectItem>
-                      <SelectItem value="delete">Supprimer</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <UserActions userId={user.id} />
                 </div>
               </TableCell>
             </TableRow>
