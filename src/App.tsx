@@ -29,6 +29,7 @@ const App = () => {
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("Initial session check:", session); // Debug log
       setSession(session);
       if (session) {
         fetchUserProfile(session.user.id);
@@ -41,6 +42,7 @@ const App = () => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log("Auth state change:", session); // Debug log
       setSession(session);
       if (session) {
         fetchUserProfile(session.user.id);
@@ -110,46 +112,77 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <Routes>
+            {/* Si l'utilisateur n'est pas connecté, on le redirige vers la page d'accueil */}
             <Route 
               path="/" 
-              element={session ? <Navigate to={getRedirectPath()} /> : <Index />} 
+              element={
+                session ? (
+                  <Navigate to={getRedirectPath()} replace />
+                ) : (
+                  <Index />
+                )
+              } 
             />
+
+            {/* Routes protégées qui nécessitent une authentification */}
             <Route
               path="/client/*"
               element={
-                <PrivateRoute allowedUserType="client">
-                  <ClientSpace />
-                </PrivateRoute>
+                !session ? (
+                  <Navigate to="/" replace />
+                ) : (
+                  <PrivateRoute allowedUserType="client">
+                    <ClientSpace />
+                  </PrivateRoute>
+                )
               }
             />
             <Route
               path="/student/*"
               element={
-                <PrivateRoute allowedUserType="student">
-                  <StudentSpace />
-                </PrivateRoute>
+                !session ? (
+                  <Navigate to="/" replace />
+                ) : (
+                  <PrivateRoute allowedUserType="student">
+                    <StudentSpace />
+                  </PrivateRoute>
+                )
               }
             />
             <Route
               path="/alumni/*"
               element={
-                <PrivateRoute allowedUserType="alumni">
-                  <AlumniSpace />
-                </PrivateRoute>
+                !session ? (
+                  <Navigate to="/" replace />
+                ) : (
+                  <PrivateRoute allowedUserType="alumni">
+                    <AlumniSpace />
+                  </PrivateRoute>
+                )
               }
             />
             <Route
               path="/member/*"
               element={
-                <PrivateRoute allowedUserType="member">
-                  <MemberSpace />
-                </PrivateRoute>
+                !session ? (
+                  <Navigate to="/" replace />
+                ) : (
+                  <PrivateRoute allowedUserType="member">
+                    <MemberSpace />
+                  </PrivateRoute>
+                )
               }
             />
-            {/* Catch any other routes and redirect to appropriate space */}
+            {/* Catch any other routes and redirect to home if not authenticated */}
             <Route
               path="*"
-              element={<Navigate to={getRedirectPath()} replace />}
+              element={
+                !session ? (
+                  <Navigate to="/" replace />
+                ) : (
+                  <Navigate to={getRedirectPath()} replace />
+                )
+              }
             />
           </Routes>
         </BrowserRouter>
