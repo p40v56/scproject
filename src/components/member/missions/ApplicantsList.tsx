@@ -6,7 +6,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import StudentProfile from "./StudentProfile";
 import type { Applicant } from "./types";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ApplicantsListProps {
@@ -16,6 +16,7 @@ interface ApplicantsListProps {
 
 export const ApplicantsList = ({ applicants, missionId }: ApplicantsListProps) => {
   const [selectedStudent, setSelectedStudent] = useState<Applicant | null>(null);
+  const queryClient = useQueryClient();
 
   const { data: profiles } = useQuery({
     queryKey: ['applicant-profiles', applicants.map(a => a.student_id)],
@@ -31,8 +32,42 @@ export const ApplicantsList = ({ applicants, missionId }: ApplicantsListProps) =
     enabled: applicants.length > 0,
   });
 
+  const selectApplicantMutation = useMutation({
+    mutationFn: async (applicantId: string) => {
+      // 1. Update mission status to in-progress
+      const { error: missionError } = await supabase
+        .from('missions')
+        .update({ 
+          status: 'in-progress',
+          assigned_student_id: applicants.find(a => a.id === applicantId)?.student_id
+        })
+        .eq('id', missionId);
+      
+      if (missionError) throw missionError;
+
+      // 2. Update application status to selected
+      const { error: applicationError } = await supabase
+        .from('mission_applications')
+        .update({ 
+          status: 'selected',
+          selected_at: new Date().toISOString()
+        })
+        .eq('id', applicantId);
+
+      if (applicationError) throw applicationError;
+    },
+    onSuccess: () => {
+      toast.success("Le candidat a été sélectionné pour la mission");
+      queryClient.invalidateQueries({ queryKey: ['missions'] });
+    },
+    onError: (error) => {
+      console.error('Error selecting applicant:', error);
+      toast.error("Erreur lors de la sélection du candidat");
+    }
+  });
+
   const handleSelectApplicant = (applicantId: string) => {
-    toast.success("Le candidat a été sélectionné pour la mission");
+    selectApplicantMutation.mutate(applicantId);
   };
 
   if (applicants.length === 0) {
@@ -57,6 +92,7 @@ export const ApplicantsList = ({ applicants, missionId }: ApplicantsListProps) =
             <TableHead>Nom</TableHead>
             <TableHead>Niveau</TableHead>
             <TableHead>Date de candidature</TableHead>
+            <TableHead>Statut</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -67,11 +103,21 @@ export const ApplicantsList = ({ applicants, missionId }: ApplicantsListProps) =
               <TableCell>{getStudentLevel(applicant.student_id)}</TableCell>
               <TableCell>{new Date(applicant.created_at).toLocaleDateString()}</TableCell>
               <TableCell>
+                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                  applicant.status === 'selected' 
+                    ? 'bg-green-100 text-green-800'
+                    : 'bg-gray-100 text-gray-800'
+                }`}>
+                  {applicant.status === 'selected' ? 'Sélectionné' : 'En attente'}
+                </span>
+              </TableCell>
+              <TableCell>
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => handleSelectApplicant(applicant.id)}
+                    disabled={applicant.status === 'selected'}
                   >
                     <UserCheck className="w-4 h-4 mr-2" />
                     Sélectionner
@@ -79,7 +125,11 @@ export const ApplicantsList = ({ applicants, missionId }: ApplicantsListProps) =
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setSelectedStudent(applicant)}
+                    onClick={() => setSelectedStudent({
+                      ...applicant,
+                      name: getStudentName(applicant.student_id),
+                      level: getStudentLevel(applicant.student_id)
+                    })}
                   >
                     <User className="w-4 h-4" />
                   </Button>

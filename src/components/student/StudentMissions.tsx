@@ -24,7 +24,8 @@ const StudentMissions = () => {
     queryFn: async () => {
       const { data: missionsData, error: missionsError } = await supabase
         .from('missions')
-        .select('*, mission_applications(*)');
+        .select('*, mission_applications(*)')
+        .eq('status', 'open'); // Only fetch open missions
 
       if (missionsError) throw missionsError;
       return missionsData;
