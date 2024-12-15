@@ -53,18 +53,12 @@ export const UserActions = ({ userId, userProfile }: UserActionsProps) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-user-actions`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session?.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ action, userId }),
+      const response = await supabase.functions.invoke('admin-user-actions', {
+        body: { action, userId },
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Une erreur est survenue');
+      if (response.error) {
+        throw new Error(response.error.message || 'Une erreur est survenue');
       }
 
       switch (action) {
