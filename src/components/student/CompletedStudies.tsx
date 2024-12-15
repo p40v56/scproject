@@ -6,6 +6,7 @@ import StudyDates from "./studies/StudyDates";
 import SatisfactionSurveyStatus from "./studies/SatisfactionSurveyStatus";
 import StudyDocuments from "./studies/StudyDocuments";
 import { toast } from "sonner";
+import type { Document } from "@/types/documents";
 
 const CompletedStudies = () => {
   const { data: studies, isLoading } = useQuery({
@@ -28,7 +29,6 @@ const CompletedStudies = () => {
   });
 
   const handleSurveyComplete = () => {
-    // TODO: Implement actual survey logic
     toast.success("Merci d'avoir complété le questionnaire de satisfaction");
   };
 
@@ -95,8 +95,11 @@ const CompletedStudies = () => {
               onComplete={handleSurveyComplete}
             />
             <StudyDocuments
-              documents={study.documents || []}
-              onUpload={handleDocumentUpload}
+              documents={(study.documents || []).map(doc => ({
+                ...doc,
+                type: doc.file_type // Map file_type to type for UI display
+              }))}
+              onUpload={() => handleDocumentUpload}
             />
           </div>
         </div>

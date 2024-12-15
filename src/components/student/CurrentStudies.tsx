@@ -5,6 +5,7 @@ import StudyProgress from "./studies/StudyProgress";
 import StudyDates from "./studies/StudyDates";
 import ContactCard from "./studies/ContactCard";
 import DocumentsList from "./studies/DocumentsList";
+import type { Document } from "@/types/documents";
 
 const CurrentStudies = () => {
   const { data: studies, isLoading } = useQuery({
@@ -79,7 +80,12 @@ const CurrentStudies = () => {
             }} 
           />
         )}
-        <DocumentsList documents={studies[0].documents || []} />
+        <DocumentsList 
+          documents={(studies[0].documents || []).map(doc => ({
+            ...doc,
+            type: doc.file_type // Map file_type to type for UI display
+          }))} 
+        />
       </div>
     </div>
   );
