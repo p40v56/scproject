@@ -38,7 +38,7 @@ export const MissionItem = ({
             : "Fermée"}
         </span>
       </TableCell>
-      <TableCell>{mission.applicants.length}</TableCell>
+      <TableCell>{mission.applicants?.length || 0}</TableCell>
       <TableCell>{mission.postedDate}</TableCell>
       <TableCell>{mission.compensation}€</TableCell>
       <TableCell>
