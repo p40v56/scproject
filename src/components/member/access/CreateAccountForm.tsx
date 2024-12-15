@@ -29,6 +29,7 @@ interface CreateAccountFormData {
   lastName: string;
   role: string;
   userType: UserType;
+  password: string;
 }
 
 export const CreateAccountForm = () => {
@@ -39,10 +40,10 @@ export const CreateAccountForm = () => {
   const onSubmit = async (data: CreateAccountFormData) => {
     setIsLoading(true);
     try {
-      // Créer l'utilisateur dans Auth
+      // Créer l'utilisateur dans Auth avec le mot de passe fourni
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
-        password: Math.random().toString(36).slice(-8), // Mot de passe temporaire
+        password: data.password,
       });
 
       if (authError) throw authError;
@@ -53,7 +54,6 @@ export const CreateAccountForm = () => {
         .update({
           first_name: data.firstName,
           last_name: data.lastName,
-          // Only set roles if userType is 'member'
           roles: data.userType === 'member' ? [data.role] : [],
           user_type: data.userType,
         })
@@ -86,6 +86,20 @@ export const CreateAccountForm = () => {
               <FormLabel>Email</FormLabel>
               <FormControl>
                 <Input type="email" placeholder="email@example.com" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Mot de passe</FormLabel>
+              <FormControl>
+                <Input type="password" placeholder="••••••••" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -144,7 +158,6 @@ export const CreateAccountForm = () => {
           )}
         />
 
-        {/* Only show role field if userType is 'member' */}
         {userType === 'member' && (
           <FormField
             control={form.control}
