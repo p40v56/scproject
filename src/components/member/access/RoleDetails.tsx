@@ -9,11 +9,32 @@ import {
 const roleDescriptions: Record<string, { title: string; description: string; permissions: string[] }> = {
   client: {
     title: "Client",
-    description: "Accès aux études et communications",
+    description: "Accès aux études et communications avec l'équipe",
     permissions: [
-      "Consultation des études assignées",
+      "Consultation des études en cours",
       "Communication avec les chargés d'études",
       "Accès aux documents partagés",
+      "Suivi de l'avancement des études",
+    ],
+  },
+  student: {
+    title: "Étudiant",
+    description: "Accès aux missions et opportunités",
+    permissions: [
+      "Consultation des missions disponibles",
+      "Candidature aux missions",
+      "Communication avec l'équipe",
+      "Accès aux documents de mission",
+    ],
+  },
+  alumni: {
+    title: "Alumni",
+    description: "Accès au réseau des anciens",
+    permissions: [
+      "Consultation de l'annuaire des Alumni",
+      "Participation aux événements",
+      "Accès aux offres d'emploi",
+      "Networking avec la communauté",
     ],
   },
   member: {
