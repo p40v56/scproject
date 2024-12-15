@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import StudentRegistration from "@/components/student/StudentRegistration";
 import StudentFirstLogin from "@/components/student/StudentFirstLogin";
@@ -10,11 +10,39 @@ import CurrentStudies from "@/components/student/CurrentStudies";
 import CompletedStudies from "@/components/student/CompletedStudies";
 import StudentSidebar from "@/components/student/StudentSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 const StudentSpace = () => {
   const [isRegistered, setIsRegistered] = useState(false);
   const [isFirstLogin, setIsFirstLogin] = useState(true);
   const [hasCompletedFirstLogin, setHasCompletedFirstLogin] = useState(false);
+  const { session } = useAuth();
+
+  const { data: profile } = useQuery({
+    queryKey: ['student-profile', session?.user.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', session?.user.id)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!session?.user.id,
+  });
+
+  useEffect(() => {
+    if (profile) {
+      setIsRegistered(true);
+      // Si l'étudiant a déjà une date d'adhésion, il a déjà complété le formulaire
+      setHasCompletedFirstLogin(!!profile.membership_paid_date);
+      setIsFirstLogin(!profile.membership_paid_date);
+    }
+  }, [profile]);
 
   const handleRegistrationComplete = () => {
     setIsRegistered(true);
