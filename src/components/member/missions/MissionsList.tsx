@@ -35,7 +35,7 @@ export default function MissionsList() {
         ...mission,
         postedDate: new Date(mission.created_at).toLocaleDateString(),
         applicants: mission.applicants || []
-      }));
+      })) as Mission[];
     }
   });
 
@@ -63,6 +63,11 @@ export default function MissionsList() {
   };
 
   const handleEditMission = async (data: any) => {
+    if (!data.id) {
+      toast.error("ID de mission manquant");
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('missions')
@@ -86,6 +91,11 @@ export default function MissionsList() {
   };
 
   const handleDeleteMission = async (missionId: string) => {
+    if (!missionId) {
+      toast.error("ID de mission manquant");
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('missions')

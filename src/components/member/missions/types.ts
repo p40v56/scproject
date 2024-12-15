@@ -6,17 +6,14 @@ export type Document = {
 
 export type Applicant = {
   id: string;
-  name: string;
-  level: string;
-  appliedDate: string;
-  email?: string;
-  phone?: string;
-  school?: string;
-  campus?: string;
-  specialization?: string;
-  experience?: string;
-  availability?: string;
-  documents?: Document[];
+  mission_id: string | null;
+  student_id: string | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  resume_url: string | null;
+  cover_letter: string | null;
+  selected_at: string | null;
 };
 
 export type Mission = {
@@ -31,4 +28,7 @@ export type Mission = {
   startDate?: string;
   endDate?: string;
   created_at: string;
+  updated_at: string;
+  study_id?: string;
+  assigned_student_id?: string;
 };

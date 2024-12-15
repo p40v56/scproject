@@ -51,11 +51,11 @@ export const MissionActions = ({
             <DialogTitle>Modifier la mission</DialogTitle>
           </DialogHeader>
           <MissionForm
-            onSubmit={onEdit}
+            onSubmit={(data) => onEdit({ ...data, id: mission.id })}
             mode="edit"
             initialData={{
               title: mission.title,
-              studyLevel: mission.studyLevel,
+              studyLevel: mission.study_level,
               compensation: mission.compensation.toString(),
               description: mission.description || "",
             }}
