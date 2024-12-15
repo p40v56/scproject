@@ -20,7 +20,7 @@ export const MissionItem = ({
   return (
     <TableRow key={mission.id}>
       <TableCell className="font-medium">{mission.title}</TableCell>
-      <TableCell>{mission.studyLevel}</TableCell>
+      <TableCell>{mission.study_level}</TableCell>
       <TableCell>
         <span
           className={`px-2 py-1 rounded-full text-xs font-semibold ${

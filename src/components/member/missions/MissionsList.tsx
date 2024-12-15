@@ -8,55 +8,98 @@ import { MissionFilters } from "./MissionFilters";
 import { MissionItem } from "./MissionItem";
 import MissionForm from "./MissionForm";
 import type { Mission } from "./types";
-
-// Données de test pour le développement
-const mockMissions: Mission[] = [
-  {
-    id: "1",
-    title: "Distribution de questionnaires",
-    studyLevel: "Tous",
-    status: "open",
-    applicants: [],
-    postedDate: "2024-03-01",
-    compensation: 400,
-    description: "Analyse du marché du luxe en France",
-  },
-  {
-    id: "2",
-    title: "Sondages téléphoniques",
-    studyLevel: "M1",
-    status: "in-progress",
-    applicants: [],
-    postedDate: "2024-03-02",
-    compensation: 300,
-    description: "Étude de satisfaction client",
-  },
-];
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export default function MissionsList() {
-  const [missions] = useState<Mission[]>(mockMissions);
-  const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [levelFilter, setLevelFilter] = useState("all");
+  const queryClient = useQueryClient();
 
-  const handleCreateMission = (data: any) => {
-    console.log("Nouvelle mission:", data);
-    toast.success("Mission créée avec succès");
-    setIsCreateDialogOpen(false);
+  const { data: missions = [], isLoading } = useQuery({
+    queryKey: ['missions'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('missions')
+        .select('*, applicants:mission_applications(*)');
+      
+      if (error) {
+        toast.error("Erreur lors du chargement des missions");
+        throw error;
+      }
+      
+      return data.map(mission => ({
+        ...mission,
+        postedDate: new Date(mission.created_at).toLocaleDateString(),
+        applicants: mission.applicants || []
+      }));
+    }
+  });
+
+  const handleCreateMission = async (data: any) => {
+    try {
+      const { error } = await supabase
+        .from('missions')
+        .insert([{
+          title: data.title,
+          study_level: data.studyLevel,
+          compensation: parseFloat(data.compensation),
+          description: data.description,
+          status: 'open'
+        }]);
+
+      if (error) throw error;
+
+      toast.success("Mission créée avec succès");
+      setIsCreateDialogOpen(false);
+      queryClient.invalidateQueries({ queryKey: ['missions'] });
+    } catch (error) {
+      console.error('Error creating mission:', error);
+      toast.error("Erreur lors de la création de la mission");
+    }
   };
 
-  const handleEditMission = (data: any) => {
-    console.log("Mission modifiée:", data);
-    toast.success("Mission modifiée avec succès");
-    setIsEditDialogOpen(false);
+  const handleEditMission = async (data: any) => {
+    try {
+      const { error } = await supabase
+        .from('missions')
+        .update({
+          title: data.title,
+          study_level: data.studyLevel,
+          compensation: parseFloat(data.compensation),
+          description: data.description
+        })
+        .eq('id', data.id);
+
+      if (error) throw error;
+
+      toast.success("Mission modifiée avec succès");
+      setIsEditDialogOpen(false);
+      queryClient.invalidateQueries({ queryKey: ['missions'] });
+    } catch (error) {
+      console.error('Error updating mission:', error);
+      toast.error("Erreur lors de la modification de la mission");
+    }
   };
 
-  const handleDeleteMission = (missionId: string) => {
-    console.log("Suppression de la mission:", missionId);
-    toast.success("Mission supprimée avec succès");
+  const handleDeleteMission = async (missionId: string) => {
+    try {
+      const { error } = await supabase
+        .from('missions')
+        .delete()
+        .eq('id', missionId);
+
+      if (error) throw error;
+
+      toast.success("Mission supprimée avec succès");
+      queryClient.invalidateQueries({ queryKey: ['missions'] });
+    } catch (error) {
+      console.error('Error deleting mission:', error);
+      toast.error("Erreur lors de la suppression de la mission");
+    }
   };
 
   const filteredMissions = missions.filter((mission) => {
@@ -67,9 +110,13 @@ export default function MissionsList() {
       statusFilter === "all" || mission.status === statusFilter;
     const matchesLevel =
       levelFilter === "all" ||
-      mission.studyLevel.toLowerCase().includes(levelFilter.toLowerCase());
+      mission.study_level.toLowerCase().includes(levelFilter.toLowerCase());
     return matchesSearch && matchesStatus && matchesLevel;
   });
+
+  if (isLoading) {
+    return <div>Chargement...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -78,7 +125,7 @@ export default function MissionsList() {
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>
-              <Briefcase className="mr-2" />
+              <Briefcase className="mr-2 h-4 w-4" />
               Nouvelle mission
             </Button>
           </DialogTrigger>

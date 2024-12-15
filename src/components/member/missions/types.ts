@@ -22,7 +22,7 @@ export type Applicant = {
 export type Mission = {
   id: string;
   title: string;
-  studyLevel: string;
+  study_level: string;
   status: "open" | "closed" | "in-progress";
   applicants: Applicant[];
   postedDate: string;
@@ -30,4 +30,5 @@ export type Mission = {
   description?: string;
   startDate?: string;
   endDate?: string;
+  created_at: string;
 };
