@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import MembershipStatus from "./profile/MembershipStatus";
 import TransportationSection from "./profile/TransportationSection";
 import PersonalInfoSection from "./profile/PersonalInfoSection";
@@ -22,34 +25,98 @@ const profileSchema = z.object({
 });
 
 const StudentProfile = () => {
-  const membershipPaidDate = new Date("2024-01-15");
-  const currentSchoolYear = "2023-2024";
-  const isMembershipActive = true;
+  const queryClient = useQueryClient();
+
+  const { data: profile, isLoading } = useQuery({
+    queryKey: ['profile'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const updateProfile = useMutation({
+    mutationFn: async (values: z.infer<typeof profileSchema>) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          first_name: values.firstName,
+          last_name: values.lastName,
+          study_year: values.studyYear,
+          specialization: values.specialization,
+          has_driver_license: values.hasDriverLicense,
+          transportation: values.transportation,
+          campus: values.campus,
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Profil mis à jour avec succès");
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+    },
+    onError: (error) => {
+      console.error('Error updating profile:', error);
+      toast.error("Erreur lors de la mise à jour du profil");
+    },
+  });
 
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      firstName: "Jean",
-      lastName: "Dupont",
-      email: "jean.dupont@skema.edu",
-      studyYear: "M1",
-      specialization: "Marketing",
+      firstName: "",
+      lastName: "",
+      email: "",
+      studyYear: "",
+      specialization: "",
       hasDriverLicense: false,
       transportation: "none",
-      campus: "Paris",
+      campus: "",
     },
   });
 
+  useEffect(() => {
+    if (profile) {
+      form.reset({
+        firstName: profile.first_name || "",
+        lastName: profile.last_name || "",
+        email: profile.email || "",
+        studyYear: profile.study_year || "",
+        specialization: profile.specialization || "",
+        hasDriverLicense: profile.has_driver_license || false,
+        transportation: profile.transportation || "none",
+        campus: profile.campus || "",
+      });
+    }
+  }, [profile, form]);
+
   const onSubmit = (data: z.infer<typeof profileSchema>) => {
-    toast.success("Profil mis à jour avec succès");
+    updateProfile.mutate(data);
   };
+
+  if (isLoading) {
+    return <div>Chargement...</div>;
+  }
 
   return (
     <div className="space-y-6">
       <MembershipStatus
-        membershipPaidDate={membershipPaidDate}
-        currentSchoolYear={currentSchoolYear}
-        isMembershipActive={isMembershipActive}
+        membershipPaidDate={profile?.membership_paid_date ? new Date(profile.membership_paid_date) : undefined}
+        currentSchoolYear={profile?.current_school_year}
+        isMembershipActive={!!profile?.membership_paid_date}
       />
 
       <Card>
@@ -65,8 +132,12 @@ const StudentProfile = () => {
                 control={form.control}
                 hasDriverLicense={form.watch("hasDriverLicense")}
               />
-              <Button type="submit" className="w-full">
-                Mettre à jour
+              <Button 
+                type="submit" 
+                className="w-full"
+                disabled={updateProfile.isPending}
+              >
+                {updateProfile.isPending ? "Mise à jour..." : "Mettre à jour"}
               </Button>
             </form>
           </Form>

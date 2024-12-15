@@ -181,32 +181,53 @@ export type Database = {
       }
       profiles: {
         Row: {
+          campus: string | null
           created_at: string
+          current_school_year: string | null
           email: string | null
           first_name: string | null
+          has_driver_license: boolean | null
           id: string
           last_name: string | null
+          membership_paid_date: string | null
           roles: string[] | null
+          specialization: string | null
+          study_year: string | null
+          transportation: string | null
           updated_at: string
           user_type: Database["public"]["Enums"]["user_type"]
         }
         Insert: {
+          campus?: string | null
           created_at?: string
+          current_school_year?: string | null
           email?: string | null
           first_name?: string | null
+          has_driver_license?: boolean | null
           id: string
           last_name?: string | null
+          membership_paid_date?: string | null
           roles?: string[] | null
+          specialization?: string | null
+          study_year?: string | null
+          transportation?: string | null
           updated_at?: string
           user_type: Database["public"]["Enums"]["user_type"]
         }
         Update: {
+          campus?: string | null
           created_at?: string
+          current_school_year?: string | null
           email?: string | null
           first_name?: string | null
+          has_driver_license?: boolean | null
           id?: string
           last_name?: string | null
+          membership_paid_date?: string | null
           roles?: string[] | null
+          specialization?: string | null
+          study_year?: string | null
+          transportation?: string | null
           updated_at?: string
           user_type?: Database["public"]["Enums"]["user_type"]
         }

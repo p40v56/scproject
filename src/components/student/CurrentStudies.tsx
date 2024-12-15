@@ -1,60 +1,85 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import StudyProgress from "./studies/StudyProgress";
 import StudyDates from "./studies/StudyDates";
 import ContactCard from "./studies/ContactCard";
 import DocumentsList from "./studies/DocumentsList";
 
 const CurrentStudies = () => {
-  // Mock data - à remplacer par des données réelles
-  const study = {
-    title: "Étude de marché - Nouveau produit",
-    description: "Analyse des tendances et comportements des consommateurs pour le lancement d'un nouveau produit.",
-    currentStep: 2,
-    totalSteps: 5,
-    startDate: new Date("2024-01-01"),
-    endDate: new Date("2024-03-31"),
-    contact: {
-      name: "Marie Dupont",
-      role: "Chef de projet",
-      email: "marie.dupont@example.com",
-      phone: "01 23 45 67 89",
+  const { data: studies, isLoading } = useQuery({
+    queryKey: ['current-studies'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { data, error } = await supabase
+        .from('studies')
+        .select(`
+          *,
+          assigned_member:profiles!studies_assigned_member_id_fkey(
+            id,
+            first_name,
+            last_name,
+            email
+          ),
+          documents(*)
+        `)
+        .eq('status', 'in_progress');
+
+      if (error) throw error;
+      return data;
     },
-    documents: [
-      {
-        id: "1",
-        name: "Brief de l'étude",
-        type: "PDF",
-      },
-      {
-        id: "2",
-        name: "Guide d'entretien",
-        type: "DOCX",
-      },
-    ],
-  };
+  });
+
+  if (isLoading) {
+    return <div>Chargement...</div>;
+  }
+
+  if (!studies || studies.length === 0) {
+    return (
+      <Card>
+        <CardContent className="py-8">
+          <p className="text-center text-muted-foreground">
+            Aucune étude en cours
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>{study.title}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <p className="text-muted-foreground">{study.description}</p>
-          <StudyProgress 
-            currentStep={study.currentStep} 
-            totalSteps={study.totalSteps} 
-          />
-          <StudyDates 
-            startDate={study.startDate} 
-            endDate={study.endDate} 
-          />
-        </CardContent>
-      </Card>
+      {studies.map((study) => (
+        <Card key={study.id}>
+          <CardHeader>
+            <CardTitle>{study.title}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <p className="text-muted-foreground">{study.description}</p>
+            <StudyProgress 
+              currentStep={2} 
+              totalSteps={5} 
+            />
+            <StudyDates 
+              startDate={study.start_date ? new Date(study.start_date) : undefined}
+              endDate={study.end_date ? new Date(study.end_date) : undefined}
+            />
+          </CardContent>
+        </Card>
+      ))}
 
       <div className="grid gap-6 md:grid-cols-2">
-        <ContactCard contact={study.contact} />
-        <DocumentsList documents={study.documents} />
+        {studies[0].assigned_member && (
+          <ContactCard 
+            contact={{
+              name: `${studies[0].assigned_member.first_name} ${studies[0].assigned_member.last_name}`,
+              role: "Chef de projet",
+              email: studies[0].assigned_member.email || "",
+            }} 
+          />
+        )}
+        <DocumentsList documents={studies[0].documents || []} />
       </div>
     </div>
   );
