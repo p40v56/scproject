@@ -2,8 +2,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CheckCircle2, AlertCircle } from "lucide-react";
 
 interface MembershipStatusProps {
-  membershipPaidDate: Date;
-  currentSchoolYear: string;
+  membershipPaidDate?: Date;
+  currentSchoolYear?: string;
   isMembershipActive: boolean;
 }
 
@@ -25,9 +25,17 @@ const MembershipStatus = ({
             {isMembershipActive ? "Adhésion active" : "Adhésion expirée"}
           </AlertTitle>
           <AlertDescription>
-            Cotisation payée le {membershipPaidDate.toLocaleDateString()}
-            <br />
-            Valable jusqu'à la fin de l'année scolaire {currentSchoolYear}
+            {membershipPaidDate ? (
+              <>
+                Cotisation payée le {membershipPaidDate.toLocaleDateString()}
+                <br />
+                {currentSchoolYear && (
+                  <>Valable jusqu'à la fin de l'année scolaire {currentSchoolYear}</>
+                )}
+              </>
+            ) : (
+              "Aucune cotisation enregistrée"
+            )}
           </AlertDescription>
         </div>
       </div>
