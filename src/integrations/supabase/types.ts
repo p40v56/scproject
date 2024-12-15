@@ -95,25 +95,34 @@ export type Database = {
       }
       mission_applications: {
         Row: {
+          cover_letter: string | null
           created_at: string
           id: string
           mission_id: string | null
+          resume_url: string | null
+          selected_at: string | null
           status: string
           student_id: string | null
           updated_at: string
         }
         Insert: {
+          cover_letter?: string | null
           created_at?: string
           id?: string
           mission_id?: string | null
+          resume_url?: string | null
+          selected_at?: string | null
           status?: string
           student_id?: string | null
           updated_at?: string
         }
         Update: {
+          cover_letter?: string | null
           created_at?: string
           id?: string
           mission_id?: string | null
+          resume_url?: string | null
+          selected_at?: string | null
           status?: string
           student_id?: string | null
           updated_at?: string
@@ -137,6 +146,7 @@ export type Database = {
       }
       missions: {
         Row: {
+          assigned_student_id: string | null
           compensation: number | null
           created_at: string
           description: string | null
@@ -148,6 +158,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          assigned_student_id?: string | null
           compensation?: number | null
           created_at?: string
           description?: string | null
@@ -159,6 +170,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          assigned_student_id?: string | null
           compensation?: number | null
           created_at?: string
           description?: string | null
@@ -170,6 +182,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "missions_assigned_student_id_fkey"
+            columns: ["assigned_student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "missions_study_id_fkey"
             columns: ["study_id"]
