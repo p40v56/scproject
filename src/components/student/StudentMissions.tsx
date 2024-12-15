@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Briefcase, Clock, GraduationCap, MapPin } from "lucide-react";
+import { Clock, GraduationCap } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -22,20 +22,12 @@ const StudentMissions = () => {
   const { data: missions, isLoading } = useQuery({
     queryKey: ['missions'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: missionsData, error: missionsError } = await supabase
         .from('missions')
-        .select(`
-          *,
-          mission_applications!mission_applications_mission_id_fkey(
-            id,
-            student_id,
-            status
-          )
-        `)
-        .eq('status', 'open');
+        .select('*, mission_applications(*)');
 
-      if (error) throw error;
-      return data;
+      if (missionsError) throw missionsError;
+      return missionsData;
     },
   });
 
@@ -94,7 +86,7 @@ const StudentMissions = () => {
   }
 
   const hasApplied = (mission: any) => {
-    return mission.mission_applications.some((app: any) => app.student_id === session?.user.id);
+    return mission.mission_applications?.some((app: any) => app.student_id === session?.user.id) || false;
   };
 
   return (

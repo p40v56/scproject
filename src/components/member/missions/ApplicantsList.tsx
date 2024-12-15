@@ -6,6 +6,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 import StudentProfile from "./StudentProfile";
 import type { Applicant } from "./types";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ApplicantsListProps {
   applicants: Applicant[];
@@ -15,6 +17,20 @@ interface ApplicantsListProps {
 export const ApplicantsList = ({ applicants, missionId }: ApplicantsListProps) => {
   const [selectedStudent, setSelectedStudent] = useState<Applicant | null>(null);
 
+  const { data: profiles } = useQuery({
+    queryKey: ['applicant-profiles', applicants.map(a => a.student_id)],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .in('id', applicants.map(a => a.student_id || ''));
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: applicants.length > 0,
+  });
+
   const handleSelectApplicant = (applicantId: string) => {
     toast.success("Le candidat a été sélectionné pour la mission");
   };
@@ -22,6 +38,16 @@ export const ApplicantsList = ({ applicants, missionId }: ApplicantsListProps) =
   if (applicants.length === 0) {
     return <p className="text-muted-foreground">Aucune candidature pour le moment</p>;
   }
+
+  const getStudentName = (studentId: string | null) => {
+    const profile = profiles?.find(p => p.id === studentId);
+    return profile ? `${profile.first_name} ${profile.last_name}` : 'Étudiant inconnu';
+  };
+
+  const getStudentLevel = (studentId: string | null) => {
+    const profile = profiles?.find(p => p.id === studentId);
+    return profile?.study_year || 'Non spécifié';
+  };
 
   return (
     <div className="space-y-4">
@@ -37,9 +63,9 @@ export const ApplicantsList = ({ applicants, missionId }: ApplicantsListProps) =
         <TableBody>
           {applicants.map((applicant) => (
             <TableRow key={applicant.id}>
-              <TableCell>{applicant.name}</TableCell>
-              <TableCell>{applicant.level}</TableCell>
-              <TableCell>{applicant.appliedDate}</TableCell>
+              <TableCell>{getStudentName(applicant.student_id)}</TableCell>
+              <TableCell>{getStudentLevel(applicant.student_id)}</TableCell>
+              <TableCell>{new Date(applicant.created_at).toLocaleDateString()}</TableCell>
               <TableCell>
                 <div className="flex gap-2">
                   <Button
