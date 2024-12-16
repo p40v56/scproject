@@ -24,29 +24,29 @@ const StudyMeetingsSection = ({ studyId }: StudyMeetingsSectionProps) => {
   const [isAddMeetingDialogOpen, setIsAddMeetingDialogOpen] = useState(false)
   const queryClient = useQueryClient()
 
-  const meetings = [
-    {
-      id: "1",
-      title: "Réunion de lancement",
-      date: "2024-04-15",
-      time: "14:00",
-      location: "Salle de réunion A",
-      description: "Présentation du projet et des objectifs",
-    },
-    {
-      id: "2",
-      title: "Point d'avancement",
-      date: "2024-04-30",
-      time: "10:00",
-      location: "Visioconférence",
-      description: "Revue des premiers résultats",
-    },
-  ]
+  const { data: meetings, isLoading } = useQuery({
+    queryKey: ['study-meetings', studyId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('study_meetings')
+        .select('*')
+        .eq('study_id', studyId)
+        .order('date', { ascending: true })
 
-  const addMeetingMutation = useMutation({
+      if (error) throw error
+      return data
+    },
+  })
+
+  const createMeetingMutation = useMutation({
     mutationFn: async (formData: any) => {
-      // TODO: Implement meeting creation logic with Supabase
-      console.log('Creating meeting:', formData)
+      const { data, error } = await supabase
+        .from('study_meetings')
+        .insert([{ ...formData, study_id: studyId }])
+        .select()
+
+      if (error) throw error
+      return data
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['study-meetings', studyId] })
@@ -64,12 +64,16 @@ const StudyMeetingsSection = ({ studyId }: StudyMeetingsSectionProps) => {
     const formData = new FormData(e.target as HTMLFormElement)
     const data = {
       title: formData.get('title'),
-      date: formData.get('date'),
-      time: formData.get('time'),
-      location: formData.get('location'),
       description: formData.get('description'),
+      date: new Date(formData.get('date') as string).toISOString(),
+      location: formData.get('location'),
+      meeting_type: formData.get('meeting_type'),
     }
-    addMeetingMutation.mutate(data)
+    createMeetingMutation.mutate(data)
+  }
+
+  if (isLoading) {
+    return <div>Chargement des rendez-vous...</div>
   }
 
   return (
@@ -90,23 +94,19 @@ const StudyMeetingsSection = ({ studyId }: StudyMeetingsSectionProps) => {
                   <Label htmlFor="title">Titre</Label>
                   <Input id="title" name="title" required />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="date">Date</Label>
-                    <Input id="date" name="date" type="date" required />
-                  </div>
-                  <div>
-                    <Label htmlFor="time">Heure</Label>
-                    <Input id="time" name="time" type="time" required />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="location">Lieu</Label>
-                  <Input id="location" name="location" required />
-                </div>
                 <div>
                   <Label htmlFor="description">Description</Label>
                   <Textarea id="description" name="description" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="date">Date</Label>
+                    <Input id="date" name="date" type="datetime-local" required />
+                  </div>
+                  <div>
+                    <Label htmlFor="location">Lieu</Label>
+                    <Input id="location" name="location" required />
+                  </div>
                 </div>
                 <Button type="submit" className="w-full">
                   Ajouter
@@ -117,7 +117,7 @@ const StudyMeetingsSection = ({ studyId }: StudyMeetingsSectionProps) => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {meetings.map((meeting) => (
+            {meetings?.map((meeting) => (
               <div
                 key={meeting.id}
                 className="p-4 border rounded-lg space-y-2"
@@ -130,7 +130,7 @@ const StudyMeetingsSection = ({ studyId }: StudyMeetingsSectionProps) => {
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4" />
-                    <span>{meeting.time}</span>
+                    <span>{new Date(meeting.date).toLocaleTimeString()}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4" />
@@ -142,7 +142,7 @@ const StudyMeetingsSection = ({ studyId }: StudyMeetingsSectionProps) => {
                 )}
               </div>
             ))}
-            {meetings.length === 0 && (
+            {(!meetings || meetings.length === 0) && (
               <p className="text-center text-muted-foreground py-8">
                 Aucun rendez-vous planifié
               </p>
