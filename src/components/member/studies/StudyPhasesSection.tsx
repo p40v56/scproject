@@ -38,6 +38,8 @@ const StudyPhasesSection = ({ studyId }: StudyPhasesSectionProps) => {
           updates.map(({ id, order }) => ({
             id,
             order,
+            study_id: studyId, // Include required fields
+            name: phases.find(p => p.id === id)?.name || '', // Include required fields
             updated_at: new Date().toISOString()
           }))
         )

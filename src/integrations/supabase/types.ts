@@ -412,6 +412,7 @@ export type Database = {
           end_date: string | null
           id: string
           name: string
+          order: number | null
           progress: number | null
           start_date: string | null
           status: string | null
@@ -424,6 +425,7 @@ export type Database = {
           end_date?: string | null
           id?: string
           name: string
+          order?: number | null
           progress?: number | null
           start_date?: string | null
           status?: string | null
@@ -436,6 +438,7 @@ export type Database = {
           end_date?: string | null
           id?: string
           name?: string
+          order?: number | null
           progress?: number | null
           start_date?: string | null
           status?: string | null
