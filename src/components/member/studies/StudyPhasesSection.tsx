@@ -13,14 +13,31 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { toast } from "sonner"
 
 interface StudyPhasesSectionProps {
   studyId: string
 }
 
+const PHASE_TYPES = [
+  "Phase Préparatoire",
+  "Phase Quantitative",
+  "Phase Qualitative",
+  "Rédaction du rapport",
+  "Autre"
+] as const
+
 const StudyPhasesSection = ({ studyId }: StudyPhasesSectionProps) => {
   const [isAddPhaseDialogOpen, setIsAddPhaseDialogOpen] = useState(false)
+  const [selectedPhaseType, setSelectedPhaseType] = useState<string>("")
+  const [customPhaseName, setCustomPhaseName] = useState("")
   const queryClient = useQueryClient()
 
   const { data: phases, isLoading } = useQuery({
@@ -51,6 +68,8 @@ const StudyPhasesSection = ({ studyId }: StudyPhasesSectionProps) => {
       queryClient.invalidateQueries({ queryKey: ['study-phases', studyId] })
       setIsAddPhaseDialogOpen(false)
       toast.success('Phase ajoutée avec succès')
+      setSelectedPhaseType("")
+      setCustomPhaseName("")
     },
     onError: (error) => {
       console.error('Error creating phase:', error)
@@ -84,14 +103,18 @@ const StudyPhasesSection = ({ studyId }: StudyPhasesSectionProps) => {
 
   const handleCreatePhase = (e: React.FormEvent) => {
     e.preventDefault()
-    const formData = new FormData(e.target as HTMLFormElement)
-    const data = {
-      name: formData.get('name'),
-      description: formData.get('description'),
-      start_date: formData.get('start_date'),
-      end_date: formData.get('end_date'),
+    const phaseName = selectedPhaseType === "Autre" ? customPhaseName : selectedPhaseType
+    
+    if (!phaseName) {
+      toast.error("Veuillez sélectionner ou saisir un nom de phase")
+      return
     }
-    createPhaseMutation.mutate(data)
+
+    createPhaseMutation.mutate({
+      name: phaseName,
+      progress: 0,
+      status: 'pending'
+    })
   }
 
   if (isLoading) {
@@ -112,21 +135,35 @@ const StudyPhasesSection = ({ studyId }: StudyPhasesSectionProps) => {
             </DialogHeader>
             <form onSubmit={handleCreatePhase} className="space-y-4">
               <div>
-                <Label htmlFor="name">Nom de la phase</Label>
-                <Input id="name" name="name" required />
+                <Label>Type de phase</Label>
+                <Select
+                  value={selectedPhaseType}
+                  onValueChange={setSelectedPhaseType}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un type de phase" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PHASE_TYPES.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Input id="description" name="description" />
-              </div>
-              <div>
-                <Label htmlFor="start_date">Date de début</Label>
-                <Input id="start_date" name="start_date" type="date" />
-              </div>
-              <div>
-                <Label htmlFor="end_date">Date de fin</Label>
-                <Input id="end_date" name="end_date" type="date" />
-              </div>
+
+              {selectedPhaseType === "Autre" && (
+                <div>
+                  <Label>Nom de la phase personnalisée</Label>
+                  <Input
+                    value={customPhaseName}
+                    onChange={(e) => setCustomPhaseName(e.target.value)}
+                    placeholder="Entrez le nom de la phase"
+                  />
+                </div>
+              )}
+
               <Button type="submit" className="w-full">
                 Ajouter
               </Button>
