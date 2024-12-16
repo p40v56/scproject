@@ -8,6 +8,7 @@ import CurrentStudies from "@/components/member/studies/CurrentStudies";
 import MemberCalendar from "@/components/member/calendar/MemberCalendar";
 import Objectives from "@/components/member/objectives/Objectives";
 import Handover from "@/components/member/handover/Handover";
+import Studies from "@/components/dashboard/Studies";
 
 const MemberSpace = () => {
   return (
@@ -33,7 +34,7 @@ const MemberSpace = () => {
               <Route path="/access-management" element={<AccessManagement />} />
               <Route path="/missions" element={<MissionsList />} />
               <Route path="/common-intranet" element={<CommonIntranet />} />
-              <Route path="/current-studies" element={<CurrentStudies />} />
+              <Route path="/current-studies" element={<Studies />} />
               <Route path="/calendar" element={<MemberCalendar />} />
               <Route path="/objectives" element={<Objectives />} />
               <Route path="/handover" element={<Handover />} />
