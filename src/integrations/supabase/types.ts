@@ -196,6 +196,7 @@ export type Database = {
           status: string
           study_id: string | null
           study_level: string | null
+          study_phase_id: string | null
           title: string
           updated_at: string
         }
@@ -208,6 +209,7 @@ export type Database = {
           status?: string
           study_id?: string | null
           study_level?: string | null
+          study_phase_id?: string | null
           title: string
           updated_at?: string
         }
@@ -220,6 +222,7 @@ export type Database = {
           status?: string
           study_id?: string | null
           study_level?: string | null
+          study_phase_id?: string | null
           title?: string
           updated_at?: string
         }
@@ -236,6 +239,13 @@ export type Database = {
             columns: ["study_id"]
             isOneToOne: false
             referencedRelation: "studies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "missions_study_phase_id_fkey"
+            columns: ["study_phase_id"]
+            isOneToOne: false
+            referencedRelation: "study_phases"
             referencedColumns: ["id"]
           },
         ]

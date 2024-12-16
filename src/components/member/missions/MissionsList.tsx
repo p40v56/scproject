@@ -47,7 +47,8 @@ export default function MissionsList() {
         postedDate: new Date(mission.created_at).toLocaleDateString(),
         applicants: mission.applicants || [],
         study: mission.study || null,
-        study_phase: mission.study_phase || null
+        study_phase: mission.study_phase || null,
+        study_phase_id: mission.study_phase_id,
       })) as Mission[];
     }
   });
@@ -62,8 +63,8 @@ export default function MissionsList() {
           compensation: parseFloat(data.compensation),
           description: data.description,
           status: 'open',
-          study_id: data.study_id || null,
-          study_phase_id: data.study_phase_id || null
+          study_id: data.study_id === 'none' ? null : data.study_id,
+          study_phase_id: data.study_phase_id === 'none' ? null : data.study_phase_id
         }]);
 
       if (error) throw error;
@@ -91,8 +92,8 @@ export default function MissionsList() {
           study_level: data.studyLevel,
           compensation: parseFloat(data.compensation),
           description: data.description,
-          study_id: data.study_id || null,
-          study_phase_id: data.study_phase_id || null
+          study_id: data.study_id === 'none' ? null : data.study_id,
+          study_phase_id: data.study_phase_id === 'none' ? null : data.study_phase_id
         })
         .eq('id', data.id);
 
