@@ -4,6 +4,7 @@ import MeetingsList from "./meetings/MeetingsList"
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
 import ReportUploadDialog from "./meetings/ReportUploadDialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface StudyMeetingsSectionProps {
   studyId: string
@@ -27,6 +28,7 @@ const StudyMeetingsSection = ({ studyId }: StudyMeetingsSectionProps) => {
         .order('date', { ascending: true })
 
       if (error) throw error
+      console.log('Fetched meetings:', data)
       return data
     }
   })
@@ -40,6 +42,10 @@ const StudyMeetingsSection = ({ studyId }: StudyMeetingsSectionProps) => {
     return <div>Chargement...</div>
   }
 
+  const now = new Date()
+  const upcomingMeetings = meetings?.filter(meeting => new Date(meeting.date) >= now) || []
+  const pastMeetings = meetings?.filter(meeting => new Date(meeting.date) < now) || []
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -47,16 +53,33 @@ const StudyMeetingsSection = ({ studyId }: StudyMeetingsSectionProps) => {
         <Button variant="outline">Planifier un rendez-vous</Button>
       </div>
 
-      <MeetingsList 
-        meetings={meetings || []}
-        onUploadReport={handleUploadReport}
-        showUploadButton
-      />
+      <Tabs defaultValue="upcoming" className="w-full">
+        <TabsList>
+          <TabsTrigger value="upcoming">À venir ({upcomingMeetings.length})</TabsTrigger>
+          <TabsTrigger value="past">Historique ({pastMeetings.length})</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="upcoming">
+          <MeetingsList 
+            meetings={upcomingMeetings}
+            onUploadReport={handleUploadReport}
+            showUploadButton
+          />
+        </TabsContent>
+
+        <TabsContent value="past">
+          <MeetingsList 
+            meetings={pastMeetings}
+            onUploadReport={handleUploadReport}
+            showUploadButton
+          />
+        </TabsContent>
+      </Tabs>
 
       {selectedMeetingId && (
         <ReportUploadDialog
           isOpen={isUploadDialogOpen}
-          onOpenChange={setIsUploadDialogOpen}
+          setIsOpen={setIsUploadDialogOpen}
           meetingId={selectedMeetingId}
         />
       )}

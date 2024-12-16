@@ -35,13 +35,27 @@ export const PastAppointments = () => {
         .order('date', { ascending: false })
 
       if (error) throw error
-      console.log('Past meetings data:', data) // Debug log
+      console.log('Past meetings data:', data)
       return data as Meeting[]
     }
   })
 
   if (isLoading) {
     return <div>Chargement...</div>
+  }
+
+  const handleDownloadReport = async (filePath: string) => {
+    try {
+      const { data } = supabase.storage
+        .from('documents')
+        .getPublicUrl(filePath)
+      
+      if (data) {
+        window.open(data.publicUrl, '_blank')
+      }
+    } catch (error) {
+      console.error('Download error:', error)
+    }
   }
 
   return (
@@ -87,12 +101,7 @@ export const PastAppointments = () => {
                       key={report.id}
                       variant="outline"
                       className="w-full"
-                      onClick={() => {
-                        const { data } = supabase.storage
-                          .from('documents')
-                          .getPublicUrl(report.file_path)
-                        window.open(data.publicUrl)
-                      }}
+                      onClick={() => handleDownloadReport(report.file_path)}
                     >
                       Télécharger le compte rendu
                     </Button>
