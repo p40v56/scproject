@@ -9,9 +9,7 @@ const LogoutButton = () => {
 
   const handleLogout = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      
+      await supabase.auth.signOut();
       navigate("/");
       toast.success("Déconnexion réussie");
     } catch (error) {

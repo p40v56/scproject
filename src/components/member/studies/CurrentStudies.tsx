@@ -1,12 +1,12 @@
-import { useQuery } from "@tanstack/react-query"
-import { supabase } from "@/integrations/supabase/client"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { useNavigate } from "react-router-dom"
-import { Eye } from "lucide-react"
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { Eye } from "lucide-react";
 
 const CurrentStudies = () => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const { data: studies, isLoading } = useQuery({
     queryKey: ['member-studies'],
@@ -28,15 +28,16 @@ const CurrentStudies = () => {
             email
           )
         `)
-        .order('created_at', { ascending: false })
+        .order('created_at', { ascending: false });
 
-      if (error) throw error
-      return data
+      if (error) throw error;
+      console.log("Studies data:", data); // Ajout d'un log pour déboguer
+      return data;
     },
-  })
+  });
 
   if (isLoading) {
-    return <div>Chargement des études...</div>
+    return <div>Chargement des études...</div>;
   }
 
   return (
@@ -54,15 +55,13 @@ const CurrentStudies = () => {
             <CardHeader>
               <div className="flex justify-between items-start">
                 <CardTitle>{study.title}</CardTitle>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => navigate(`/member/current-studies/${study.id}`)}
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                </div>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => navigate(`/member/current-studies/${study.id}`)}
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
               </div>
             </CardHeader>
             <CardContent>
@@ -123,7 +122,7 @@ const CurrentStudies = () => {
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default CurrentStudies
+export default CurrentStudies;
