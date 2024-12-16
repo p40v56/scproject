@@ -17,6 +17,8 @@ const StudyDetailsPage = () => {
     queryKey: ['study', studyId],
     queryFn: async () => {
       console.log("Fetching study with ID:", studyId)
+      if (!studyId) throw new Error("Study ID is required")
+
       const { data, error } = await supabase
         .from('studies')
         .select(`
@@ -38,25 +40,44 @@ const StudyDetailsPage = () => {
         .single()
 
       if (error) {
-        console.error("Error fetching study:", error)
+        console.error("Supabase error:", error)
         throw error
       }
-      console.log("Fetched study data:", data)
+
+      console.log("Study data fetched:", data)
       return data
     },
+    retry: 1,
   })
 
+  console.log("Component state:", { isLoading, error, study })
+
   if (isLoading) {
-    return <div className="flex items-center justify-center p-8">Chargement...</div>
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-lg">Chargement des détails de l'étude...</div>
+      </div>
+    )
   }
 
   if (error) {
     console.error("Error in component:", error)
-    return <div className="flex items-center justify-center p-8 text-red-500">Erreur lors du chargement de l'étude</div>
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-lg text-red-500">
+          Une erreur est survenue lors du chargement de l'étude. 
+          Veuillez réessayer plus tard.
+        </div>
+      </div>
+    )
   }
 
   if (!study) {
-    return <div className="flex items-center justify-center p-8">Étude non trouvée</div>
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-lg">Étude non trouvée</div>
+      </div>
+    )
   }
 
   return (
