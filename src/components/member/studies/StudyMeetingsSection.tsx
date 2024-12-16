@@ -1,10 +1,8 @@
-import { useState } from "react"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import MeetingsList from "./meetings/MeetingsList"
+import { Button } from "@/components/ui/button"
+import { useState } from "react"
 import ReportUploadDialog from "./meetings/ReportUploadDialog"
 
 interface StudyMeetingsSectionProps {
@@ -12,9 +10,8 @@ interface StudyMeetingsSectionProps {
 }
 
 const StudyMeetingsSection = ({ studyId }: StudyMeetingsSectionProps) => {
-  const [isUploadReportDialogOpen, setIsUploadReportDialogOpen] = useState(false)
   const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(null)
-  const queryClient = useQueryClient()
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false)
 
   const { data: meetings, isLoading } = useQuery({
     queryKey: ['study-meetings', studyId],
@@ -23,71 +20,45 @@ const StudyMeetingsSection = ({ studyId }: StudyMeetingsSectionProps) => {
         .from('study_meetings')
         .select(`
           *,
-          meeting_reports (
-            id,
-            file_path,
-            created_at
-          )
+          meeting_reports(*),
+          meeting_reschedule_requests(*)
         `)
         .eq('study_id', studyId)
         .order('date', { ascending: true })
 
       if (error) throw error
       return data
-    },
+    }
   })
-
-  const now = new Date()
-  const upcomingMeetings = meetings?.filter(m => new Date(m.date) > now) || []
-  const pastMeetings = meetings?.filter(m => new Date(m.date) <= now) || []
 
   const handleUploadReport = (meetingId: string) => {
     setSelectedMeetingId(meetingId)
-    setIsUploadReportDialogOpen(true)
+    setIsUploadDialogOpen(true)
   }
 
   if (isLoading) {
-    return <div>Chargement des rendez-vous...</div>
+    return <div>Chargement...</div>
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Rendez-vous</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Tabs defaultValue="upcoming" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="upcoming">À venir ({upcomingMeetings.length})</TabsTrigger>
-            <TabsTrigger value="past">Historique ({pastMeetings.length})</TabsTrigger>
-          </TabsList>
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-medium">Rendez-vous</h3>
+        <Button variant="outline">Planifier un rendez-vous</Button>
+      </div>
 
-          <TabsContent value="upcoming">
-            <MeetingsList meetings={upcomingMeetings} />
-          </TabsContent>
-
-          <TabsContent value="past">
-            <MeetingsList
-              meetings={pastMeetings}
-              onUploadReport={handleUploadReport}
-              showUploadButton
-            />
-          </TabsContent>
-        </Tabs>
-      </CardContent>
+      <MeetingsList 
+        meetings={meetings || []}
+        onUploadReport={handleUploadReport}
+        showUploadButton
+      />
 
       <ReportUploadDialog
-        meetingId={selectedMeetingId || ''}
-        isOpen={isUploadReportDialogOpen}
-        onClose={() => {
-          setIsUploadReportDialogOpen(false)
-          setSelectedMeetingId(null)
-        }}
-        onSuccess={() => {
-          queryClient.invalidateQueries({ queryKey: ['study-meetings', studyId] })
-        }}
+        open={isUploadDialogOpen}
+        onOpenChange={setIsUploadDialogOpen}
+        meetingId={selectedMeetingId}
       />
-    </Card>
+    </div>
   )
 }
 
