@@ -17,12 +17,14 @@ interface DocumentUploadDialogProps {
 const DocumentUploadDialog = ({ studyId, isOpen, onClose, onSuccess }: DocumentUploadDialogProps) => {
   const [uploading, setUploading] = useState(false)
   const [category, setCategory] = useState<string>("")
+  const [documentName, setDocumentName] = useState("")
 
   const handleUpload = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const formData = new FormData(event.target as HTMLFormElement)
     const file = formData.get('file') as File
     const documentCategory = formData.get('category') as string
+    const name = documentName.trim() || file.name
 
     if (!file || !documentCategory) {
       toast.error('Veuillez sélectionner un fichier et une catégorie')
@@ -44,7 +46,7 @@ const DocumentUploadDialog = ({ studyId, isOpen, onClose, onSuccess }: DocumentU
         .from('documents')
         .insert({
           study_id: studyId,
-          name: file.name,
+          name: name,
           file_path: filePath,
           file_type: file.type,
           category: documentCategory
@@ -55,6 +57,8 @@ const DocumentUploadDialog = ({ studyId, isOpen, onClose, onSuccess }: DocumentU
       toast.success('Document uploadé avec succès')
       onSuccess()
       onClose()
+      setDocumentName("")
+      setCategory("")
     } catch (error) {
       console.error('Error uploading document:', error)
       toast.error("Erreur lors de l'upload du document")
@@ -70,6 +74,15 @@ const DocumentUploadDialog = ({ studyId, isOpen, onClose, onSuccess }: DocumentU
           <DialogTitle>Uploader un document</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleUpload} className="space-y-4">
+          <div>
+            <Label htmlFor="name">Nom du document</Label>
+            <Input
+              id="name"
+              value={documentName}
+              onChange={(e) => setDocumentName(e.target.value)}
+              placeholder="Nom du document (optionnel)"
+            />
+          </div>
           <div>
             <Label htmlFor="category">Catégorie</Label>
             <Select
