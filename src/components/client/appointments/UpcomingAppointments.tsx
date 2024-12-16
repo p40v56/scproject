@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useState } from "react"
 import { toast } from "sonner"
 import { Textarea } from "@/components/ui/textarea"
+import { Input } from "@/components/ui/input"
 
 interface Meeting {
   id: string
@@ -18,6 +19,7 @@ interface Meeting {
 
 export const UpcomingAppointments = () => {
   const [rescheduleDate, setRescheduleDate] = useState<Date | undefined>()
+  const [rescheduleTime, setRescheduleTime] = useState("09:00")
   const [reason, setReason] = useState("")
 
   const { data: upcomingMeetings, isLoading } = useQuery({
@@ -31,8 +33,7 @@ export const UpcomingAppointments = () => {
           date,
           description,
           location,
-          status,
-          studies!inner(client_id)
+          status
         `)
         .gt('date', new Date().toISOString())
         .order('date', { ascending: true })
@@ -48,15 +49,21 @@ export const UpcomingAppointments = () => {
       return
     }
     
+    // Combine date and time
+    const dateTime = new Date(rescheduleDate)
+    const [hours, minutes] = rescheduleTime.split(":")
+    dateTime.setHours(parseInt(hours), parseInt(minutes))
+    
     const { error } = await supabase
       .from('meeting_reschedule_requests')
       .insert({
         meeting_id: meetingId,
-        requested_date: rescheduleDate.toISOString(),
+        requested_date: dateTime.toISOString(),
         reason: reason
       })
 
     if (error) {
+      console.error('Error requesting reschedule:', error)
       toast.error("Erreur lors de la demande de report")
       return
     }
@@ -64,6 +71,7 @@ export const UpcomingAppointments = () => {
     toast.success("Demande de report envoyée")
     setReason("")
     setRescheduleDate(undefined)
+    setRescheduleTime("09:00")
   }
 
   if (isLoading) {
@@ -118,6 +126,17 @@ export const UpcomingAppointments = () => {
                     selected={rescheduleDate}
                     onSelect={setRescheduleDate}
                     className="rounded-md border"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Nouvelle heure souhaitée
+                  </label>
+                  <Input
+                    type="time"
+                    value={rescheduleTime}
+                    onChange={(e) => setRescheduleTime(e.target.value)}
+                    className="w-full"
                   />
                 </div>
                 <div className="space-y-2">

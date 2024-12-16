@@ -29,13 +29,13 @@ export const PastAppointments = () => {
           meeting_reports (
             id,
             file_path
-          ),
-          studies!inner(client_id)
+          )
         `)
         .lt('date', new Date().toISOString())
         .order('date', { ascending: false })
 
       if (error) throw error
+      console.log('Past meetings data:', data) // Debug log
       return data as Meeting[]
     }
   })
@@ -87,7 +87,12 @@ export const PastAppointments = () => {
                       key={report.id}
                       variant="outline"
                       className="w-full"
-                      onClick={() => window.open(report.file_path)}
+                      onClick={() => {
+                        const { data } = supabase.storage
+                          .from('documents')
+                          .getPublicUrl(report.file_path)
+                        window.open(data.publicUrl)
+                      }}
                     >
                       Télécharger le compte rendu
                     </Button>
