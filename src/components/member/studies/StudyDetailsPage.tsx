@@ -13,7 +13,7 @@ const StudyDetailsPage = () => {
   const { studyId } = useParams()
   const navigate = useNavigate()
 
-  const { data: study, isLoading } = useQuery({
+  const { data: study, isLoading, error } = useQuery({
     queryKey: ['study', studyId],
     queryFn: async () => {
       console.log("Fetching study with ID:", studyId)
@@ -47,11 +47,16 @@ const StudyDetailsPage = () => {
   })
 
   if (isLoading) {
-    return <div>Chargement...</div>
+    return <div className="flex items-center justify-center p-8">Chargement...</div>
+  }
+
+  if (error) {
+    console.error("Error in component:", error)
+    return <div className="flex items-center justify-center p-8 text-red-500">Erreur lors du chargement de l'étude</div>
   }
 
   if (!study) {
-    return <div>Étude non trouvée</div>
+    return <div className="flex items-center justify-center p-8">Étude non trouvée</div>
   }
 
   return (
