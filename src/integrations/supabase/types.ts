@@ -96,6 +96,44 @@ export type Database = {
           },
         ]
       }
+      meeting_reschedule_requests: {
+        Row: {
+          created_at: string
+          id: string
+          meeting_id: string
+          reason: string | null
+          requested_date: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          meeting_id: string
+          reason?: string | null
+          requested_date: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          meeting_id?: string
+          reason?: string | null
+          requested_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_reschedule_requests_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "study_meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           content: string
@@ -369,6 +407,7 @@ export type Database = {
           id: string
           location: string | null
           meeting_type: string | null
+          status: string
           study_id: string
           title: string
           updated_at: string
@@ -380,6 +419,7 @@ export type Database = {
           id?: string
           location?: string | null
           meeting_type?: string | null
+          status?: string
           study_id: string
           title: string
           updated_at?: string
@@ -391,6 +431,7 @@ export type Database = {
           id?: string
           location?: string | null
           meeting_type?: string | null
+          status?: string
           study_id?: string
           title?: string
           updated_at?: string
