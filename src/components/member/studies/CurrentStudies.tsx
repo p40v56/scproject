@@ -1,26 +1,13 @@
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
-import { Pencil, Trash2 } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query"
+import { supabase } from "@/integrations/supabase/client"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { useNavigate } from "react-router-dom"
+import { Eye, Pencil, Trash2 } from "lucide-react"
 
 const CurrentStudies = () => {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
 
-  // Fetch studies with related data
   const { data: studies, isLoading } = useQuery({
     queryKey: ['member-studies'],
     queryFn: async () => {
@@ -41,37 +28,15 @@ const CurrentStudies = () => {
             email
           )
         `)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
 
-      if (error) {
-        toast.error("Erreur lors du chargement des études");
-        throw error;
-      }
-      return data;
+      if (error) throw error
+      return data
     },
-  });
-
-  const handleEditStudy = (studyId: string) => {
-    navigate(`/member/studies/${studyId}`);
-  };
-
-  const handleDeleteStudy = async (studyId: string) => {
-    try {
-      const { error } = await supabase
-        .from('studies')
-        .delete()
-        .eq('id', studyId);
-
-      if (error) throw error;
-      toast.success("Étude supprimée avec succès");
-    } catch (error) {
-      console.error('Error deleting study:', error);
-      toast.error("Erreur lors de la suppression de l'étude");
-    }
-  };
+  })
 
   if (isLoading) {
-    return <div>Chargement des études...</div>;
+    return <div>Chargement des études...</div>
   }
 
   return (
@@ -92,35 +57,11 @@ const CurrentStudies = () => {
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
-                    size="icon"
-                    onClick={() => handleEditStudy(study.id)}
+                    size="sm"
+                    onClick={() => navigate(`/member/current-studies/${study.id}`)}
                   >
-                    <Pencil className="h-4 w-4" />
+                    <Eye className="h-4 w-4" />
                   </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="destructive" size="icon">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Êtes-vous sûr de vouloir supprimer cette étude ? Cette action est irréversible.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Annuler</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleDeleteStudy(study.id)}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        >
-                          Supprimer
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
                 </div>
               </div>
             </CardHeader>
@@ -166,25 +107,6 @@ const CurrentStudies = () => {
                     </p>
                   </div>
                 </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="font-medium">Date de début</p>
-                    <p className="text-sm text-muted-foreground">
-                      {study.start_date 
-                        ? new Date(study.start_date).toLocaleDateString() 
-                        : 'Non définie'}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-medium">Date de fin</p>
-                    <p className="text-sm text-muted-foreground">
-                      {study.end_date 
-                        ? new Date(study.end_date).toLocaleDateString() 
-                        : 'Non définie'}
-                    </p>
-                  </div>
-                </div>
               </div>
             </CardContent>
           </Card>
@@ -201,7 +123,7 @@ const CurrentStudies = () => {
         )}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default CurrentStudies;
+export default CurrentStudies
