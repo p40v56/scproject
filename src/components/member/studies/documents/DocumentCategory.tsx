@@ -3,21 +3,21 @@ import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { supabase } from "@/integrations/supabase/client"
 
-interface Document {
-  id: string
-  name: string
-  file_path: string
-  file_type: string
-  category: string
+interface DocumentFile {
+  id: string;
+  name: string;
+  file_path: string;
+  file_type: string;
+  category: string;
 }
 
 interface DocumentCategoryProps {
-  title: string
-  documents: Document[]
+  title: string;
+  documents: DocumentFile[];
 }
 
 const DocumentCategory = ({ title, documents }: DocumentCategoryProps) => {
-  const handleDownload = async (document: Document) => {
+  const handleDownload = async (document: DocumentFile) => {
     try {
       const { data, error } = await supabase.storage
         .from('documents')
@@ -27,7 +27,7 @@ const DocumentCategory = ({ title, documents }: DocumentCategoryProps) => {
 
       // Create a download link
       const url = window.URL.createObjectURL(data)
-      const link = document.createElement('a')
+      const link = window.document.createElement('a')
       link.href = url
       link.download = document.name
       link.click()

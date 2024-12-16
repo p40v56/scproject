@@ -6,13 +6,19 @@ import StudyHeader from "./study/StudyHeader"
 import StudyMilestones from "./study/StudyMilestones"
 import CallbackRequest from "./study/CallbackRequest"
 
+interface Phase {
+  name: string;
+  status: string;
+  progress: number;
+}
+
 const StudyDetails = () => {
-  const studyPhases = [
+  const studyPhases: Phase[] = [
     { name: "Phase préparatoire", status: "completed", progress: 100 },
     { name: "Phase quantitative", status: "in-progress", progress: 60 },
     { name: "Phase qualitative", status: "pending", progress: 0 },
     { name: "Présentation finale", status: "pending", progress: 0 },
-  ] as const
+  ]
 
   const studyDetails = {
     title: "Étude de marché - Secteur IT",

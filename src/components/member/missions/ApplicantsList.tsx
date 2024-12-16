@@ -1,161 +1,162 @@
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import { User, UserCheck } from "lucide-react"
-import { Dialog } from "@/components/ui/dialog"
 import { useState } from "react"
-import { toast } from "sonner"
-import StudentProfile from "./StudentProfile"
-import type { Applicant } from "./types"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
+import { toast } from "sonner"
 
-interface ApplicantsListProps {
-  applicants: Applicant[]
-  missionId: string
+interface Applicant {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  study_year?: string;
+  specialization?: string;
+  campus?: string;
+  application_id: string;
+  application_status: string;
+  resume_url?: string;
+  cover_letter?: string;
 }
 
-export const ApplicantsList = ({ applicants, missionId }: ApplicantsListProps) => {
+interface ApplicantsListProps {
+  missionId: string;
+}
+
+const ApplicantsList = ({ missionId }: ApplicantsListProps) => {
   const [selectedStudent, setSelectedStudent] = useState<Applicant | null>(null)
   const queryClient = useQueryClient()
 
-  const { data: profiles } = useQuery({
-    queryKey: ['applicant-profiles', applicants.map(a => a.student_id)],
+  const { data: applicants, isLoading } = useQuery({
+    queryKey: ['mission-applicants', missionId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .in('id', applicants.map(a => a.student_id || ''))
-      
+        .from('mission_applications')
+        .select(`
+          id as application_id,
+          status as application_status,
+          resume_url,
+          cover_letter,
+          student:profiles!mission_applications_student_id_fkey (
+            id,
+            first_name,
+            last_name,
+            email,
+            study_year,
+            specialization,
+            campus
+          )
+        `)
+        .eq('mission_id', missionId)
+
       if (error) throw error
-      return data
+
+      return data.map((app: any) => ({
+        ...app.student,
+        application_id: app.application_id,
+        application_status: app.application_status,
+        resume_url: app.resume_url,
+        cover_letter: app.cover_letter,
+      }))
     },
-    enabled: applicants.length > 0,
   })
 
-  const selectApplicantMutation = useMutation({
-    mutationFn: async (applicantId: string) => {
-      // 1. Update mission status to in-progress
-      const { error: missionError } = await supabase
-        .from('missions')
-        .update({ 
-          status: 'in-progress',
-          assigned_student_id: applicants.find(a => a.id === applicantId)?.student_id
-        })
-        .eq('id', missionId)
-      
-      if (missionError) throw missionError
-
-      // 2. Update application status to selected
-      const { error: applicationError } = await supabase
+  const updateApplicationMutation = useMutation({
+    mutationFn: async ({ applicationId, status }: { applicationId: string, status: string }) => {
+      const { error } = await supabase
         .from('mission_applications')
-        .update({ 
-          status: 'selected',
-          selected_at: new Date().toISOString()
-        })
-        .eq('id', applicantId)
+        .update({ status })
+        .eq('id', applicationId)
 
-      if (applicationError) throw applicationError
+      if (error) throw error
     },
     onSuccess: () => {
-      toast.success("Le candidat a été sélectionné pour la mission")
-      queryClient.invalidateQueries({ queryKey: ['missions'] })
+      queryClient.invalidateQueries({ queryKey: ['mission-applicants', missionId] })
+      toast.success("Statut de la candidature mis à jour")
     },
     onError: (error) => {
-      console.error('Error selecting applicant:', error)
-      toast.error("Erreur lors de la sélection du candidat")
-    }
+      console.error('Error updating application:', error)
+      toast.error("Erreur lors de la mise à jour du statut")
+    },
   })
 
-  const handleSelectApplicant = (applicantId: string) => {
-    selectApplicantMutation.mutate(applicantId)
+  const handleStudentSelect = (student: Applicant) => {
+    setSelectedStudent(student)
   }
 
-  if (applicants.length === 0) {
-    return <p className="text-muted-foreground">Aucune candidature pour le moment</p>
-  }
-
-  const getStudentName = (studentId: string | null) => {
-    const profile = profiles?.find(p => p.id === studentId)
-    return profile ? `${profile.first_name} ${profile.last_name}` : 'Étudiant inconnu'
-  }
-
-  const getStudentLevel = (studentId: string | null) => {
-    const profile = profiles?.find(p => p.id === studentId)
-    return profile?.study_year || 'Non spécifié'
+  if (isLoading) {
+    return <div>Chargement des candidatures...</div>
   }
 
   return (
     <div className="space-y-4">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Nom</TableHead>
-            <TableHead>Niveau</TableHead>
-            <TableHead>Date de candidature</TableHead>
-            <TableHead>Statut</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {applicants.map((applicant) => (
-            <TableRow key={applicant.id}>
-              <TableCell>{getStudentName(applicant.student_id)}</TableCell>
-              <TableCell>{getStudentLevel(applicant.student_id)}</TableCell>
-              <TableCell>{new Date(applicant.created_at).toLocaleDateString()}</TableCell>
-              <TableCell>
-                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                  applicant.status === 'selected' 
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-gray-100 text-gray-800'
-                }`}>
-                  {applicant.status === 'selected' ? 'Sélectionné' : 'En attente'}
-                </span>
-              </TableCell>
-              <TableCell>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleSelectApplicant(applicant.id)}
-                    disabled={applicant.status === 'selected'}
-                  >
-                    <UserCheck className="w-4 h-4 mr-2" />
-                    Sélectionner
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      const profile = profiles?.find(p => p.id === applicant.student_id)
-                      setSelectedStudent({
-                        ...applicant,
-                        name: getStudentName(applicant.student_id),
-                        level: getStudentLevel(applicant.student_id),
-                        email: profile?.email,
-                        specialization: profile?.specialization
-                      })
-                    }}
-                  >
-                    <User className="w-4 h-4" />
-                  </Button>
+      <Card>
+        <CardHeader>
+          <CardTitle>Candidatures ({applicants?.length || 0})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {applicants?.map((applicant) => (
+              <div
+                key={applicant.application_id}
+                className="p-4 border rounded-lg space-y-2"
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-medium">
+                      {applicant.first_name} {applicant.last_name}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {applicant.email}
+                    </p>
+                    {applicant.study_year && (
+                      <p className="text-sm text-muted-foreground">
+                        {applicant.study_year} - {applicant.specialization}
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleStudentSelect(applicant)}
+                    >
+                      Voir détails
+                    </Button>
+                    <Button
+                      variant={applicant.application_status === 'accepted' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => updateApplicationMutation.mutate({
+                        applicationId: applicant.application_id,
+                        status: 'accepted'
+                      })}
+                    >
+                      Accepter
+                    </Button>
+                    <Button
+                      variant={applicant.application_status === 'rejected' ? 'destructive' : 'outline'}
+                      size="sm"
+                      onClick={() => updateApplicationMutation.mutate({
+                        applicationId: applicant.application_id,
+                        status: 'rejected'
+                      })}
+                    >
+                      Refuser
+                    </Button>
+                  </div>
                 </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-
-      {selectedStudent && (
-        <Dialog
-          open={!!selectedStudent}
-          onOpenChange={() => setSelectedStudent(null)}
-        >
-          <StudentProfile
-            student={selectedStudent}
-            onClose={() => setSelectedStudent(null)}
-          />
-        </Dialog>
-      )}
+              </div>
+            ))}
+            {(!applicants || applicants.length === 0) && (
+              <p className="text-center text-muted-foreground py-4">
+                Aucune candidature pour le moment
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
+
+export default ApplicantsList
