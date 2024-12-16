@@ -53,7 +53,6 @@ export const UpcomingAppointments = () => {
 
       if (error) throw error
       
-      // Transform the data to match our interface
       return data.map((meeting: any) => ({
         ...meeting,
         reschedule_request: meeting.meeting_reschedule_requests?.[0]
@@ -67,7 +66,6 @@ export const UpcomingAppointments = () => {
       return
     }
     
-    // Combine date and time
     const dateTime = new Date(rescheduleDate)
     const [hours, minutes] = rescheduleTime.split(":")
     dateTime.setHours(parseInt(hours), parseInt(minutes))
@@ -117,7 +115,7 @@ export const UpcomingAppointments = () => {
                 Statut: {meeting.status === 'pending' ? 'En attente de confirmation' : 'Confirmé'}
               </p>
               
-              {meeting.reschedule_request && (
+              {meeting.reschedule_request?.status === 'pending' && (
                 <div className="mt-2 p-2 bg-muted rounded-md">
                   <p className="text-sm font-medium">Demande de report en cours</p>
                   <p className="text-sm line-through">
@@ -130,7 +128,7 @@ export const UpcomingAppointments = () => {
                     Motif: {meeting.reschedule_request.reason}
                   </p>
                   <p className="text-sm font-medium mt-1">
-                    Statut: {meeting.reschedule_request.status === 'pending' ? 'En attente de confirmation' : meeting.reschedule_request.status === 'approved' ? 'Approuvé' : 'Refusé'}
+                    Statut: En attente de confirmation
                   </p>
                 </div>
               )}
@@ -145,7 +143,7 @@ export const UpcomingAppointments = () => {
             </div>
           </div>
           
-          {!meeting.reschedule_request && (
+          {(!meeting.reschedule_request || meeting.reschedule_request.status !== 'pending') && (
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm">
@@ -200,7 +198,7 @@ export const UpcomingAppointments = () => {
             </Dialog>
           )}
           
-          {meeting.reschedule_request && (
+          {meeting.reschedule_request?.status === 'pending' && (
             <Button variant="outline" size="sm" disabled>
               Report demandé - En attente de confirmation
             </Button>

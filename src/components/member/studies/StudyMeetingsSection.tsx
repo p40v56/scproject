@@ -53,11 +53,13 @@ const StudyMeetingsSection = ({ studyId }: StudyMeetingsSectionProps) => {
         showUploadButton
       />
 
-      <ReportUploadDialog
-        open={isUploadDialogOpen}
-        onOpenChange={setIsUploadDialogOpen}
-        meetingId={selectedMeetingId}
-      />
+      {selectedMeetingId && (
+        <ReportUploadDialog
+          isOpen={isUploadDialogOpen}
+          onOpenChange={setIsUploadDialogOpen}
+          meetingId={selectedMeetingId}
+        />
+      )}
     </div>
   )
 }

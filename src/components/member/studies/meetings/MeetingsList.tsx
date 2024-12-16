@@ -108,7 +108,7 @@ const MeetingsList = ({ meetings, onUploadReport, showUploadButton }: MeetingsLi
                 <p className="text-sm mt-2">{meeting.description}</p>
               )}
 
-              {meeting.meeting_reschedule_requests?.[0] && (
+              {meeting.meeting_reschedule_requests?.[0] && meeting.meeting_reschedule_requests[0].status === 'pending' && (
                 <div className="mt-4 p-3 bg-muted rounded-lg border border-muted-foreground/20">
                   <div className="flex items-center gap-2 text-orange-500 mb-2">
                     <AlertCircle className="h-4 w-4" />
@@ -124,36 +124,22 @@ const MeetingsList = ({ meetings, onUploadReport, showUploadButton }: MeetingsLi
                     Motif: {meeting.meeting_reschedule_requests[0].reason}
                   </p>
                   
-                  {meeting.meeting_reschedule_requests[0].status === 'pending' && (
-                    <div className="flex gap-2 mt-3">
-                      <Button 
-                        size="sm" 
-                        variant="default"
-                        onClick={() => handleRescheduleResponse(meeting.id, meeting.meeting_reschedule_requests![0].id, true)}
-                      >
-                        Accepter
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => handleRescheduleResponse(meeting.id, meeting.meeting_reschedule_requests![0].id, false)}
-                      >
-                        Refuser
-                      </Button>
-                    </div>
-                  )}
-
-                  {meeting.meeting_reschedule_requests[0].status === 'approved' && (
-                    <p className="text-sm text-green-500 font-medium mt-2">
-                      Report approuvé
-                    </p>
-                  )}
-
-                  {meeting.meeting_reschedule_requests[0].status === 'rejected' && (
-                    <p className="text-sm text-red-500 font-medium mt-2">
-                      Report refusé
-                    </p>
-                  )}
+                  <div className="flex gap-2 mt-3">
+                    <Button 
+                      size="sm" 
+                      variant="default"
+                      onClick={() => handleRescheduleResponse(meeting.id, meeting.meeting_reschedule_requests![0].id, true)}
+                    >
+                      Accepter
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => handleRescheduleResponse(meeting.id, meeting.meeting_reschedule_requests![0].id, false)}
+                    >
+                      Refuser
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
