@@ -28,8 +28,8 @@ const missionSchema = z.object({
   studyLevel: z.string().min(1, "Le niveau d'étude est requis"),
   compensation: z.string().min(1, "La rémunération est requise"),
   description: z.string().min(10, "La description doit faire au moins 10 caractères"),
-  study_id: z.string().optional(),
-  study_phase_id: z.string().optional(),
+  study_id: z.string().nullable(),
+  study_phase_id: z.string().nullable(),
 })
 
 type MissionFormProps = {
@@ -46,8 +46,8 @@ export default function MissionForm({ onSubmit, initialData, mode = "create" }: 
       studyLevel: "",
       compensation: "",
       description: "",
-      study_id: "",
-      study_phase_id: "",
+      study_id: null,
+      study_phase_id: null,
     },
   })
 
@@ -100,14 +100,14 @@ export default function MissionForm({ onSubmit, initialData, mode = "create" }: 
           render={({ field }) => (
             <FormItem>
               <FormLabel>Étude associée</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
+              <Select onValueChange={field.onChange} value={field.value || undefined}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionner une étude" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="">Aucune</SelectItem>
+                  <SelectItem value="none">Aucune</SelectItem>
                   {studies?.map((study) => (
                     <SelectItem key={study.id} value={study.id}>
                       {study.title}
@@ -120,21 +120,21 @@ export default function MissionForm({ onSubmit, initialData, mode = "create" }: 
           )}
         />
 
-        {form.watch('study_id') && (
+        {form.watch('study_id') && form.watch('study_id') !== 'none' && (
           <FormField
             control={form.control}
             name="study_phase_id"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Phase associée</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select onValueChange={field.onChange} value={field.value || undefined}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Sélectionner une phase" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">Aucune</SelectItem>
+                    <SelectItem value="none">Aucune</SelectItem>
                     {phases?.map((phase) => (
                       <SelectItem key={phase.id} value={phase.id}>
                         {phase.name}

@@ -29,9 +29,9 @@ export type Mission = {
   endDate?: string;
   created_at: string;
   updated_at: string;
-  study_id?: string;
-  study_phase_id?: string;
-  assigned_student_id?: string;
+  study_id?: string | null;
+  study_phase_id?: string | null;
+  assigned_student_id?: string | null;
   study?: {
     id: string;
     title: string;
