@@ -8,7 +8,7 @@ import CallbackRequest from "./study/CallbackRequest"
 
 interface Phase {
   name: string;
-  status: string;
+  status: "completed" | "in-progress" | "pending";
   progress: number;
 }
 

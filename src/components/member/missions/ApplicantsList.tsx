@@ -119,7 +119,7 @@ const ApplicantsList = ({ missionId }: ApplicantsListProps) => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleStudentSelect(applicant)}
+                      onClick={() => setSelectedStudent(applicant)}
                     >
                       Voir détails
                     </Button>
