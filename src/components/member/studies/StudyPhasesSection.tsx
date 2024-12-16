@@ -22,10 +22,6 @@ import {
 } from "@/components/ui/select"
 import { toast } from "sonner"
 
-interface StudyPhasesSectionProps {
-  studyId: string
-}
-
 const PHASE_TYPES = [
   "Phase Préparatoire",
   "Phase Quantitative",
@@ -33,6 +29,10 @@ const PHASE_TYPES = [
   "Rédaction du rapport",
   "Autre"
 ] as const
+
+interface StudyPhasesSectionProps {
+  studyId: string
+}
 
 const StudyPhasesSection = ({ studyId }: StudyPhasesSectionProps) => {
   const [isAddPhaseDialogOpen, setIsAddPhaseDialogOpen] = useState(false)

@@ -2,37 +2,34 @@ import { useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import { supabase } from "@/integrations/supabase/client"
 
-interface DocumentUploadDialogProps {
-  studyId: string
+interface ReportUploadDialogProps {
+  meetingId: string
   isOpen: boolean
   onClose: () => void
   onSuccess: () => void
 }
 
-const DocumentUploadDialog = ({ studyId, isOpen, onClose, onSuccess }: DocumentUploadDialogProps) => {
+const ReportUploadDialog = ({ meetingId, isOpen, onClose, onSuccess }: ReportUploadDialogProps) => {
   const [uploading, setUploading] = useState(false)
-  const [category, setCategory] = useState<string>("")
 
-  const handleUpload = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    const formData = new FormData(event.target as HTMLFormElement)
+  const handleUpload = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const formData = new FormData(e.target as HTMLFormElement)
     const file = formData.get('file') as File
-    const documentCategory = formData.get('category') as string
 
-    if (!file || !documentCategory) {
-      toast.error('Veuillez sélectionner un fichier et une catégorie')
+    if (!file) {
+      toast.error('Veuillez sélectionner un fichier')
       return
     }
 
     setUploading(true)
     try {
       const fileExt = file.name.split('.').pop()
-      const filePath = `${studyId}/${crypto.randomUUID()}.${fileExt}`
+      const filePath = `meeting-reports/${meetingId}/${crypto.randomUUID()}.${fileExt}`
 
       const { error: uploadError } = await supabase.storage
         .from('documents')
@@ -41,23 +38,20 @@ const DocumentUploadDialog = ({ studyId, isOpen, onClose, onSuccess }: DocumentU
       if (uploadError) throw uploadError
 
       const { error: dbError } = await supabase
-        .from('documents')
+        .from('meeting_reports')
         .insert({
-          study_id: studyId,
-          name: file.name,
+          meeting_id: meetingId,
           file_path: filePath,
-          file_type: file.type,
-          category: documentCategory
         })
 
       if (dbError) throw dbError
 
-      toast.success('Document uploadé avec succès')
+      toast.success('Compte-rendu uploadé avec succès')
       onSuccess()
       onClose()
     } catch (error) {
-      console.error('Error uploading document:', error)
-      toast.error("Erreur lors de l'upload du document")
+      console.error('Error uploading report:', error)
+      toast.error("Erreur lors de l'upload du compte-rendu")
     } finally {
       setUploading(false)
     }
@@ -67,33 +61,16 @@ const DocumentUploadDialog = ({ studyId, isOpen, onClose, onSuccess }: DocumentU
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Uploader un document</DialogTitle>
+          <DialogTitle>Upload du compte-rendu</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleUpload} className="space-y-4">
-          <div>
-            <Label htmlFor="category">Catégorie</Label>
-            <Select
-              name="category"
-              value={category}
-              onValueChange={setCategory}
-              required
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner une catégorie" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="administratif">Administratif</SelectItem>
-                <SelectItem value="facturation">Facturation</SelectItem>
-                <SelectItem value="etude">Étude</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
           <div>
             <Label htmlFor="file">Fichier</Label>
             <Input
               id="file"
               name="file"
               type="file"
+              accept=".pdf,.doc,.docx"
               required
               disabled={uploading}
             />
@@ -108,7 +85,7 @@ const DocumentUploadDialog = ({ studyId, isOpen, onClose, onSuccess }: DocumentU
               Annuler
             </Button>
             <Button type="submit" disabled={uploading}>
-              {uploading ? 'Upload en cours...' : 'Uploader'}
+              {uploading ? 'Upload en cours...' : 'Upload'}
             </Button>
           </div>
         </form>
@@ -117,4 +94,4 @@ const DocumentUploadDialog = ({ studyId, isOpen, onClose, onSuccess }: DocumentU
   )
 }
 
-export default DocumentUploadDialog
+export default ReportUploadDialog

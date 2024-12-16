@@ -8,6 +8,7 @@ interface Document {
   name: string
   file_path: string
   file_type: string
+  category: string
 }
 
 interface DocumentCategoryProps {
