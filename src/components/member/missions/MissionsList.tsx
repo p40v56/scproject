@@ -24,7 +24,18 @@ export default function MissionsList() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('missions')
-        .select('*, applicants:mission_applications(*)');
+        .select(`
+          *,
+          applicants:mission_applications(*),
+          study:studies(
+            id,
+            title
+          ),
+          study_phase:study_phases(
+            id,
+            name
+          )
+        `);
       
       if (error) {
         toast.error("Erreur lors du chargement des missions");
@@ -34,7 +45,9 @@ export default function MissionsList() {
       return data.map(mission => ({
         ...mission,
         postedDate: new Date(mission.created_at).toLocaleDateString(),
-        applicants: mission.applicants || []
+        applicants: mission.applicants || [],
+        study: mission.study || null,
+        study_phase: mission.study_phase || null
       })) as Mission[];
     }
   });
@@ -48,7 +61,9 @@ export default function MissionsList() {
           study_level: data.studyLevel,
           compensation: parseFloat(data.compensation),
           description: data.description,
-          status: 'open'
+          status: 'open',
+          study_id: data.study_id || null,
+          study_phase_id: data.study_phase_id || null
         }]);
 
       if (error) throw error;
@@ -75,7 +90,9 @@ export default function MissionsList() {
           title: data.title,
           study_level: data.studyLevel,
           compensation: parseFloat(data.compensation),
-          description: data.description
+          description: data.description,
+          study_id: data.study_id || null,
+          study_phase_id: data.study_phase_id || null
         })
         .eq('id', data.id);
 
@@ -161,6 +178,8 @@ export default function MissionsList() {
         <TableHeader>
           <TableRow>
             <TableHead>Titre</TableHead>
+            <TableHead>Étude</TableHead>
+            <TableHead>Phase</TableHead>
             <TableHead>Niveau d'étude</TableHead>
             <TableHead>Statut</TableHead>
             <TableHead>Candidatures</TableHead>

@@ -30,5 +30,14 @@ export type Mission = {
   created_at: string;
   updated_at: string;
   study_id?: string;
+  study_phase_id?: string;
   assigned_student_id?: string;
+  study?: {
+    id: string;
+    title: string;
+  } | null;
+  study_phase?: {
+    id: string;
+    name: string;
+  } | null;
 };

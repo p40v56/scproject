@@ -1,4 +1,5 @@
 import { TableCell, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import { MissionActions } from "./MissionActions";
 import type { Mission } from "./types";
 
@@ -10,6 +11,12 @@ interface MissionItemProps {
   onEdit: (data: any) => void;
 }
 
+const statusLabels = {
+  open: "Ouverte",
+  closed: "Fermée",
+  "in-progress": "En cours",
+};
+
 export const MissionItem = ({
   mission,
   onDelete,
@@ -18,30 +25,28 @@ export const MissionItem = ({
   onEdit,
 }: MissionItemProps) => {
   return (
-    <TableRow key={mission.id}>
-      <TableCell className="font-medium">{mission.title}</TableCell>
+    <TableRow>
+      <TableCell>{mission.title}</TableCell>
+      <TableCell>{mission.study?.title || "-"}</TableCell>
+      <TableCell>{mission.study_phase?.name || "-"}</TableCell>
       <TableCell>{mission.study_level}</TableCell>
       <TableCell>
-        <span
-          className={`px-2 py-1 rounded-full text-xs font-semibold ${
+        <Badge
+          variant={
             mission.status === "open"
-              ? "text-green-600 bg-green-100"
+              ? "default"
               : mission.status === "in-progress"
-              ? "text-yellow-600 bg-yellow-100"
-              : "text-red-600 bg-red-100"
-          }`}
+              ? "secondary"
+              : "destructive"
+          }
         >
-          {mission.status === "open"
-            ? "Ouverte"
-            : mission.status === "in-progress"
-            ? "En cours"
-            : "Fermée"}
-        </span>
+          {statusLabels[mission.status]}
+        </Badge>
       </TableCell>
-      <TableCell>{mission.applicants?.length || 0}</TableCell>
+      <TableCell>{mission.applicants.length}</TableCell>
       <TableCell>{mission.postedDate}</TableCell>
       <TableCell>{mission.compensation}€</TableCell>
-      <TableCell>
+      <TableCell className="text-right">
         <MissionActions
           mission={mission}
           onDelete={onDelete}
