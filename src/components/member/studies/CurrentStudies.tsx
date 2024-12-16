@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useNavigate } from "react-router-dom"
-import { Eye, Pencil, Trash2 } from "lucide-react"
+import { Eye } from "lucide-react"
 
 const CurrentStudies = () => {
   const navigate = useNavigate()
@@ -57,7 +57,7 @@ const CurrentStudies = () => {
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
-                    size="sm"
+                    size="icon"
                     onClick={() => navigate(`/member/current-studies/${study.id}`)}
                   >
                     <Eye className="h-4 w-4" />
