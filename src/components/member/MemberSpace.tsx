@@ -6,6 +6,7 @@ import CurrentStudies from "./studies/CurrentStudies"
 import NewStudy from "./studies/NewStudy"
 import Documents from "../dashboard/Documents"
 import Settings from "./Settings"
+import MissionsList from "./missions/MissionsList"
 
 const MemberSpace = () => {
   return (
@@ -17,6 +18,7 @@ const MemberSpace = () => {
           <Route path="/current-studies" element={<CurrentStudies />} />
           <Route path="/current-studies/:studyId" element={<StudyDetailsPage />} />
           <Route path="/studies/new" element={<NewStudy />} />
+          <Route path="/missions" element={<MissionsList />} />
           <Route path="/documents" element={<Documents />} />
           <Route path="/settings" element={<Settings />} />
         </Routes>
