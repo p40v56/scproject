@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -14,6 +14,7 @@ interface StudyMeetingsSectionProps {
 const StudyMeetingsSection = ({ studyId }: StudyMeetingsSectionProps) => {
   const [isUploadReportDialogOpen, setIsUploadReportDialogOpen] = useState(false)
   const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(null)
+  const queryClient = useQueryClient()
 
   const { data: meetings, isLoading } = useQuery({
     queryKey: ['study-meetings', studyId],

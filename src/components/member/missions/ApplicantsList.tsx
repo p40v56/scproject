@@ -1,22 +1,22 @@
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { User, UserCheck } from "lucide-react";
-import { Dialog } from "@/components/ui/dialog";
-import { useState } from "react";
-import { toast } from "sonner";
-import StudentProfile from "./StudentProfile";
-import type { Applicant } from "./types";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
+import { User, UserCheck } from "lucide-react"
+import { Dialog } from "@/components/ui/dialog"
+import { useState } from "react"
+import { toast } from "sonner"
+import StudentProfile from "./StudentProfile"
+import type { Applicant } from "./types"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { supabase } from "@/integrations/supabase/client"
 
 interface ApplicantsListProps {
-  applicants: Applicant[];
-  missionId: string;
+  applicants: Applicant[]
+  missionId: string
 }
 
 export const ApplicantsList = ({ applicants, missionId }: ApplicantsListProps) => {
-  const [selectedStudent, setSelectedStudent] = useState<Applicant | null>(null);
-  const queryClient = useQueryClient();
+  const [selectedStudent, setSelectedStudent] = useState<Applicant | null>(null)
+  const queryClient = useQueryClient()
 
   const { data: profiles } = useQuery({
     queryKey: ['applicant-profiles', applicants.map(a => a.student_id)],
@@ -24,13 +24,13 @@ export const ApplicantsList = ({ applicants, missionId }: ApplicantsListProps) =
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .in('id', applicants.map(a => a.student_id || ''));
+        .in('id', applicants.map(a => a.student_id || ''))
       
-      if (error) throw error;
-      return data;
+      if (error) throw error
+      return data
     },
     enabled: applicants.length > 0,
-  });
+  })
 
   const selectApplicantMutation = useMutation({
     mutationFn: async (applicantId: string) => {
@@ -41,9 +41,9 @@ export const ApplicantsList = ({ applicants, missionId }: ApplicantsListProps) =
           status: 'in-progress',
           assigned_student_id: applicants.find(a => a.id === applicantId)?.student_id
         })
-        .eq('id', missionId);
+        .eq('id', missionId)
       
-      if (missionError) throw missionError;
+      if (missionError) throw missionError
 
       // 2. Update application status to selected
       const { error: applicationError } = await supabase
@@ -52,37 +52,37 @@ export const ApplicantsList = ({ applicants, missionId }: ApplicantsListProps) =
           status: 'selected',
           selected_at: new Date().toISOString()
         })
-        .eq('id', applicantId);
+        .eq('id', applicantId)
 
-      if (applicationError) throw applicationError;
+      if (applicationError) throw applicationError
     },
     onSuccess: () => {
-      toast.success("Le candidat a été sélectionné pour la mission");
-      queryClient.invalidateQueries({ queryKey: ['missions'] });
+      toast.success("Le candidat a été sélectionné pour la mission")
+      queryClient.invalidateQueries({ queryKey: ['missions'] })
     },
     onError: (error) => {
-      console.error('Error selecting applicant:', error);
-      toast.error("Erreur lors de la sélection du candidat");
+      console.error('Error selecting applicant:', error)
+      toast.error("Erreur lors de la sélection du candidat")
     }
-  });
+  })
 
   const handleSelectApplicant = (applicantId: string) => {
-    selectApplicantMutation.mutate(applicantId);
-  };
+    selectApplicantMutation.mutate(applicantId)
+  }
 
   if (applicants.length === 0) {
-    return <p className="text-muted-foreground">Aucune candidature pour le moment</p>;
+    return <p className="text-muted-foreground">Aucune candidature pour le moment</p>
   }
 
   const getStudentName = (studentId: string | null) => {
-    const profile = profiles?.find(p => p.id === studentId);
-    return profile ? `${profile.first_name} ${profile.last_name}` : 'Étudiant inconnu';
-  };
+    const profile = profiles?.find(p => p.id === studentId)
+    return profile ? `${profile.first_name} ${profile.last_name}` : 'Étudiant inconnu'
+  }
 
   const getStudentLevel = (studentId: string | null) => {
-    const profile = profiles?.find(p => p.id === studentId);
-    return profile?.study_year || 'Non spécifié';
-  };
+    const profile = profiles?.find(p => p.id === studentId)
+    return profile?.study_year || 'Non spécifié'
+  }
 
   return (
     <div className="space-y-4">
@@ -125,11 +125,16 @@ export const ApplicantsList = ({ applicants, missionId }: ApplicantsListProps) =
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setSelectedStudent({
-                      ...applicant,
-                      name: getStudentName(applicant.student_id),
-                      level: getStudentLevel(applicant.student_id)
-                    })}
+                    onClick={() => {
+                      const profile = profiles?.find(p => p.id === applicant.student_id)
+                      setSelectedStudent({
+                        ...applicant,
+                        name: getStudentName(applicant.student_id),
+                        level: getStudentLevel(applicant.student_id),
+                        email: profile?.email,
+                        specialization: profile?.specialization
+                      })
+                    }}
                   >
                     <User className="w-4 h-4" />
                   </Button>
@@ -152,5 +157,5 @@ export const ApplicantsList = ({ applicants, missionId }: ApplicantsListProps) =
         </Dialog>
       )}
     </div>
-  );
-};
+  )
+}

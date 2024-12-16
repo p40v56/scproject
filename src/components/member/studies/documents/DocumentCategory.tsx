@@ -25,12 +25,13 @@ const DocumentCategory = ({ title, documents }: DocumentCategoryProps) => {
 
       if (error) throw error
 
-      const url = URL.createObjectURL(data)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = document.name
-      a.click()
-      URL.revokeObjectURL(url)
+      // Create a download link
+      const url = window.URL.createObjectURL(data)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = document.name
+      link.click()
+      window.URL.revokeObjectURL(url)
     } catch (error) {
       console.error('Error downloading document:', error)
       toast.error('Erreur lors du téléchargement du document')

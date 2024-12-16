@@ -1,4 +1,5 @@
-import { Calendar, Clock, MapPin } from "lucide-react"
+import { Calendar, Clock, MapPin, Upload } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 interface Meeting {
   id: string
