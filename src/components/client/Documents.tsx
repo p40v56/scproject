@@ -13,6 +13,11 @@ const Documents = () => {
   const { data: documents, isLoading } = useQuery({
     queryKey: ['study-documents', studyId],
     queryFn: async () => {
+      // Return early if no studyId
+      if (!studyId) {
+        return []
+      }
+
       const { data, error } = await supabase
         .from('documents')
         .select('*')
@@ -22,6 +27,8 @@ const Documents = () => {
       if (error) throw error
       return data
     },
+    // Only enable the query if we have a studyId
+    enabled: !!studyId
   })
 
   const handleDownload = async (document: any) => {
@@ -45,8 +52,34 @@ const Documents = () => {
     }
   }
 
+  if (!studyId) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Documents</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-center text-muted-foreground py-4">
+            Aucune étude sélectionnée
+          </p>
+        </CardContent>
+      </Card>
+    )
+  }
+
   if (isLoading) {
-    return <div>Chargement des documents...</div>
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Documents</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-center text-muted-foreground py-4">
+            Chargement des documents...
+          </p>
+        </CardContent>
+      </Card>
+    )
   }
 
   const documentsByCategory = {
