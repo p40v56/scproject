@@ -29,14 +29,14 @@ export type Mission = {
   endDate?: string;
   created_at: string;
   updated_at: string;
-  study_id?: string | null;
-  study_phase_id?: string | null;
-  assigned_student_id?: string | null;
-  study?: {
+  study_id: string | null;
+  study_phase_id: string | null;
+  assigned_student_id: string | null;
+  study: {
     id: string;
     title: string;
   } | null;
-  study_phase?: {
+  study_phase: {
     id: string;
     name: string;
   } | null;

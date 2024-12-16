@@ -31,7 +31,7 @@ export default function MissionsList() {
             id,
             title
           ),
-          study_phase:study_phases(
+          study_phase:study_phases!study_phase_id(
             id,
             name
           )
