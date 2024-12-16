@@ -14,6 +14,7 @@ interface Phase {
   start_date?: string
   end_date?: string
   mission_id?: string
+  order?: number
 }
 
 interface PhaseItemProps {
@@ -27,13 +28,19 @@ const PhaseItem = ({ phase, studyId, isDragging, dragHandleProps }: PhaseItemPro
   const queryClient = useQueryClient()
 
   const updatePhaseMutation = useMutation({
-    mutationFn: async ({ id, progress }: { id: string, progress: number }) => {
+    mutationFn: async ({ id, progress, order }: { id: string, progress?: number, order?: number }) => {
+      const updates: any = {}
+      if (progress !== undefined) {
+        updates.progress = progress
+        updates.status = progress === 100 ? 'completed' : progress === 0 ? 'pending' : 'in_progress'
+      }
+      if (order !== undefined) {
+        updates.order = order
+      }
+
       const { data, error } = await supabase
         .from('study_phases')
-        .update({ 
-          progress,
-          status: progress === 100 ? 'completed' : progress === 0 ? 'pending' : 'in_progress'
-        })
+        .update(updates)
         .eq('id', id)
         .select()
 
@@ -45,7 +52,7 @@ const PhaseItem = ({ phase, studyId, isDragging, dragHandleProps }: PhaseItemPro
     },
     onError: (error) => {
       console.error('Error updating phase:', error)
-      toast.error('Erreur lors de la mise à jour de la progression')
+      toast.error('Erreur lors de la mise à jour de la phase')
     },
   })
 

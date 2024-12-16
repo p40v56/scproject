@@ -23,19 +23,24 @@ const StudyPhasesSection = ({ studyId }: StudyPhasesSectionProps) => {
         .from('study_phases')
         .select('*')
         .eq('study_id', studyId)
-        .order('created_at', { ascending: true })
+        .order('order', { ascending: true })
 
       if (error) throw error
       return data
     },
   })
 
-  const updatePhaseMutation = useMutation({
-    mutationFn: async ({ id, order }: { id: string, order: number }) => {
+  const updatePhaseOrderMutation = useMutation({
+    mutationFn: async (updates: { id: string, order: number }[]) => {
       const { error } = await supabase
         .from('study_phases')
-        .update({ updated_at: new Date().toISOString() })
-        .eq('id', id)
+        .upsert(
+          updates.map(({ id, order }) => ({
+            id,
+            order,
+            updated_at: new Date().toISOString()
+          }))
+        )
 
       if (error) throw error
     },
@@ -60,10 +65,11 @@ const StudyPhasesSection = ({ studyId }: StudyPhasesSectionProps) => {
 
     // Update the order in the database
     try {
-      await Promise.all(
-        items.map((item, index) =>
-          updatePhaseMutation.mutate({ id: item.id, order: index })
-        )
+      await updatePhaseOrderMutation.mutateAsync(
+        items.map((item, index) => ({
+          id: item.id,
+          order: index
+        }))
       )
     } catch (error) {
       console.error('Error updating phases order:', error)
@@ -103,7 +109,6 @@ const StudyPhasesSection = ({ studyId }: StudyPhasesSectionProps) => {
                       <div
                         ref={provided.innerRef}
                         {...provided.draggableProps}
-                        {...provided.dragHandleProps}
                         className={`transition-colors ${
                           snapshot.isDragging ? "bg-muted" : ""
                         }`}
@@ -112,6 +117,7 @@ const StudyPhasesSection = ({ studyId }: StudyPhasesSectionProps) => {
                           phase={phase}
                           studyId={studyId}
                           isDragging={snapshot.isDragging}
+                          dragHandleProps={provided.dragHandleProps}
                         />
                       </div>
                     )}
