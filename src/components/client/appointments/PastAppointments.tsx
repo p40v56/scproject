@@ -20,14 +20,15 @@ export const PastAppointments = () => {
   const { data: pastMeetings, isLoading } = useQuery({
     queryKey: ['past-meetings'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      console.log("Fetching past meetings...")
+      const { data: meetings, error } = await supabase
         .from('study_meetings')
         .select(`
           id,
           title,
           date,
           description,
-          meeting_reports (
+          meeting_reports!left (
             id,
             file_path
           )
@@ -35,9 +36,13 @@ export const PastAppointments = () => {
         .lt('date', new Date().toISOString())
         .order('date', { ascending: false })
 
-      if (error) throw error
-      console.log('Past meetings data:', data)
-      return data as Meeting[]
+      if (error) {
+        console.error('Error fetching meetings:', error)
+        throw error
+      }
+      
+      console.log('Past meetings with reports:', meetings)
+      return meetings as Meeting[]
     }
   })
 
