@@ -7,14 +7,16 @@ import StudyPhasesSection from "./StudyPhasesSection"
 import StudyMeetingsSection from "./StudyMeetingsSection"
 import { Button } from "@/components/ui/button"
 import { useNavigate } from "react-router-dom"
+import { Card, CardContent } from "@/components/ui/card"
 
 const StudyDetailsPage = () => {
   const { studyId } = useParams()
   const navigate = useNavigate()
 
   const { data: study, isLoading } = useQuery({
-    queryKey: ['studies', studyId],
+    queryKey: ['study', studyId],
     queryFn: async () => {
+      console.log("Fetching study with ID:", studyId)
       const { data, error } = await supabase
         .from('studies')
         .select(`
@@ -35,7 +37,11 @@ const StudyDetailsPage = () => {
         .eq('id', studyId)
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error("Error fetching study:", error)
+        throw error
+      }
+      console.log("Fetched study data:", data)
       return data
     },
   })
@@ -68,40 +74,48 @@ const StudyDetailsPage = () => {
         <TabsContent value="overview">
           <div className="grid gap-6">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <div className="p-4 border rounded-lg">
-                <h3 className="font-medium">Client</h3>
-                <p className="text-sm text-muted-foreground">
-                  {study.client ? `${study.client.first_name} ${study.client.last_name}` : 'Non assigné'}
-                </p>
-                {study.client?.email && (
-                  <p className="text-sm text-muted-foreground">{study.client.email}</p>
-                )}
-              </div>
+              <Card>
+                <CardContent className="pt-6">
+                  <h3 className="font-medium mb-2">Client</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {study.client ? `${study.client.first_name} ${study.client.last_name}` : 'Non assigné'}
+                  </p>
+                  {study.client?.email && (
+                    <p className="text-sm text-muted-foreground">{study.client.email}</p>
+                  )}
+                </CardContent>
+              </Card>
 
-              <div className="p-4 border rounded-lg">
-                <h3 className="font-medium">Chargé de projet</h3>
-                <p className="text-sm text-muted-foreground">
-                  {study.assigned_member ? `${study.assigned_member.first_name} ${study.assigned_member.last_name}` : 'Non assigné'}
-                </p>
-                {study.assigned_member?.email && (
-                  <p className="text-sm text-muted-foreground">{study.assigned_member.email}</p>
-                )}
-              </div>
+              <Card>
+                <CardContent className="pt-6">
+                  <h3 className="font-medium mb-2">Chargé de projet</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {study.assigned_member ? `${study.assigned_member.first_name} ${study.assigned_member.last_name}` : 'Non assigné'}
+                  </p>
+                  {study.assigned_member?.email && (
+                    <p className="text-sm text-muted-foreground">{study.assigned_member.email}</p>
+                  )}
+                </CardContent>
+              </Card>
 
-              <div className="p-4 border rounded-lg">
-                <h3 className="font-medium">Budget</h3>
-                <p className="text-sm text-muted-foreground">
-                  {study.budget ? `${study.budget}€` : 'Non défini'}
-                </p>
-              </div>
+              <Card>
+                <CardContent className="pt-6">
+                  <h3 className="font-medium mb-2">Budget</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {study.budget ? `${study.budget}€` : 'Non défini'}
+                  </p>
+                </CardContent>
+              </Card>
             </div>
 
-            <div className="p-4 border rounded-lg">
-              <h3 className="font-medium mb-2">Description</h3>
-              <p className="text-sm text-muted-foreground">
-                {study.description || 'Aucune description'}
-              </p>
-            </div>
+            <Card>
+              <CardContent className="pt-6">
+                <h3 className="font-medium mb-2">Description</h3>
+                <p className="text-sm text-muted-foreground">
+                  {study.description || 'Aucune description'}
+                </p>
+              </CardContent>
+            </Card>
           </div>
         </TabsContent>
 
