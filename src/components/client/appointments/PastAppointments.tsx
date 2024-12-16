@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { FileText } from "lucide-react"
+import { toast } from "sonner"
 
 interface Meeting {
   id: string
@@ -46,15 +47,32 @@ export const PastAppointments = () => {
 
   const handleDownloadReport = async (filePath: string) => {
     try {
-      const { data } = supabase.storage
+      const { data, error } = await supabase.storage
         .from('documents')
-        .getPublicUrl(filePath)
+        .download(filePath)
       
-      if (data) {
-        window.open(data.publicUrl, '_blank')
+      if (error) {
+        console.error('Download error:', error)
+        toast.error("Erreur lors du téléchargement du compte rendu")
+        return
       }
+
+      // Créer un URL pour le fichier téléchargé
+      const url = URL.createObjectURL(data)
+      
+      // Créer un lien temporaire pour le téléchargement
+      const link = document.createElement('a')
+      link.href = url
+      link.download = filePath.split('/').pop() || 'compte-rendu.pdf'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      
+      // Nettoyer l'URL
+      URL.revokeObjectURL(url)
     } catch (error) {
       console.error('Download error:', error)
+      toast.error("Erreur lors du téléchargement du compte rendu")
     }
   }
 
