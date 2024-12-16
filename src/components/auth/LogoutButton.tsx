@@ -9,7 +9,9 @@ const LogoutButton = () => {
 
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut();
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
       navigate("/");
       toast.success("Déconnexion réussie");
     } catch (error) {
@@ -22,7 +24,7 @@ const LogoutButton = () => {
     <Button
       variant="ghost"
       onClick={handleLogout}
-      className="gap-2 text-gray-600 hover:text-gray-900"
+      className="gap-2 text-gray-600 hover:text-gray-900 w-full justify-start"
     >
       <LogOut className="h-4 w-4" />
       Se déconnecter
