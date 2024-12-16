@@ -69,7 +69,7 @@ export const PastAppointments = () => {
               </p>
             </div>
           </div>
-          {meeting.meeting_reports && meeting.meeting_reports.length > 0 && (
+          {meeting.meeting_reports && meeting.meeting_reports.length > 0 ? (
             <Dialog>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm">
@@ -95,6 +95,10 @@ export const PastAppointments = () => {
                 </div>
               </DialogContent>
             </Dialog>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Compte rendu non disponible
+            </p>
           )}
         </div>
       ))}

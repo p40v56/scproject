@@ -26,7 +26,8 @@ export const NewAppointment = () => {
         study_id: studyId,
         title: subject,
         description,
-        date: date.toISOString()
+        date: date.toISOString(),
+        status: 'pending'
       })
 
     if (error) {
@@ -37,6 +38,7 @@ export const NewAppointment = () => {
     toast.success("Demande de rendez-vous envoyée")
     setSubject("")
     setDescription("")
+    setDate(new Date())
   }
 
   return (

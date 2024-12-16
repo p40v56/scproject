@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { useState } from "react"
 import { toast } from "sonner"
+import { Textarea } from "@/components/ui/textarea"
 
 interface Meeting {
   id: string
@@ -12,10 +13,12 @@ interface Meeting {
   date: string
   description: string | null
   location: string | null
+  status: string
 }
 
 export const UpcomingAppointments = () => {
   const [rescheduleDate, setRescheduleDate] = useState<Date | undefined>()
+  const [reason, setReason] = useState("")
 
   const { data: upcomingMeetings, isLoading } = useQuery({
     queryKey: ['upcoming-meetings'],
@@ -28,6 +31,7 @@ export const UpcomingAppointments = () => {
           date,
           description,
           location,
+          status,
           studies!inner(client_id)
         `)
         .gt('date', new Date().toISOString())
@@ -38,16 +42,19 @@ export const UpcomingAppointments = () => {
     }
   })
 
-  const handleReschedule = async (meetingId: string) => {
+  const handleRescheduleRequest = async (meetingId: string) => {
     if (!rescheduleDate) {
       toast.error("Veuillez sélectionner une nouvelle date")
       return
     }
     
     const { error } = await supabase
-      .from('study_meetings')
-      .update({ date: rescheduleDate.toISOString() })
-      .eq('id', meetingId)
+      .from('meeting_reschedule_requests')
+      .insert({
+        meeting_id: meetingId,
+        requested_date: rescheduleDate.toISOString(),
+        reason: reason
+      })
 
     if (error) {
       toast.error("Erreur lors de la demande de report")
@@ -55,6 +62,8 @@ export const UpcomingAppointments = () => {
     }
 
     toast.success("Demande de report envoyée")
+    setReason("")
+    setRescheduleDate(undefined)
   }
 
   if (isLoading) {
@@ -76,6 +85,9 @@ export const UpcomingAppointments = () => {
                   {meeting.description}
                 </p>
               )}
+              <p className="text-sm mt-1">
+                Statut: {meeting.status === 'pending' ? 'En attente de confirmation' : 'Confirmé'}
+              </p>
             </div>
             <div className="text-right">
               <p className="font-medium">
@@ -108,11 +120,21 @@ export const UpcomingAppointments = () => {
                     className="rounded-md border"
                   />
                 </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Motif du report
+                  </label>
+                  <Textarea
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    placeholder="Veuillez indiquer la raison du report..."
+                  />
+                </div>
                 <Button
-                  onClick={() => handleReschedule(meeting.id)}
+                  onClick={() => handleRescheduleRequest(meeting.id)}
                   className="w-full"
                 >
-                  Confirmer le report
+                  Envoyer la demande
                 </Button>
               </div>
             </DialogContent>
