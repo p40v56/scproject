@@ -81,7 +81,7 @@ const StudyDetails = () => {
     status: phase.status === 'completed' ? 'completed' : 
            phase.status === 'in_progress' ? 'in-progress' : 'pending',
     progress: phase.progress || 0
-  })) || []
+  } as const)) || []
 
   const nextMilestones = [
     {
