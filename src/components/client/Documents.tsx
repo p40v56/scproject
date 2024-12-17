@@ -61,13 +61,23 @@ const Documents = () => {
         .from('documents')
         .download(document.file_path);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error downloading document:', error);
+        throw error;
+      }
 
+      // Créer un URL pour le fichier téléchargé
       const url = window.URL.createObjectURL(data);
+      
+      // Créer un lien temporaire pour le téléchargement
       const link = document.createElement('a');
       link.href = url;
       link.download = document.name;
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
+      
+      // Nettoyer l'URL créé
       window.URL.revokeObjectURL(url);
       
       toast.success('Document téléchargé avec succès');
