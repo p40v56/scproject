@@ -103,12 +103,11 @@ const StudyDetails = () => {
     }
   ]
 
-  const consultant: Consultant = study.assigned_member ? {
-    name: `${study.assigned_member.first_name || ''} ${study.assigned_member.last_name || ''}`.trim() || 'Non assigné',
-    email: study.assigned_member.email || 'Non renseigné'
-  } : {
-    name: 'Non assigné',
-    email: 'Non renseigné'
+  const consultant: Consultant = {
+    name: study.assigned_member ? 
+      `${study.assigned_member.first_name || ''} ${study.assigned_member.last_name || ''}`.trim() || 'Non assigné' 
+      : 'Non assigné',
+    email: study.assigned_member?.email || 'Non renseigné'
   }
 
   return (

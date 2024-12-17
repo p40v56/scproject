@@ -63,6 +63,7 @@ const Documents = () => {
 
       if (error) {
         console.error('Error downloading document:', error);
+        toast.error('Erreur lors du téléchargement du document');
         throw error;
       }
 
