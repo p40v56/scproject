@@ -22,6 +22,7 @@ const queryClient = new QueryClient({
 
 const AppRoutes = () => {
   const { session, userProfile, isLoading } = useAuth();
+  console.log("Auth state:", { session, userProfile, isLoading });
 
   if (isLoading) {
     return (
@@ -31,9 +32,25 @@ const AppRoutes = () => {
     );
   }
 
+  if (!session) {
+    return (
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    );
+  }
+
+  if (!userProfile) {
+    console.error("No user profile found for authenticated user");
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-red-600">Erreur de chargement du profil</div>
+      </div>
+    );
+  }
+
   const getRedirectPath = () => {
-    if (!userProfile) return '/';
-    
     if (userProfile.roles?.includes('admin')) {
       return '/member';
     }
@@ -54,75 +71,45 @@ const AppRoutes = () => {
 
   return (
     <Routes>
-      <Route 
-        path="/" 
-        element={
-          session ? (
-            <Navigate to={getRedirectPath()} replace />
-          ) : (
-            <Index />
-          )
-        } 
-      />
-
+      <Route path="/" element={<Navigate to={getRedirectPath()} replace />} />
+      
       <Route
         path="/client/*"
         element={
-          !session ? (
-            <Navigate to="/" replace />
-          ) : (
-            <PrivateRoute allowedUserType="client">
-              <ClientSpace />
-            </PrivateRoute>
-          )
+          <PrivateRoute allowedUserType="client">
+            <ClientSpace />
+          </PrivateRoute>
         }
       />
+      
       <Route
         path="/student/*"
         element={
-          !session ? (
-            <Navigate to="/" replace />
-          ) : (
-            <PrivateRoute allowedUserType="student">
-              <StudentSpace />
-            </PrivateRoute>
-          )
+          <PrivateRoute allowedUserType="student">
+            <StudentSpace />
+          </PrivateRoute>
         }
       />
+      
       <Route
         path="/alumni/*"
         element={
-          !session ? (
-            <Navigate to="/" replace />
-          ) : (
-            <PrivateRoute allowedUserType="alumni">
-              <AlumniSpace />
-            </PrivateRoute>
-          )
+          <PrivateRoute allowedUserType="alumni">
+            <AlumniSpace />
+          </PrivateRoute>
         }
       />
+      
       <Route
         path="/member/*"
         element={
-          !session ? (
-            <Navigate to="/" replace />
-          ) : (
-            <PrivateRoute allowedUserType="member">
-              <MemberSpace />
-            </PrivateRoute>
-          )
+          <PrivateRoute allowedUserType="member">
+            <MemberSpace />
+          </PrivateRoute>
         }
       />
-      <Route
-        path="*"
-        element={
-          !session ? (
-            <Navigate to="/" replace />
-          ) : (
-            <Navigate to={getRedirectPath()} replace />
-          )
-        }
-      />
+      
+      <Route path="*" element={<Navigate to={getRedirectPath()} replace />} />
     </Routes>
   );
 };
@@ -132,11 +119,11 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <TooltipProvider>
-          <Toaster />
-          <Sonner />
           <BrowserRouter>
             <AppRoutes />
           </BrowserRouter>
+          <Toaster />
+          <Sonner />
         </TooltipProvider>
       </AuthProvider>
     </QueryClientProvider>
