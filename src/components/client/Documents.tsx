@@ -13,44 +13,39 @@ const Documents = () => {
   const { data: documents, isLoading } = useQuery({
     queryKey: ['study-documents', studyId],
     queryFn: async () => {
-      // Return early if no studyId
-      if (!studyId) {
-        return []
-      }
+      if (!studyId) return [];
 
       const { data, error } = await supabase
         .from('documents')
         .select('*')
         .eq('study_id', studyId)
-        .order('created_at', { ascending: false })
+        .order('created_at', { ascending: false });
 
-      if (error) throw error
-      return data
+      if (error) throw error;
+      return data;
     },
-    // Only enable the query if we have a studyId
     enabled: !!studyId
-  })
+  });
 
   const handleDownload = async (document: any) => {
     try {
       const { data, error } = await supabase.storage
         .from('documents')
-        .download(document.file_path)
+        .download(document.file_path);
 
-      if (error) throw error
+      if (error) throw error;
 
-      // Create a download link
-      const url = window.URL.createObjectURL(data)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = document.name
-      link.click()
-      window.URL.revokeObjectURL(url)
+      const url = window.URL.createObjectURL(data);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = document.name;
+      link.click();
+      window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Error downloading document:', error)
-      toast.error('Erreur lors du téléchargement du document')
+      console.error('Error downloading document:', error);
+      toast.error('Erreur lors du téléchargement du document');
     }
-  }
+  };
 
   if (!studyId) {
     return (
@@ -64,7 +59,7 @@ const Documents = () => {
           </p>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (isLoading) {
@@ -79,14 +74,14 @@ const Documents = () => {
           </p>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   const documentsByCategory = {
     administratif: documents?.filter(doc => doc.category === 'administratif') || [],
     facturation: documents?.filter(doc => doc.category === 'facturation') || [],
     etude: documents?.filter(doc => doc.category === 'etude') || [],
-  }
+  };
 
   return (
     <Card>
@@ -138,7 +133,7 @@ const Documents = () => {
         </Tabs>
       </CardContent>
     </Card>
-  )
-}
+  );
+};
 
-export default Documents
+export default Documents;

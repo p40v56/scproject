@@ -3,6 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 interface FirstLoginProps {
   onComplete: () => void;
@@ -11,6 +14,30 @@ interface FirstLoginProps {
 const FirstLogin = ({ onComplete }: FirstLoginProps) => {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [newsletterSubscription, setNewsletterSubscription] = useState(false);
+  const { session } = useAuth();
+
+  const { data: profile, isLoading } = useQuery({
+    queryKey: ['profile', session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) return null;
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('membership_paid_date')
+        .eq('id', session.user.id)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!session?.user?.id
+  });
+
+  // Si le client a déjà payé, on passe directement à l'étape suivante
+  if (!isLoading && profile?.membership_paid_date) {
+    onComplete();
+    return null;
+  }
 
   const handlePayment = async () => {
     if (!acceptedTerms) {
@@ -18,10 +45,27 @@ const FirstLogin = ({ onComplete }: FirstLoginProps) => {
       return;
     }
 
-    // TODO: Intégrer le système de paiement
-    toast.success("Paiement effectué avec succès");
-    onComplete();
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          membership_paid_date: new Date().toISOString(),
+        })
+        .eq('id', session?.user?.id);
+
+      if (error) throw error;
+
+      toast.success("Paiement effectué avec succès");
+      onComplete();
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error("Une erreur est survenue lors du paiement");
+    }
   };
+
+  if (isLoading) {
+    return <div>Chargement...</div>;
+  }
 
   return (
     <div className="container mx-auto p-6">

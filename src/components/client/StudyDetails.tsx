@@ -2,13 +2,12 @@ import { useParams } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { FileText, Download } from "lucide-react"
 import StudyProgress from "./StudyProgress"
 import StudyHeader from "./study/StudyHeader"
 import StudyMilestones from "./study/StudyMilestones"
 import CallbackRequest from "./study/CallbackRequest"
 import { useAuth } from "@/components/auth/AuthProvider"
+import Documents from "./Documents"
 
 const StudyDetails = () => {
   const { studyId } = useParams()
@@ -53,21 +52,6 @@ const StudyDetails = () => {
     enabled: !!studyId && !!session?.user?.id,
   })
 
-  const { data: documents } = useQuery({
-    queryKey: ['study-documents', studyId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('documents')
-        .select('*')
-        .eq('study_id', studyId)
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
-      return data
-    },
-    enabled: !!studyId,
-  })
-
   if (isLoading) {
     return <div>Chargement...</div>
   }
@@ -93,11 +77,9 @@ const StudyDetails = () => {
 
   const consultant = study.assigned_member ? {
     name: `${study.assigned_member.first_name || ''} ${study.assigned_member.last_name || ''}`.trim() || 'Non assigné',
-    phone: 'Non renseigné',
     email: study.assigned_member.email || 'Non renseigné'
   } : {
     name: 'Non assigné',
-    phone: 'Non renseigné',
     email: 'Non renseigné'
   }
 
@@ -123,50 +105,7 @@ const StudyDetails = () => {
         <StudyMilestones milestones={nextMilestones} />
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Détails de l'étude</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground">
-                  Date de début
-                </h4>
-                <p>{study.start_date ? new Date(study.start_date).toLocaleDateString('fr-FR') : 'Non définie'}</p>
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground">
-                  Date de fin prévue
-                </h4>
-                <p>{study.end_date ? new Date(study.end_date).toLocaleDateString('fr-FR') : 'Non définie'}</p>
-              </div>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">
-                Documents associés
-              </h4>
-              <div className="space-y-2">
-                {documents?.map((doc) => (
-                  <div key={doc.id} className="flex items-center justify-between p-2 border rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <FileText className="h-4 w-4 text-blue-600" />
-                      <span className="text-sm">{doc.name}</span>
-                    </div>
-                    <Button variant="ghost" size="sm">
-                      <Download className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-                {(!documents || documents.length === 0) && (
-                  <p className="text-sm text-muted-foreground">Aucun document disponible</p>
-                )}
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <Documents />
 
       <CallbackRequest />
     </div>
