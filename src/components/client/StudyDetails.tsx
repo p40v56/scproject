@@ -18,6 +18,8 @@ const StudyDetails = () => {
     queryKey: ['client-study', studyId],
     queryFn: async () => {
       if (!studyId) throw new Error("Study ID is required")
+      console.log("Fetching study with ID:", studyId)
+      console.log("Current user ID:", session?.user?.id)
 
       const { data, error } = await supabase
         .from('studies')
@@ -27,8 +29,7 @@ const StudyDetails = () => {
             id,
             first_name,
             last_name,
-            email,
-            phone
+            email
           ),
           study_phases(
             id,
@@ -41,7 +42,12 @@ const StudyDetails = () => {
         .eq('client_id', session?.user?.id)
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error("Error fetching study:", error)
+        throw error
+      }
+      
+      console.log("Fetched study data:", data)
       return data
     },
     enabled: !!studyId && !!session?.user?.id,
@@ -86,8 +92,8 @@ const StudyDetails = () => {
   ]
 
   const consultant = study.assigned_member ? {
-    name: `${study.assigned_member.first_name} ${study.assigned_member.last_name}`,
-    phone: study.assigned_member.phone || 'Non renseigné',
+    name: `${study.assigned_member.first_name || ''} ${study.assigned_member.last_name || ''}`.trim() || 'Non assigné',
+    phone: 'Non renseigné',
     email: study.assigned_member.email || 'Non renseigné'
   } : {
     name: 'Non assigné',
