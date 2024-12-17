@@ -1,4 +1,3 @@
-import { useParams } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -21,15 +20,12 @@ type Consultant = {
 }
 
 const StudyDetails = () => {
-  const { studyId } = useParams()
   const { session } = useAuth()
 
   const { data: study, isLoading } = useQuery({
-    queryKey: ['client-study', studyId],
+    queryKey: ['client-study'],
     queryFn: async () => {
-      if (!studyId) throw new Error("Study ID is required")
-      console.log("Fetching study with ID:", studyId)
-      console.log("Current user ID:", session?.user?.id)
+      console.log("Fetching study for client:", session?.user?.id)
 
       const { data, error } = await supabase
         .from('studies')
@@ -49,7 +45,6 @@ const StudyDetails = () => {
             order
           )
         `)
-        .eq('id', studyId)
         .eq('client_id', session?.user?.id)
         .single()
 
@@ -61,7 +56,7 @@ const StudyDetails = () => {
       console.log("Fetched study data:", data)
       return data
     },
-    enabled: !!studyId && !!session?.user?.id,
+    enabled: !!session?.user?.id,
   })
 
   if (isLoading) {
@@ -69,7 +64,7 @@ const StudyDetails = () => {
   }
 
   if (!study) {
-    return <div>Étude non trouvée</div>
+    return <div>Aucune étude trouvée</div>
   }
 
   const studyPhases = study.study_phases?.map(phase => ({
