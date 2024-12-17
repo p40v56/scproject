@@ -143,7 +143,7 @@ const Documents = () => {
                       <div>
                         <p className="font-medium">{doc.name}</p>
                         <p className="text-sm text-muted-foreground">
-                          {doc.file_type} • {new Date(doc.created_at).toLocaleDateString()}
+                          {new Date(doc.created_at).toLocaleDateString('fr-FR')}
                         </p>
                       </div>
                     </div>

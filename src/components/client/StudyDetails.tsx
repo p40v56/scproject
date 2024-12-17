@@ -43,6 +43,12 @@ const StudyDetails = () => {
             status,
             progress,
             order
+          ),
+          study_meetings(
+            id,
+            title,
+            date,
+            status
           )
         `)
         .eq('client_id', session?.user?.id)
@@ -75,7 +81,21 @@ const StudyDetails = () => {
     progress: phase.progress || 0
   })) || []
 
+  // Filtrer uniquement les rendez-vous confirmés à venir
+  const upcomingMeetings = study.study_meetings
+    ?.filter(meeting => 
+      meeting.status === 'confirmed' && 
+      new Date(meeting.date) > new Date()
+    )
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    || []
+
   const nextMilestones = [
+    ...upcomingMeetings.map(meeting => ({
+      date: new Date(meeting.date).toLocaleDateString('fr-FR'),
+      title: meeting.title,
+      description: "Rendez-vous confirmé",
+    })),
     {
       date: study.end_date ? new Date(study.end_date).toLocaleDateString('fr-FR') : 'Non définie',
       title: "Fin prévue de l'étude",
