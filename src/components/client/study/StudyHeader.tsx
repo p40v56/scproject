@@ -25,7 +25,7 @@ const StudyHeader = ({ currentPhase, progress, consultant, budget }: StudyHeader
         <p className="text-sm text-muted-foreground">{Math.round(progress)}%</p>
       </div>
       <div className="p-4 border rounded-lg space-y-2">
-        <p className="text-sm font-medium text-muted-foreground">Consultant assigné</p>
+        <p className="text-sm font-medium text-muted-foreground">Chargé de projet</p>
         <p className="text-lg font-semibold">{consultant.name}</p>
         <p className="text-sm text-muted-foreground">{consultant.email}</p>
       </div>
