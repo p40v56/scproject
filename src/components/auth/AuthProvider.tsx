@@ -21,23 +21,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [userProfile, setUserProfile] = useState(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("Initial session check:", session);
-      setSession(session);
-      if (session) {
-        fetchUserProfile(session.user.id);
-      } else {
+    const initializeAuth = async () => {
+      try {
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        console.log("Initial session check:", initialSession);
+        setSession(initialSession);
+        
+        if (initialSession) {
+          await fetchUserProfile(initialSession.user.id);
+        } else {
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error("Error during auth initialization:", error);
         setIsLoading(false);
       }
-    });
+    };
+
+    initializeAuth();
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log("Auth state change:", session);
-      setSession(session);
-      if (session) {
-        fetchUserProfile(session.user.id);
+    } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+      console.log("Auth state change:", newSession);
+      setSession(newSession);
+      
+      if (newSession) {
+        await fetchUserProfile(newSession.user.id);
       } else {
         setUserProfile(null);
         setIsLoading(false);
@@ -58,9 +68,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (error) throw error;
       console.log("User profile:", profile);
       setUserProfile(profile);
-      setIsLoading(false);
     } catch (error) {
       console.error('Error fetching user profile:', error);
+    } finally {
       setIsLoading(false);
     }
   };

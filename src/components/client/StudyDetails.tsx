@@ -9,6 +9,17 @@ import CallbackRequest from "./study/CallbackRequest"
 import { useAuth } from "@/components/auth/AuthProvider"
 import Documents from "./Documents"
 
+type Phase = {
+  name: string;
+  status: "completed" | "in-progress" | "pending";
+  progress: number;
+}
+
+type Consultant = {
+  name: string;
+  email: string;
+}
+
 const StudyDetails = () => {
   const { studyId } = useParams()
   const { session } = useAuth()
@@ -62,10 +73,11 @@ const StudyDetails = () => {
 
   const studyPhases = study.study_phases?.map(phase => ({
     name: phase.name,
-    status: phase.status === 'completed' ? 'completed' : 
-           phase.status === 'in_progress' ? 'in-progress' : 'pending',
+    status: phase.status === 'completed' ? 'completed' as const : 
+           phase.status === 'in_progress' ? 'in-progress' as const : 
+           'pending' as const,
     progress: phase.progress || 0
-  } as const)) || []
+  })) || []
 
   const nextMilestones = [
     {
@@ -75,7 +87,7 @@ const StudyDetails = () => {
     }
   ]
 
-  const consultant = study.assigned_member ? {
+  const consultant: Consultant = study.assigned_member ? {
     name: `${study.assigned_member.first_name || ''} ${study.assigned_member.last_name || ''}`.trim() || 'Non assigné',
     email: study.assigned_member.email || 'Non renseigné'
   } : {
