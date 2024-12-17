@@ -4,21 +4,44 @@ import { FileText, Download } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { useParams } from "react-router-dom"
+import { useAuth } from "@/components/auth/AuthProvider"
 import { toast } from "sonner"
 
 const Documents = () => {
-  const { studyId } = useParams()
+  const { session } = useAuth()
 
-  const { data: documents, isLoading } = useQuery({
-    queryKey: ['study-documents', studyId],
+  // First, fetch the study for the current client
+  const { data: study } = useQuery({
+    queryKey: ['client-study'],
     queryFn: async () => {
-      if (!studyId) return [];
+      if (!session?.user?.id) return null;
+
+      const { data, error } = await supabase
+        .from('studies')
+        .select('id')
+        .eq('client_id', session.user.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching study:', error);
+        throw error;
+      }
+      
+      return data;
+    },
+    enabled: !!session?.user?.id
+  });
+
+  // Then fetch documents for that study
+  const { data: documents, isLoading } = useQuery({
+    queryKey: ['study-documents', study?.id],
+    queryFn: async () => {
+      if (!study?.id) return [];
 
       const { data, error } = await supabase
         .from('documents')
         .select('*')
-        .eq('study_id', studyId)
+        .eq('study_id', study.id)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -29,7 +52,7 @@ const Documents = () => {
       console.log('Fetched documents:', data);
       return data;
     },
-    enabled: !!studyId
+    enabled: !!study?.id
   });
 
   const handleDownload = async (document: any) => {
@@ -54,21 +77,6 @@ const Documents = () => {
     }
   };
 
-  if (!studyId) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Documents</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-center text-muted-foreground py-4">
-            Aucune étude sélectionnée
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
-
   if (isLoading) {
     return (
       <Card>
@@ -78,6 +86,21 @@ const Documents = () => {
         <CardContent>
           <p className="text-center text-muted-foreground py-4">
             Chargement des documents...
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!study) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Documents</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-center text-muted-foreground py-4">
+            Aucune étude trouvée
           </p>
         </CardContent>
       </Card>
