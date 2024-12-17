@@ -9,6 +9,16 @@ const LogoutButton = () => {
 
   const handleLogout = async () => {
     try {
+      // D'abord, on récupère la session actuelle
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      // Si pas de session, on redirige directement
+      if (!session) {
+        navigate("/");
+        return;
+      }
+
+      // Sinon, on procède à la déconnexion
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
@@ -16,7 +26,9 @@ const LogoutButton = () => {
       toast.success("Déconnexion réussie");
     } catch (error) {
       console.error('Error logging out:', error);
-      toast.error("Erreur lors de la déconnexion");
+      // En cas d'erreur, on force quand même la redirection
+      navigate("/");
+      toast.error("Une erreur est survenue lors de la déconnexion");
     }
   };
 
