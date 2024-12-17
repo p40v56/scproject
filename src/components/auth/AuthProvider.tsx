@@ -20,40 +20,36 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [userProfile, setUserProfile] = useState(null);
 
-  const fetchUserProfile = async (userId: string) => {
-    try {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('user_type, roles')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error('Error fetching profile:', error);
-        return null;
-      }
-
-      console.log("Profile fetched:", profile);
-      return profile;
-    } catch (error) {
-      console.error('Error in fetchUserProfile:', error);
-      return null;
-    }
-  };
-
   useEffect(() => {
     let mounted = true;
+
+    const fetchUserProfile = async (userId: string) => {
+      try {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('user_type, roles')
+          .eq('id', userId)
+          .single();
+
+        if (error) throw error;
+        
+        console.log("Profile fetched:", profile);
+        return profile;
+      } catch (error) {
+        console.error('Error in fetchUserProfile:', error);
+        return null;
+      }
+    };
 
     const initializeAuth = async () => {
       try {
         const { data: { session: initialSession } } = await supabase.auth.getSession();
         console.log("Initial session check:", initialSession);
-        
+
         if (!mounted) return;
 
-        setSession(initialSession);
-        
-        if (initialSession?.user?.id) {
+        if (initialSession) {
+          setSession(initialSession);
           const profile = await fetchUserProfile(initialSession.user.id);
           if (mounted) {
             setUserProfile(profile);
@@ -70,29 +66,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
       console.log("Auth state change event:", event);
-      console.log("New session:", newSession);
       
       if (!mounted) return;
 
-      setSession(newSession);
-      setIsLoading(true);
+      if (event === 'SIGNED_OUT') {
+        setSession(null);
+        setUserProfile(null);
+        setIsLoading(false);
+        return;
+      }
 
-      try {
-        if (newSession?.user?.id) {
-          const profile = await fetchUserProfile(newSession.user.id);
-          if (mounted) {
-            setUserProfile(profile);
-          }
-        } else {
-          setUserProfile(null);
-        }
-      } catch (error) {
-        console.error("Error during auth state change:", error);
-      } finally {
+      if (newSession) {
+        setSession(newSession);
+        const profile = await fetchUserProfile(newSession.user.id);
         if (mounted) {
-          setIsLoading(false);
+          setUserProfile(profile);
         }
       }
+      
+      setIsLoading(false);
     });
 
     initializeAuth();
