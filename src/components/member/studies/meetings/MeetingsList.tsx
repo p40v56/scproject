@@ -35,49 +35,58 @@ const MeetingsList = ({ meetings, onUploadReport, showUploadButton }: MeetingsLi
   const handleRescheduleResponse = async (meetingId: string, requestId: string, approved: boolean) => {
     console.log('Handling reschedule response:', { meetingId, requestId, approved })
     
-    // First update the reschedule request status
-    const { error: requestError } = await supabase
-      .from('meeting_reschedule_requests')
-      .update({
-        status: approved ? 'approved' : 'rejected'
-      })
-      .eq('id', requestId)
-
-    if (requestError) {
-      console.error('Error updating reschedule request:', requestError)
-      toast.error("Erreur lors de la mise à jour de la demande")
-      return
-    }
-
-    if (approved) {
-      // If approved, update the meeting date
-      const request = meetings
-        .find(m => m.id === meetingId)
-        ?.meeting_reschedule_requests?.[0]
-
-      if (!request) {
-        toast.error("Demande introuvable")
-        return
-      }
-
-      const { error: meetingError } = await supabase
-        .from('study_meetings')
+    try {
+      // First update the reschedule request status
+      const { error: requestError } = await supabase
+        .from('meeting_reschedule_requests')
         .update({
-          date: request.requested_date
+          status: approved ? 'approved' : 'rejected'
         })
-        .eq('id', meetingId)
+        .eq('id', requestId)
 
-      if (meetingError) {
-        console.error('Error updating meeting date:', meetingError)
-        toast.error("Erreur lors de la mise à jour du rendez-vous")
+      if (requestError) {
+        console.error('Error updating reschedule request:', requestError)
+        toast.error("Erreur lors de la mise à jour de la demande")
         return
       }
-    }
 
-    // Refresh the meetings data
-    await queryClient.invalidateQueries({ queryKey: ['study-meetings'] })
-    
-    toast.success(approved ? "Demande de report approuvée" : "Demande de report refusée")
+      if (approved) {
+        // If approved, find the request to get the new date
+        const request = meetings
+          .find(m => m.id === meetingId)
+          ?.meeting_reschedule_requests?.find(r => r.id === requestId)
+
+        if (!request) {
+          toast.error("Demande introuvable")
+          return
+        }
+
+        // Update the meeting date
+        const { error: meetingError } = await supabase
+          .from('study_meetings')
+          .update({
+            date: request.requested_date
+          })
+          .eq('id', meetingId)
+
+        if (meetingError) {
+          console.error('Error updating meeting date:', meetingError)
+          toast.error("Erreur lors de la mise à jour du rendez-vous")
+          return
+        }
+
+        console.log('Meeting date updated successfully')
+      }
+
+      // Refresh the meetings data
+      await queryClient.invalidateQueries({ queryKey: ['study-meetings'] })
+      await queryClient.invalidateQueries({ queryKey: ['upcoming-meetings'] })
+      
+      toast.success(approved ? "Demande de report approuvée" : "Demande de report refusée")
+    } catch (error) {
+      console.error('Error in handleRescheduleResponse:', error)
+      toast.error("Une erreur est survenue")
+    }
   }
 
   return (
