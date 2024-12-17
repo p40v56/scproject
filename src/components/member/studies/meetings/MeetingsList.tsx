@@ -33,6 +33,8 @@ const MeetingsList = ({ meetings, onUploadReport, showUploadButton }: MeetingsLi
   const queryClient = useQueryClient()
 
   const handleRescheduleResponse = async (meetingId: string, requestId: string, approved: boolean) => {
+    console.log('Handling reschedule response:', { meetingId, requestId, approved })
+    
     // First update the reschedule request status
     const { error: requestError } = await supabase
       .from('meeting_reschedule_requests')
@@ -108,39 +110,41 @@ const MeetingsList = ({ meetings, onUploadReport, showUploadButton }: MeetingsLi
                 <p className="text-sm mt-2">{meeting.description}</p>
               )}
 
-              {meeting.meeting_reschedule_requests?.[0] && meeting.meeting_reschedule_requests[0].status === 'pending' && (
-                <div className="mt-4 p-3 bg-muted rounded-lg border border-muted-foreground/20">
-                  <div className="flex items-center gap-2 text-orange-500 mb-2">
-                    <AlertCircle className="h-4 w-4" />
-                    <span className="text-sm font-medium">Demande de report en attente</span>
+              {meeting.meeting_reschedule_requests?.map(request => 
+                request.status === 'pending' && (
+                  <div key={request.id} className="mt-4 p-3 bg-muted rounded-lg border border-muted-foreground/20">
+                    <div className="flex items-center gap-2 text-orange-500 mb-2">
+                      <AlertCircle className="h-4 w-4" />
+                      <span className="text-sm font-medium">Demande de report en attente</span>
+                    </div>
+                    <p className="text-sm line-through">
+                      Date actuelle: {new Date(meeting.date).toLocaleDateString()} à {new Date(meeting.date).toLocaleTimeString()}
+                    </p>
+                    <p className="text-sm">
+                      Nouvelle date souhaitée: {new Date(request.requested_date).toLocaleDateString()} à {new Date(request.requested_date).toLocaleTimeString()}
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Motif: {request.reason}
+                    </p>
+                    
+                    <div className="flex gap-2 mt-3">
+                      <Button 
+                        size="sm" 
+                        variant="default"
+                        onClick={() => handleRescheduleResponse(meeting.id, request.id, true)}
+                      >
+                        Accepter
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleRescheduleResponse(meeting.id, request.id, false)}
+                      >
+                        Refuser
+                      </Button>
+                    </div>
                   </div>
-                  <p className="text-sm line-through">
-                    Date actuelle: {new Date(meeting.date).toLocaleDateString()} à {new Date(meeting.date).toLocaleTimeString()}
-                  </p>
-                  <p className="text-sm">
-                    Nouvelle date souhaitée: {new Date(meeting.meeting_reschedule_requests[0].requested_date).toLocaleDateString()} à {new Date(meeting.meeting_reschedule_requests[0].requested_date).toLocaleTimeString()}
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Motif: {meeting.meeting_reschedule_requests[0].reason}
-                  </p>
-                  
-                  <div className="flex gap-2 mt-3">
-                    <Button 
-                      size="sm" 
-                      variant="default"
-                      onClick={() => handleRescheduleResponse(meeting.id, meeting.meeting_reschedule_requests![0].id, true)}
-                    >
-                      Accepter
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => handleRescheduleResponse(meeting.id, meeting.meeting_reschedule_requests![0].id, false)}
-                    >
-                      Refuser
-                    </Button>
-                  </div>
-                </div>
+                )
               )}
             </div>
             {showUploadButton && onUploadReport && (

@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Calendar } from "@/components/ui/calendar"
 import { Button } from "@/components/ui/button"
@@ -15,12 +15,12 @@ interface Meeting {
   description: string | null
   location: string | null
   status: string
-  reschedule_request?: {
+  meeting_reschedule_requests?: {
     id: string
     requested_date: string
     reason: string
     status: string
-  }
+  }[]
 }
 
 export const UpcomingAppointments = () => {
@@ -28,10 +28,12 @@ export const UpcomingAppointments = () => {
   const [rescheduleTime, setRescheduleTime] = useState("09:00")
   const [reason, setReason] = useState("")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const queryClient = useQueryClient()
 
   const { data: upcomingMeetings, isLoading } = useQuery({
     queryKey: ['upcoming-meetings'],
     queryFn: async () => {
+      console.log("Fetching upcoming meetings...")
       const { data, error } = await supabase
         .from('study_meetings')
         .select(`
@@ -41,7 +43,7 @@ export const UpcomingAppointments = () => {
           description,
           location,
           status,
-          meeting_reschedule_requests (
+          meeting_reschedule_requests!left (
             id,
             requested_date,
             reason,
@@ -51,11 +53,15 @@ export const UpcomingAppointments = () => {
         .gt('date', new Date().toISOString())
         .order('date', { ascending: true })
 
-      if (error) throw error
+      if (error) {
+        console.error('Error fetching meetings:', error)
+        throw error
+      }
       
+      console.log('Upcoming meetings with requests:', data)
       return data.map((meeting: any) => ({
         ...meeting,
-        reschedule_request: meeting.meeting_reschedule_requests?.[0]
+        meeting_reschedule_requests: meeting.meeting_reschedule_requests || []
       })) as Meeting[]
     }
   })
@@ -84,6 +90,9 @@ export const UpcomingAppointments = () => {
       toast.error("Erreur lors de la demande de report")
       return
     }
+
+    // Invalider le cache pour forcer un rafraîchissement
+    await queryClient.invalidateQueries({ queryKey: ['upcoming-meetings'] })
 
     toast.success("Demande de report envoyée")
     setReason("")
@@ -115,21 +124,27 @@ export const UpcomingAppointments = () => {
                 Statut: {meeting.status === 'pending' ? 'En attente de confirmation' : 'Confirmé'}
               </p>
               
-              {meeting.reschedule_request?.status === 'pending' && (
+              {meeting.meeting_reschedule_requests?.some(req => req.status === 'pending') && (
                 <div className="mt-2 p-2 bg-muted rounded-md">
                   <p className="text-sm font-medium">Demande de report en cours</p>
                   <p className="text-sm line-through">
                     Date actuelle: {new Date(meeting.date).toLocaleDateString()} à {new Date(meeting.date).toLocaleTimeString()}
                   </p>
-                  <p className="text-sm">
-                    Nouvelle date souhaitée: {new Date(meeting.reschedule_request.requested_date).toLocaleDateString()} à {new Date(meeting.reschedule_request.requested_date).toLocaleTimeString()}
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Motif: {meeting.reschedule_request.reason}
-                  </p>
-                  <p className="text-sm font-medium mt-1">
-                    Statut: En attente de confirmation
-                  </p>
+                  {meeting.meeting_reschedule_requests.map((request, index) => (
+                    request.status === 'pending' && (
+                      <div key={index}>
+                        <p className="text-sm">
+                          Nouvelle date souhaitée: {new Date(request.requested_date).toLocaleDateString()} à {new Date(request.requested_date).toLocaleTimeString()}
+                        </p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Motif: {request.reason}
+                        </p>
+                        <p className="text-sm font-medium mt-1">
+                          Statut: En attente de confirmation
+                        </p>
+                      </div>
+                    )
+                  ))}
                 </div>
               )}
             </div>
@@ -143,7 +158,7 @@ export const UpcomingAppointments = () => {
             </div>
           </div>
           
-          {(!meeting.reschedule_request || meeting.reschedule_request.status !== 'pending') && (
+          {!meeting.meeting_reschedule_requests?.some(req => req.status === 'pending') && (
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm">
@@ -198,7 +213,7 @@ export const UpcomingAppointments = () => {
             </Dialog>
           )}
           
-          {meeting.reschedule_request?.status === 'pending' && (
+          {meeting.meeting_reschedule_requests?.some(req => req.status === 'pending') && (
             <Button variant="outline" size="sm" disabled>
               Report demandé - En attente de confirmation
             </Button>
