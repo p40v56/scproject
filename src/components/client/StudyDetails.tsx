@@ -1,3 +1,6 @@
+import { useParams } from "react-router-dom"
+import { useQuery } from "@tanstack/react-query"
+import { supabase } from "@/integrations/supabase/client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { FileText, Download } from "lucide-react"
@@ -5,54 +8,100 @@ import StudyProgress from "./StudyProgress"
 import StudyHeader from "./study/StudyHeader"
 import StudyMilestones from "./study/StudyMilestones"
 import CallbackRequest from "./study/CallbackRequest"
-
-interface Phase {
-  name: string;
-  status: "completed" | "in-progress" | "pending";
-  progress: number;
-}
+import { useAuth } from "@/components/auth/AuthProvider"
 
 const StudyDetails = () => {
-  const studyPhases: Phase[] = [
-    { name: "Phase préparatoire", status: "completed", progress: 100 },
-    { name: "Phase quantitative", status: "in-progress", progress: 60 },
-    { name: "Phase qualitative", status: "pending", progress: 0 },
-    { name: "Présentation finale", status: "pending", progress: 0 },
-  ]
+  const { studyId } = useParams()
+  const { session } = useAuth()
 
-  const studyDetails = {
-    title: "Étude de marché - Secteur IT",
-    startDate: "01/03/2024",
-    endDate: "30/06/2024",
-    consultant: {
-      name: "Marie Dupont",
-      phone: "+33 6 12 34 56 78",
-      email: "marie.dupont@example.com"
+  const { data: study, isLoading } = useQuery({
+    queryKey: ['client-study', studyId],
+    queryFn: async () => {
+      if (!studyId) throw new Error("Study ID is required")
+
+      const { data, error } = await supabase
+        .from('studies')
+        .select(`
+          *,
+          assigned_member:profiles!studies_assigned_member_id_fkey(
+            id,
+            first_name,
+            last_name,
+            email,
+            phone
+          ),
+          study_phases(
+            id,
+            name,
+            status,
+            progress
+          )
+        `)
+        .eq('id', studyId)
+        .eq('client_id', session?.user?.id)
+        .single()
+
+      if (error) throw error
+      return data
     },
-    budget: "15000000",
-    currentPhase: "Phase quantitative",
+    enabled: !!studyId && !!session?.user?.id,
+  })
+
+  const { data: documents } = useQuery({
+    queryKey: ['study-documents', studyId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('documents')
+        .select('*')
+        .eq('study_id', studyId)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      return data
+    },
+    enabled: !!studyId,
+  })
+
+  if (isLoading) {
+    return <div>Chargement...</div>
   }
+
+  if (!study) {
+    return <div>Étude non trouvée</div>
+  }
+
+  const studyPhases = study.study_phases?.map(phase => ({
+    name: phase.name,
+    status: phase.status === 'completed' ? 'completed' : 
+           phase.status === 'in_progress' ? 'in-progress' : 'pending',
+    progress: phase.progress || 0
+  })) || []
 
   const nextMilestones = [
     {
-      date: "15/04/2024",
-      title: "Présentation intermédiaire",
-      description: "Résultats de la phase quantitative",
-    },
-    {
-      date: "30/04/2024",
-      title: "Début phase qualitative",
-      description: "Lancement des entretiens",
-    },
+      date: study.end_date ? new Date(study.end_date).toLocaleDateString('fr-FR') : 'Non définie',
+      title: "Fin prévue de l'étude",
+      description: "Date de livraison finale",
+    }
   ]
+
+  const consultant = study.assigned_member ? {
+    name: `${study.assigned_member.first_name} ${study.assigned_member.last_name}`,
+    phone: study.assigned_member.phone || 'Non renseigné',
+    email: study.assigned_member.email || 'Non renseigné'
+  } : {
+    name: 'Non assigné',
+    phone: 'Non renseigné',
+    email: 'Non renseigné'
+  }
 
   return (
     <div className="space-y-6">
       <StudyHeader
-        currentPhase={studyDetails.currentPhase}
-        progress={60}
-        consultant={studyDetails.consultant}
-        budget={studyDetails.budget}
+        currentPhase={studyPhases.find(p => p.status === 'in-progress')?.name || 'En attente'}
+        progress={studyPhases.reduce((acc, phase) => acc + phase.progress, 0) / studyPhases.length}
+        consultant={consultant}
+        budget={study.budget?.toString() || '0'}
       />
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -79,13 +128,13 @@ const StudyDetails = () => {
                 <h4 className="text-sm font-medium text-muted-foreground">
                   Date de début
                 </h4>
-                <p>{studyDetails.startDate}</p>
+                <p>{study.start_date ? new Date(study.start_date).toLocaleDateString('fr-FR') : 'Non définie'}</p>
               </div>
               <div>
                 <h4 className="text-sm font-medium text-muted-foreground">
                   Date de fin prévue
                 </h4>
-                <p>{studyDetails.endDate}</p>
+                <p>{study.end_date ? new Date(study.end_date).toLocaleDateString('fr-FR') : 'Non définie'}</p>
               </div>
             </div>
             <div>
@@ -93,24 +142,20 @@ const StudyDetails = () => {
                 Documents associés
               </h4>
               <div className="space-y-2">
-                <div className="flex items-center justify-between p-2 border rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-blue-600" />
-                    <span className="text-sm">Proposition commerciale</span>
+                {documents?.map((doc) => (
+                  <div key={doc.id} className="flex items-center justify-between p-2 border rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-blue-600" />
+                      <span className="text-sm">{doc.name}</span>
+                    </div>
+                    <Button variant="ghost" size="sm">
+                      <Download className="h-4 w-4" />
+                    </Button>
                   </div>
-                  <Button variant="ghost" size="sm">
-                    <Download className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex items-center justify-between p-2 border rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-blue-600" />
-                    <span className="text-sm">Planning détaillé</span>
-                  </div>
-                  <Button variant="ghost" size="sm">
-                    <Download className="h-4 w-4" />
-                  </Button>
-                </div>
+                ))}
+                {(!documents || documents.length === 0) && (
+                  <p className="text-sm text-muted-foreground">Aucun document disponible</p>
+                )}
               </div>
             </div>
           </div>
