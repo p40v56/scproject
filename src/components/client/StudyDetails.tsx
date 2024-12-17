@@ -45,7 +45,8 @@ const StudyDetails = () => {
             id,
             name,
             status,
-            progress
+            progress,
+            order
           )
         `)
         .eq('id', studyId)

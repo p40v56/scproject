@@ -21,7 +21,12 @@ const Documents = () => {
         .eq('study_id', studyId)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching documents:', error);
+        throw error;
+      }
+      
+      console.log('Fetched documents:', data);
       return data;
     },
     enabled: !!studyId
@@ -41,6 +46,8 @@ const Documents = () => {
       link.download = document.name;
       link.click();
       window.URL.revokeObjectURL(url);
+      
+      toast.success('Document téléchargé avec succès');
     } catch (error) {
       console.error('Error downloading document:', error);
       toast.error('Erreur lors du téléchargement du document');
