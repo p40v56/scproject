@@ -20,22 +20,38 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [userProfile, setUserProfile] = useState(null);
 
+  // Fonction pour récupérer le profil utilisateur
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('user_type, roles')
+        .eq('id', userId)
+        .single();
+
+      console.log("Profile fetched:", profile);
+      setUserProfile(profile);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      setUserProfile(null);
+    }
+  };
+
   useEffect(() => {
+    // Nettoyer l'état au montage
+    setSession(null);
+    setUserProfile(null);
+    setIsLoading(true);
+
     const initializeAuth = async () => {
       try {
         const { data: { session: initialSession } } = await supabase.auth.getSession();
-        console.log("Initial session:", initialSession);
+        console.log("Initial session check:", initialSession);
+        
         setSession(initialSession);
         
         if (initialSession?.user?.id) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('user_type, roles')
-            .eq('id', initialSession.user.id)
-            .single();
-
-          console.log("Initial profile loaded:", profile);
-          setUserProfile(profile);
+          await fetchUserProfile(initialSession.user.id);
         }
       } catch (error) {
         console.error("Auth initialization error:", error);
@@ -46,24 +62,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     initializeAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
-      console.log("Auth state change:", newSession);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+      console.log("Auth state change event:", event);
+      console.log("New session:", newSession);
+      
       setSession(newSession);
       
       if (newSession?.user?.id) {
-        try {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('user_type, roles')
-            .eq('id', newSession.user.id)
-            .single();
-
-          console.log("Profile updated:", profile);
-          setUserProfile(profile);
-        } catch (error) {
-          console.error('Error updating profile:', error);
-          setUserProfile(null);
-        }
+        await fetchUserProfile(newSession.user.id);
       } else {
         setUserProfile(null);
       }
@@ -71,7 +77,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setIsLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    // Cleanup function
+    return () => {
+      subscription.unsubscribe();
+      setSession(null);
+      setUserProfile(null);
+      setIsLoading(true);
+    };
   }, []);
 
   return (
