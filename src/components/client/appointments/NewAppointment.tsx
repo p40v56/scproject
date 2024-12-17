@@ -10,7 +10,7 @@ import { toast } from "sonner"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
 
-const NewAppointment = () => {
+export const NewAppointment = () => {
   const { studyId } = useParams()
   const { session } = useAuth()
   const [date, setDate] = useState<Date>()
@@ -116,5 +116,3 @@ const NewAppointment = () => {
     </form>
   )
 }
-
-export default NewAppointment
