@@ -30,15 +30,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (error) {
         console.error('Error fetching profile:', error);
-        setUserProfile(null);
-        return;
+        return null;
       }
 
       console.log("Profile fetched:", profile);
-      setUserProfile(profile);
+      return profile;
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);
-      setUserProfile(null);
+      return null;
     }
   };
 
@@ -50,11 +49,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const { data: { session: initialSession } } = await supabase.auth.getSession();
         console.log("Initial session check:", initialSession);
         
-        if (mounted) {
-          setSession(initialSession);
-          
-          if (initialSession?.user?.id) {
-            await fetchUserProfile(initialSession.user.id);
+        if (!mounted) return;
+
+        setSession(initialSession);
+        
+        if (initialSession?.user?.id) {
+          const profile = await fetchUserProfile(initialSession.user.id);
+          if (mounted) {
+            setUserProfile(profile);
           }
         }
       } catch (error) {
@@ -66,24 +68,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     };
 
-    initializeAuth();
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
       console.log("Auth state change event:", event);
       console.log("New session:", newSession);
       
-      if (mounted) {
-        setSession(newSession);
-        
+      if (!mounted) return;
+
+      setSession(newSession);
+      setIsLoading(true);
+
+      try {
         if (newSession?.user?.id) {
-          await fetchUserProfile(newSession.user.id);
+          const profile = await fetchUserProfile(newSession.user.id);
+          if (mounted) {
+            setUserProfile(profile);
+          }
         } else {
           setUserProfile(null);
         }
-        
-        setIsLoading(false);
+      } catch (error) {
+        console.error("Error during auth state change:", error);
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
     });
+
+    initializeAuth();
 
     return () => {
       mounted = false;
