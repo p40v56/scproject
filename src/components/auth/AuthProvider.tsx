@@ -23,32 +23,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // Récupérer la session initiale
         const { data: { session: initialSession } } = await supabase.auth.getSession();
         console.log("Initial session:", initialSession);
         setSession(initialSession);
         
-        if (initialSession) {
-          // Si on a une session, récupérer le profil
-          const { data: profile, error } = await supabase
+        if (initialSession?.user?.id) {
+          const { data: profile } = await supabase
             .from('profiles')
             .select('user_type, roles')
             .eq('id', initialSession.user.id)
             .single();
 
-          if (error) {
-            console.error('Error fetching profile:', error);
-            setIsLoading(false);
-            return;
-          }
-
-          console.log("User profile loaded:", profile);
+          console.log("Initial profile loaded:", profile);
           setUserProfile(profile);
         }
-        
-        setIsLoading(false);
       } catch (error) {
         console.error("Auth initialization error:", error);
+      } finally {
         setIsLoading(false);
       }
     };
@@ -59,20 +50,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.log("Auth state change:", newSession);
       setSession(newSession);
       
-      if (newSession) {
+      if (newSession?.user?.id) {
         try {
-          const { data: profile, error } = await supabase
+          const { data: profile } = await supabase
             .from('profiles')
             .select('user_type, roles')
             .eq('id', newSession.user.id)
             .single();
 
-          if (error) throw error;
-          
           console.log("Profile updated:", profile);
           setUserProfile(profile);
         } catch (error) {
           console.error('Error updating profile:', error);
+          setUserProfile(null);
         }
       } else {
         setUserProfile(null);
