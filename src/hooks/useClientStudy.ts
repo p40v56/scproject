@@ -27,7 +27,9 @@ export const useClientStudy = () => {
             name,
             status,
             progress,
-            order
+            order,
+            start_date,
+            end_date
           ),
           study_meetings(
             id,
