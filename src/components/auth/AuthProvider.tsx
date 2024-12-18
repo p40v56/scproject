@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface AuthContextType {
@@ -16,16 +16,16 @@ const AuthContext = createContext<AuthContextType>({
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [session, setSession] = useState(null);
+  const [session, setSession] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [userProfile, setUserProfile] = useState(null);
+  const isMounted = useRef(true);
+  const initializationComplete = useRef(false);
 
   useEffect(() => {
-    let mounted = true;
-
     const fetchUserProfile = async (userId: string) => {
       try {
-        const { data: profile, error } = await supabase
+        const { data, error } = await supabase
           .from('profiles')
           .select('user_type, roles')
           .eq('id', userId)
@@ -36,49 +36,61 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           return null;
         }
 
-        return profile;
+        return data;
       } catch (error) {
         console.error('Error in fetchUserProfile:', error);
         return null;
       }
     };
 
-    const handleSession = async (currentSession: any) => {
-      if (!mounted) return;
+    const updateAuthState = async (newSession: any) => {
+      if (!isMounted.current) return;
 
-      if (!currentSession) {
-        setSession(null);
-        setUserProfile(null);
-        setIsLoading(false);
-        return;
+      try {
+        if (!newSession) {
+          setSession(null);
+          setUserProfile(null);
+        } else {
+          setSession(newSession);
+          const profile = await fetchUserProfile(newSession.user.id);
+          if (isMounted.current) {
+            setUserProfile(profile);
+          }
+        }
+      } finally {
+        if (isMounted.current && !initializationComplete.current) {
+          setIsLoading(false);
+          initializationComplete.current = true;
+        }
       }
-
-      setSession(currentSession);
-      const profile = await fetchUserProfile(currentSession.user.id);
-      
-      if (!mounted) return;
-      
-      setUserProfile(profile);
-      setIsLoading(false);
     };
 
-    // Initial session check
-    const initializeAuth = async () => {
-      const { data: { session: initialSession } } = await supabase.auth.getSession();
-      await handleSession(initialSession);
+    const initialize = async () => {
+      try {
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        await updateAuthState(initialSession);
+      } catch (error) {
+        console.error('Error during initialization:', error);
+        if (isMounted.current) {
+          setIsLoading(false);
+          initializationComplete.current = true;
+        }
+      }
     };
 
-    // Auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      await handleSession(session);
-    });
+    // Set up auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        if (initializationComplete.current) {
+          await updateAuthState(session);
+        }
+      }
+    );
 
-    // Initialize
-    initializeAuth();
+    initialize();
 
-    // Cleanup
     return () => {
-      mounted = false;
+      isMounted.current = false;
       subscription.unsubscribe();
     };
   }, []);
