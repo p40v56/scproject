@@ -22,7 +22,7 @@ type Consultant = {
 const StudyDetails = () => {
   const { session } = useAuth()
 
-  const { data: study, isLoading } = useQuery({
+  const { data: study, isLoading, error } = useQuery({
     queryKey: ['client-study'],
     queryFn: async () => {
       console.log("Fetching study for client:", session?.user?.id)
@@ -52,7 +52,7 @@ const StudyDetails = () => {
           )
         `)
         .eq('client_id', session?.user?.id)
-        .single()
+        .maybeSingle()
 
       if (error) {
         console.error("Error fetching study:", error)
@@ -63,17 +63,35 @@ const StudyDetails = () => {
       return data
     },
     enabled: !!session?.user?.id,
+    staleTime: 30000, // Consider data fresh for 30 seconds
+    cacheTime: 5 * 60 * 1000, // Keep data in cache for 5 minutes
   })
 
   if (isLoading) {
-    return <div>Chargement...</div>
+    return (
+      <div className="flex items-center justify-center min-h-[200px]">
+        <p className="text-muted-foreground">Chargement de votre étude...</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[200px]">
+        <p className="text-red-500">Une erreur est survenue lors du chargement de votre étude.</p>
+      </div>
+    )
   }
 
   if (!study) {
-    return <div>Aucune étude trouvée</div>
+    return (
+      <div className="flex items-center justify-center min-h-[200px]">
+        <p className="text-muted-foreground">Aucune étude trouvée</p>
+      </div>
+    )
   }
 
-  // Transformer les phases de l'étude dans le format attendu
+  // Transform study phases into expected format
   const studyPhases = study.study_phases
     ?.sort((a, b) => (a.order || 0) - (b.order || 0))
     ?.map(phase => ({
@@ -84,15 +102,15 @@ const StudyDetails = () => {
       progress: phase.progress || 0
     })) || []
 
-  // Calculer la phase actuelle
+  // Calculate current phase
   const currentPhase = studyPhases.find(p => p.status === 'in-progress')?.name || 'En attente'
 
-  // Calculer la progression globale (moyenne des progrès de toutes les phases)
+  // Calculate overall progress
   const overallProgress = studyPhases.length > 0
     ? Math.round(studyPhases.reduce((acc, phase) => acc + phase.progress, 0) / studyPhases.length)
     : 0
 
-  // Filtrer uniquement les rendez-vous confirmés à venir
+  // Filter confirmed upcoming meetings
   const upcomingMeetings = study.study_meetings
     ?.filter(meeting => 
       meeting.status === 'confirmed' && 
@@ -101,7 +119,7 @@ const StudyDetails = () => {
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     || []
 
-  // Préparer les prochaines étapes (rendez-vous + date de fin)
+  // Prepare next milestones
   const nextMilestones = [
     ...upcomingMeetings.map(meeting => ({
       date: new Date(meeting.date).toLocaleDateString('fr-FR'),
@@ -115,7 +133,7 @@ const StudyDetails = () => {
     }
   ]
 
-  // Préparer les informations du chargé de projet
+  // Prepare consultant information
   const consultant: Consultant = {
     name: study.assigned_member ? 
       `${study.assigned_member.first_name || ''} ${study.assigned_member.last_name || ''}`.trim() 
