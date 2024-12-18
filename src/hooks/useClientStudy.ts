@@ -6,9 +6,11 @@ export const useClientStudy = () => {
   const { session } = useAuth()
 
   return useQuery({
-    queryKey: ['client-study'],
+    queryKey: ['client-study', session?.user?.id],
     queryFn: async () => {
-      console.log("Fetching study for client:", session?.user?.id)
+      if (!session?.user?.id) {
+        throw new Error("User not authenticated")
+      }
 
       const { data, error } = await supabase
         .from('studies')
@@ -34,7 +36,7 @@ export const useClientStudy = () => {
             status
           )
         `)
-        .eq('client_id', session?.user?.id)
+        .eq('client_id', session.user.id)
         .maybeSingle()
 
       if (error) {
@@ -42,12 +44,12 @@ export const useClientStudy = () => {
         throw error
       }
       
-      console.log("Fetched study data:", data)
       return data
     },
     enabled: !!session?.user?.id,
-    staleTime: 30000, // Les données sont considérées comme fraîches pendant 30 secondes
-    gcTime: 5 * 60 * 1000, // Garde les données en cache pendant 5 minutes
-    refetchOnWindowFocus: false, // Évite les rechargements inutiles
+    staleTime: 5 * 60 * 1000, // Données considérées fraîches pendant 5 minutes
+    gcTime: 10 * 60 * 1000, // Garde en cache pendant 10 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   })
 }
