@@ -16,7 +16,7 @@ const FirstLogin = ({ onComplete }: FirstLoginProps) => {
   const [newsletterSubscription, setNewsletterSubscription] = useState(false);
   const { session } = useAuth();
 
-  const { data: profile, isLoading } = useQuery({
+  const { data: profile } = useQuery({
     queryKey: ['profile', session?.user?.id],
     queryFn: async () => {
       if (!session?.user?.id) return null;
@@ -25,16 +25,18 @@ const FirstLogin = ({ onComplete }: FirstLoginProps) => {
         .from('profiles')
         .select('membership_paid_date')
         .eq('id', session.user.id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data;
     },
-    enabled: !!session?.user?.id
+    enabled: !!session?.user?.id,
+    staleTime: Infinity, // On ne recharge pas les données automatiquement
+    gcTime: 0, // On ne garde pas les données en cache
   });
 
-  // Si le client a déjà payé, on passe directement à l'étape suivante
-  if (!isLoading && profile?.membership_paid_date) {
+  // Si le client a déjà payé, on passe à l'étape suivante
+  if (profile?.membership_paid_date) {
     onComplete();
     return null;
   }
@@ -62,10 +64,6 @@ const FirstLogin = ({ onComplete }: FirstLoginProps) => {
       toast.error("Une erreur est survenue lors du paiement");
     }
   };
-
-  if (isLoading) {
-    return <div>Chargement...</div>;
-  }
 
   return (
     <div className="container mx-auto p-6">

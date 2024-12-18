@@ -9,19 +9,48 @@ import Messages from "@/components/client/Messages"
 import Notifications from "@/components/client/Notifications"
 import Settings from "@/components/client/Settings"
 import { SidebarProvider } from "@/components/ui/sidebar"
+import { useQuery } from "@tanstack/react-query"
+import { supabase } from "@/integrations/supabase/client"
+import { useAuth } from "@/components/auth/AuthProvider"
 
 const ClientSpace = () => {
-  const [isFirstLogin, setIsFirstLogin] = useState(true)
+  const [showFirstLogin, setShowFirstLogin] = useState<boolean | null>(null)
+  const { session } = useAuth()
 
-  // Utiliser useEffect pour les mises à jour d'état
+  const { data: profile } = useQuery({
+    queryKey: ['client-profile', session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) return null
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('membership_paid_date')
+        .eq('id', session.user.id)
+        .maybeSingle()
+
+      if (error) throw error
+      return data
+    },
+    enabled: !!session?.user?.id,
+  })
+
   useEffect(() => {
-    // Ici vous pouvez ajouter la logique pour vérifier si c'est vraiment
-    // la première connexion en vérifiant les données du profil par exemple
-    setIsFirstLogin(false) // Pour l'instant, on désactive directement
-  }, [])
+    if (profile) {
+      setShowFirstLogin(!profile.membership_paid_date)
+    }
+  }, [profile])
 
-  if (isFirstLogin) {
-    return <FirstLogin onComplete={() => setIsFirstLogin(false)} />
+  // Attendre que le statut de première connexion soit déterminé
+  if (showFirstLogin === null) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-muted-foreground">Chargement...</p>
+      </div>
+    )
+  }
+
+  if (showFirstLogin) {
+    return <FirstLogin onComplete={() => setShowFirstLogin(false)} />
   }
 
   return (
