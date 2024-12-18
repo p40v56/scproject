@@ -46,7 +46,8 @@ export const useClientStudy = () => {
       return data
     },
     enabled: !!session?.user?.id,
-    staleTime: 30000, // Consider data fresh for 30 seconds
-    gcTime: 5 * 60 * 1000, // Keep data in cache for 5 minutes
+    staleTime: 30000, // Les données sont considérées comme fraîches pendant 30 secondes
+    gcTime: 5 * 60 * 1000, // Garde les données en cache pendant 5 minutes
+    refetchOnWindowFocus: false, // Évite les rechargements inutiles
   })
 }

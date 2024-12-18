@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Routes, Route } from "react-router-dom"
 import ClientSidebar from "@/components/client/ClientSidebar"
 import FirstLogin from "@/components/client/FirstLogin"
@@ -12,6 +12,13 @@ import { SidebarProvider } from "@/components/ui/sidebar"
 
 const ClientSpace = () => {
   const [isFirstLogin, setIsFirstLogin] = useState(true)
+
+  // Utiliser useEffect pour les mises à jour d'état
+  useEffect(() => {
+    // Ici vous pouvez ajouter la logique pour vérifier si c'est vraiment
+    // la première connexion en vérifiant les données du profil par exemple
+    setIsFirstLogin(false) // Pour l'instant, on désactive directement
+  }, [])
 
   if (isFirstLogin) {
     return <FirstLogin onComplete={() => setIsFirstLogin(false)} />
