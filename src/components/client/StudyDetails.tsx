@@ -89,7 +89,7 @@ const StudyDetails = () => {
 
   // Calculer la progression globale (moyenne des progrès de toutes les phases)
   const overallProgress = studyPhases.length > 0
-    ? studyPhases.reduce((acc, phase) => acc + phase.progress, 0) / studyPhases.length
+    ? Math.round(studyPhases.reduce((acc, phase) => acc + phase.progress, 0) / studyPhases.length)
     : 0
 
   // Filtrer uniquement les rendez-vous confirmés à venir
@@ -118,7 +118,7 @@ const StudyDetails = () => {
   // Préparer les informations du chargé de projet
   const consultant: Consultant = {
     name: study.assigned_member ? 
-      `${study.assigned_member.first_name || ''} ${study.assigned_member.last_name || ''}`.trim() || 'Non assigné' 
+      `${study.assigned_member.first_name || ''} ${study.assigned_member.last_name || ''}`.trim() 
       : 'Non assigné',
     email: study.assigned_member?.email || 'Non renseigné'
   }
