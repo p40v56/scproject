@@ -41,51 +41,52 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     };
 
-    const initializeAuth = async () => {
-      try {
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
-        console.log("Initial session check:", initialSession);
-
-        if (!mounted) return;
-
-        if (initialSession) {
-          setSession(initialSession);
-          const profile = await fetchUserProfile(initialSession.user.id);
-          if (mounted) {
-            setUserProfile(profile);
-          }
-        }
-      } catch (error) {
-        console.error("Auth initialization error:", error);
-      } finally {
-        if (mounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+    const handleAuthChange = async (event: string, newSession: any) => {
       console.log("Auth state change event:", event);
       
       if (!mounted) return;
 
-      if (event === 'SIGNED_OUT') {
+      if (event === 'SIGNED_OUT' || !newSession) {
         setSession(null);
         setUserProfile(null);
         setIsLoading(false);
         return;
       }
 
-      if (newSession) {
-        setSession(newSession);
-        const profile = await fetchUserProfile(newSession.user.id);
+      setSession(newSession);
+      const profile = await fetchUserProfile(newSession.user.id);
+      if (mounted) {
+        setUserProfile(profile);
+        setIsLoading(false);
+      }
+    };
+
+    // Initial session check
+    const initializeAuth = async () => {
+      try {
+        setIsLoading(true);
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        console.log("Initial session check:", initialSession);
+
         if (mounted) {
-          setUserProfile(profile);
+          if (initialSession) {
+            await handleAuthChange('SIGNED_IN', initialSession);
+          } else {
+            setIsLoading(false);
+          }
+        }
+      } catch (error) {
+        console.error("Auth initialization error:", error);
+        if (mounted) {
           setIsLoading(false);
         }
       }
-    });
+    };
 
+    // Set up auth subscription
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
+
+    // Initialize auth
     initializeAuth();
 
     return () => {
