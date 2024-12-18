@@ -73,13 +73,24 @@ const StudyDetails = () => {
     return <div>Aucune étude trouvée</div>
   }
 
-  const studyPhases = study.study_phases?.map(phase => ({
-    name: phase.name,
-    status: phase.status === 'completed' ? 'completed' as const : 
-           phase.status === 'in_progress' ? 'in-progress' as const : 
-           'pending' as const,
-    progress: phase.progress || 0
-  })) || []
+  // Transformer les phases de l'étude dans le format attendu
+  const studyPhases = study.study_phases
+    ?.sort((a, b) => (a.order || 0) - (b.order || 0))
+    ?.map(phase => ({
+      name: phase.name,
+      status: phase.status === 'completed' ? 'completed' as const : 
+             phase.status === 'in_progress' ? 'in-progress' as const : 
+             'pending' as const,
+      progress: phase.progress || 0
+    })) || []
+
+  // Calculer la phase actuelle
+  const currentPhase = studyPhases.find(p => p.status === 'in-progress')?.name || 'En attente'
+
+  // Calculer la progression globale (moyenne des progrès de toutes les phases)
+  const overallProgress = studyPhases.length > 0
+    ? studyPhases.reduce((acc, phase) => acc + phase.progress, 0) / studyPhases.length
+    : 0
 
   // Filtrer uniquement les rendez-vous confirmés à venir
   const upcomingMeetings = study.study_meetings
@@ -90,6 +101,7 @@ const StudyDetails = () => {
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     || []
 
+  // Préparer les prochaines étapes (rendez-vous + date de fin)
   const nextMilestones = [
     ...upcomingMeetings.map(meeting => ({
       date: new Date(meeting.date).toLocaleDateString('fr-FR'),
@@ -103,6 +115,7 @@ const StudyDetails = () => {
     }
   ]
 
+  // Préparer les informations du chargé de projet
   const consultant: Consultant = {
     name: study.assigned_member ? 
       `${study.assigned_member.first_name || ''} ${study.assigned_member.last_name || ''}`.trim() || 'Non assigné' 
@@ -113,8 +126,8 @@ const StudyDetails = () => {
   return (
     <div className="space-y-6">
       <StudyHeader
-        currentPhase={studyPhases.find(p => p.status === 'in-progress')?.name || 'En attente'}
-        progress={studyPhases.reduce((acc, phase) => acc + phase.progress, 0) / studyPhases.length}
+        currentPhase={currentPhase}
+        progress={overallProgress}
         consultant={consultant}
         budget={study.budget?.toString() || '0'}
       />
