@@ -81,10 +81,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const profile = await fetchUserProfile(newSession.user.id);
         if (mounted) {
           setUserProfile(profile);
+          setIsLoading(false);
         }
       }
-      
-      setIsLoading(false);
     });
 
     initializeAuth();
