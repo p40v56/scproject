@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           console.error('Error fetching user profile:', error);
           return null;
         }
-        
+
         return profile;
       } catch (error) {
         console.error('Error in fetchUserProfile:', error);
@@ -43,63 +43,38 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     };
 
-    // Initialize auth state
-    const initialize = async () => {
-      try {
-        // Get initial session
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
-        
-        if (!mounted) return;
+    const handleSession = async (currentSession: any) => {
+      if (!mounted) return;
 
-        if (!initialSession) {
-          setSession(null);
-          setUserProfile(null);
-          setIsLoading(false);
-          return;
-        }
-
-        setSession(initialSession);
-        const profile = await fetchUserProfile(initialSession.user.id);
-        
-        if (!mounted) return;
-        
-        setUserProfile(profile);
+      if (!currentSession) {
+        setSession(null);
+        setUserProfile(null);
         setIsLoading(false);
-      } catch (error) {
-        console.error('Error during initialization:', error);
-        if (mounted) {
-          setIsLoading(false);
-        }
+        return;
       }
+
+      setSession(currentSession);
+      const profile = await fetchUserProfile(currentSession.user.id);
+      
+      if (!mounted) return;
+      
+      setUserProfile(profile);
+      setIsLoading(false);
     };
 
-    // Set up auth state change subscription
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, newSession) => {
-        console.log('Auth state change:', event);
-        
-        if (!mounted) return;
+    // Initial session check
+    const initializeAuth = async () => {
+      const { data: { session: initialSession } } = await supabase.auth.getSession();
+      await handleSession(initialSession);
+    };
 
-        if (event === 'SIGNED_OUT' || !newSession) {
-          setSession(null);
-          setUserProfile(null);
-          setIsLoading(false);
-          return;
-        }
-
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          setSession(newSession);
-          const profile = await fetchUserProfile(newSession.user.id);
-          if (mounted) {
-            setUserProfile(profile);
-            setIsLoading(false);
-          }
-        }
-      }
-    );
+    // Auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      await handleSession(session);
+    });
 
     // Initialize
-    initialize();
+    initializeAuth();
 
     // Cleanup
     return () => {
