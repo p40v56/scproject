@@ -31,9 +31,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           .eq('id', userId)
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error fetching user profile:', error);
+          return null;
+        }
         
-        console.log("Profile fetched:", profile);
         return profile;
       } catch (error) {
         console.error('Error in fetchUserProfile:', error);
@@ -41,54 +43,65 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     };
 
-    const handleAuthChange = async (event: string, newSession: any) => {
-      console.log("Auth state change event:", event);
-      
-      if (!mounted) return;
+    // Initialize auth state
+    const initialize = async () => {
+      try {
+        // Get initial session
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
 
-      if (event === 'SIGNED_OUT' || !newSession) {
-        setSession(null);
-        setUserProfile(null);
-        setIsLoading(false);
-        return;
-      }
+        if (!initialSession) {
+          setSession(null);
+          setUserProfile(null);
+          setIsLoading(false);
+          return;
+        }
 
-      setSession(newSession);
-      const profile = await fetchUserProfile(newSession.user.id);
-      if (mounted) {
+        setSession(initialSession);
+        const profile = await fetchUserProfile(initialSession.user.id);
+        
+        if (!mounted) return;
+        
         setUserProfile(profile);
         setIsLoading(false);
-      }
-    };
-
-    // Initial session check
-    const initializeAuth = async () => {
-      try {
-        setIsLoading(true);
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
-        console.log("Initial session check:", initialSession);
-
-        if (mounted) {
-          if (initialSession) {
-            await handleAuthChange('SIGNED_IN', initialSession);
-          } else {
-            setIsLoading(false);
-          }
-        }
       } catch (error) {
-        console.error("Auth initialization error:", error);
+        console.error('Error during initialization:', error);
         if (mounted) {
           setIsLoading(false);
         }
       }
     };
 
-    // Set up auth subscription
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
+    // Set up auth state change subscription
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, newSession) => {
+        console.log('Auth state change:', event);
+        
+        if (!mounted) return;
 
-    // Initialize auth
-    initializeAuth();
+        if (event === 'SIGNED_OUT' || !newSession) {
+          setSession(null);
+          setUserProfile(null);
+          setIsLoading(false);
+          return;
+        }
 
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          setSession(newSession);
+          const profile = await fetchUserProfile(newSession.user.id);
+          if (mounted) {
+            setUserProfile(profile);
+            setIsLoading(false);
+          }
+        }
+      }
+    );
+
+    // Initialize
+    initialize();
+
+    // Cleanup
     return () => {
       mounted = false;
       subscription.unsubscribe();
