@@ -20,22 +20,28 @@ interface AddPhaseDialogProps {
   studyId: string
   isOpen: boolean
   onClose: () => void
-  missions?: { id: string; title: string }[]
 }
 
-const AddPhaseDialog = ({ studyId, isOpen, onClose, missions }: AddPhaseDialogProps) => {
+const AddPhaseDialog = ({ studyId, isOpen, onClose }: AddPhaseDialogProps) => {
   const [selectedType, setSelectedType] = useState<string>("")
   const [customName, setCustomName] = useState("")
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
-  const [selectedMission, setSelectedMission] = useState<string>("")
   const queryClient = useQueryClient()
 
   const createPhaseMutation = useMutation({
     mutationFn: async (formData: any) => {
       const { data, error } = await supabase
         .from('study_phases')
-        .insert([{ ...formData, study_id: studyId }])
+        .insert([{ 
+          study_id: studyId,
+          name: formData.name,
+          progress: 0,
+          status: 'pending',
+          start_date: formData.start_date || null,
+          end_date: formData.end_date || null,
+          order: 0
+        }])
         .select()
 
       if (error) throw error
@@ -49,7 +55,6 @@ const AddPhaseDialog = ({ studyId, isOpen, onClose, missions }: AddPhaseDialogPr
       setCustomName("")
       setStartDate("")
       setEndDate("")
-      setSelectedMission("")
     },
     onError: (error) => {
       console.error('Error creating phase:', error)
@@ -68,11 +73,8 @@ const AddPhaseDialog = ({ studyId, isOpen, onClose, missions }: AddPhaseDialogPr
 
     createPhaseMutation.mutate({
       name: phaseName,
-      progress: 0,
-      status: 'pending',
       start_date: startDate || null,
-      end_date: endDate || null,
-      mission_id: selectedMission || null
+      end_date: endDate || null
     })
   }
 
@@ -130,28 +132,6 @@ const AddPhaseDialog = ({ studyId, isOpen, onClose, missions }: AddPhaseDialogPr
               onChange={(e) => setEndDate(e.target.value)}
             />
           </div>
-
-          {missions && missions.length > 0 && (
-            <div>
-              <Label>Mission associée</Label>
-              <Select
-                value={selectedMission}
-                onValueChange={setSelectedMission}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner une mission" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Aucune</SelectItem>
-                  {missions.map((mission) => (
-                    <SelectItem key={mission.id} value={mission.id}>
-                      {mission.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
 
           <Button type="submit" className="w-full">
             Ajouter
