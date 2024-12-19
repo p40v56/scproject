@@ -25,7 +25,10 @@ const StudyPhasesSection = ({ studyId }: StudyPhasesSectionProps) => {
         .eq('study_id', studyId)
         .order('order', { ascending: true })
 
-      if (error) throw error
+      if (error) {
+        console.error('Error fetching phases:', error)
+        throw error
+      }
       return data
     },
   })
@@ -38,8 +41,8 @@ const StudyPhasesSection = ({ studyId }: StudyPhasesSectionProps) => {
           updates.map(({ id, order }) => ({
             id,
             order,
-            study_id: studyId, // Include required fields
-            name: phases.find(p => p.id === id)?.name || '', // Include required fields
+            study_id: studyId,
+            name: phases.find(p => p.id === id)?.name || '',
             updated_at: new Date().toISOString()
           }))
         )
