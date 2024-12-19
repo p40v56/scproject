@@ -41,7 +41,12 @@ export const PastAppointments = () => {
         throw error
       }
       
-      console.log('Past meetings with reports:', meetings)
+      // Add detailed logging
+      console.log('Raw meetings data:', meetings)
+      meetings?.forEach(meeting => {
+        console.log(`Meeting ${meeting.id} reports:`, meeting.meeting_reports)
+      })
+      
       return meetings as Meeting[]
     }
   })
@@ -52,7 +57,7 @@ export const PastAppointments = () => {
 
   const handleDownloadReport = async (filePath: string) => {
     try {
-      console.log('Downloading report from path:', filePath)
+      console.log('Attempting to download report from path:', filePath)
       const { data, error } = await supabase.storage
         .from('documents')
         .download(filePath)
