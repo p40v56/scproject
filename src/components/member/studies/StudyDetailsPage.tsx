@@ -34,10 +34,24 @@ const StudyDetailsPage = () => {
             first_name,
             last_name,
             email
+          ),
+          study_phases(
+            id,
+            name,
+            status,
+            progress,
+            order,
+            description
+          ),
+          study_meetings(
+            id,
+            title,
+            date,
+            status
           )
         `)
         .eq('id', studyId)
-        .single()
+        .maybeSingle()
 
       if (error) {
         console.error("Supabase error:", error)
