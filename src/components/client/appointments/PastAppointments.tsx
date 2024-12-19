@@ -28,7 +28,7 @@ export const PastAppointments = () => {
           title,
           date,
           description,
-          meeting_reports!left (
+          meeting_reports (
             id,
             file_path
           )
@@ -44,6 +44,7 @@ export const PastAppointments = () => {
       // Add detailed logging
       console.log('Raw meetings data:', meetings)
       meetings?.forEach(meeting => {
+        console.log(`Meeting ${meeting.id}:`, meeting)
         console.log(`Meeting ${meeting.id} reports:`, meeting.meeting_reports)
       })
       
