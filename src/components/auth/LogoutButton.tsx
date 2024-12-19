@@ -9,7 +9,14 @@ const LogoutButton = () => {
 
   const handleLogout = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
+      // First clear any local session state
+      await supabase.auth.clearSession();
+      
+      // Then sign out
+      const { error } = await supabase.auth.signOut({
+        scope: 'local'
+      });
+      
       if (error) throw error;
       
       navigate("/");
