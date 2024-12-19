@@ -1,10 +1,7 @@
-import { useState } from "react"
-import { useQuery } from "@tanstack/react-query"
-import { supabase } from "@/integrations/supabase/client"
 import { Button } from "@/components/ui/button"
 import { FileText, Download } from "lucide-react"
 import { toast } from "sonner"
-import ReportUploadDialog from "./ReportUploadDialog"
+import { supabase } from "@/integrations/supabase/client"
 
 interface Meeting {
   id: string
@@ -18,37 +15,13 @@ interface Meeting {
   }[] | null
 }
 
-const MeetingsList = ({ studyId }: { studyId: string }) => {
-  const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(null)
+interface MeetingsListProps {
+  meetings: Meeting[]
+  onUploadReport: (meetingId: string) => void
+  showUploadButton?: boolean
+}
 
-  const { data: meetings, isLoading } = useQuery({
-    queryKey: ['study-meetings', studyId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('study_meetings')
-        .select(`
-          id,
-          title,
-          date,
-          description,
-          meeting_reports (
-            id,
-            file_path,
-            created_at
-          )
-        `)
-        .eq('study_id', studyId)
-        .order('date', { ascending: false })
-
-      if (error) {
-        console.error('Error fetching meetings:', error)
-        throw error
-      }
-
-      return data as Meeting[]
-    }
-  })
-
+const MeetingsList = ({ meetings, onUploadReport, showUploadButton = true }: MeetingsListProps) => {
   const handleDownload = async (filePath: string, meetingTitle: string) => {
     try {
       const { data, error } = await supabase.storage
@@ -73,10 +46,6 @@ const MeetingsList = ({ studyId }: { studyId: string }) => {
     }
   }
 
-  if (isLoading) {
-    return <div>Chargement des rendez-vous...</div>
-  }
-
   return (
     <div className="space-y-4">
       {meetings?.map((meeting) => (
@@ -99,14 +68,16 @@ const MeetingsList = ({ studyId }: { studyId: string }) => {
                 })}
               </p>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setSelectedMeetingId(meeting.id)}
-            >
-              <FileText className="w-4 h-4 mr-2" />
-              Ajouter un compte rendu
-            </Button>
+            {showUploadButton && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onUploadReport(meeting.id)}
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                Ajouter un compte rendu
+              </Button>
+            )}
           </div>
 
           {meeting.meeting_reports && meeting.meeting_reports.length > 0 && (
@@ -136,12 +107,6 @@ const MeetingsList = ({ studyId }: { studyId: string }) => {
           )}
         </div>
       ))}
-
-      <ReportUploadDialog
-        meetingId={selectedMeetingId || ''}
-        isOpen={!!selectedMeetingId}
-        onClose={() => setSelectedMeetingId(null)}
-      />
     </div>
   )
 }

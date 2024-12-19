@@ -10,10 +10,10 @@ import { useQueryClient } from "@tanstack/react-query"
 interface ReportUploadDialogProps {
   meetingId: string
   isOpen: boolean
-  onClose: () => void
+  setIsOpen: (open: boolean) => void
 }
 
-const ReportUploadDialog = ({ meetingId, isOpen, onClose }: ReportUploadDialogProps) => {
+const ReportUploadDialog = ({ meetingId, isOpen, setIsOpen }: ReportUploadDialogProps) => {
   const [uploading, setUploading] = useState(false)
   const queryClient = useQueryClient()
 
@@ -51,8 +51,8 @@ const ReportUploadDialog = ({ meetingId, isOpen, onClose }: ReportUploadDialogPr
       if (dbError) throw dbError
 
       toast.success('Compte rendu uploadé avec succès')
-      queryClient.invalidateQueries({ queryKey: ['meeting-reports', meetingId] })
-      onClose()
+      queryClient.invalidateQueries({ queryKey: ['study-meetings'] })
+      setIsOpen(false)
     } catch (error) {
       console.error('Error uploading report:', error)
       toast.error("Erreur lors de l'upload du compte rendu")
@@ -62,7 +62,7 @@ const ReportUploadDialog = ({ meetingId, isOpen, onClose }: ReportUploadDialogPr
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Uploader un compte rendu</DialogTitle>
@@ -83,7 +83,7 @@ const ReportUploadDialog = ({ meetingId, isOpen, onClose }: ReportUploadDialogPr
             <Button
               type="button"
               variant="outline"
-              onClick={onClose}
+              onClick={() => setIsOpen(false)}
               disabled={uploading}
             >
               Annuler
