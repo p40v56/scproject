@@ -28,7 +28,7 @@ export const PastAppointments = () => {
           title,
           date,
           description,
-          meeting_reports!left (
+          meeting_reports (
             id,
             file_path
           )
@@ -52,6 +52,7 @@ export const PastAppointments = () => {
 
   const handleDownloadReport = async (filePath: string) => {
     try {
+      console.log('Downloading report from path:', filePath)
       const { data, error } = await supabase.storage
         .from('documents')
         .download(filePath)
@@ -75,6 +76,8 @@ export const PastAppointments = () => {
       
       // Nettoyer l'URL
       URL.revokeObjectURL(url)
+      
+      toast.success("Compte rendu téléchargé avec succès")
     } catch (error) {
       console.error('Download error:', error)
       toast.error("Erreur lors du téléchargement du compte rendu")
