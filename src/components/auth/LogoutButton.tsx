@@ -9,8 +9,15 @@ const LogoutButton = () => {
 
   const handleLogout = async () => {
     try {
-      // Always navigate and clear local state, even if the server-side logout fails
-      await supabase.auth.signOut();
+      // First check if we have a session
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        // Only attempt to sign out if we have a valid session
+        await supabase.auth.signOut();
+      }
+      
+      // Always clear local state and redirect, regardless of session status
       navigate("/");
       toast.success("Déconnexion réussie");
     } catch (error) {
