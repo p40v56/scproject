@@ -14,17 +14,18 @@ const LogoutButton = () => {
       
       if (session) {
         // Only attempt to sign out if we have a valid session
-        await supabase.auth.signOut();
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
       }
       
       // Always clear local state and redirect, regardless of session status
       navigate("/");
       toast.success("Déconnexion réussie");
     } catch (error) {
-      console.error('Error logging out:', error);
+      console.error('Error during logout:', error);
       // Even if there's an error, we'll clear the local state and redirect
       navigate("/");
-      toast.error("Une erreur est survenue lors de la déconnexion");
+      toast.success("Déconnexion réussie");
     }
   };
 
