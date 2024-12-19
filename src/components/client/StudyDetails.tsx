@@ -40,10 +40,10 @@ const StudyDetails = () => {
   }
 
   // Transform study data
-  const studyPhases = transformStudyPhases(study.study_phases)
+  const studyPhases = transformStudyPhases(study.study_phases || [])
   const currentPhase = getCurrentPhase(studyPhases)
   const overallProgress = calculateOverallProgress(studyPhases)
-  const nextMilestones = getUpcomingMilestones(study.study_meetings, study.end_date)
+  const nextMilestones = getUpcomingMilestones(study.study_meetings || [], study.end_date)
 
   // Prepare consultant information
   const consultant = {
