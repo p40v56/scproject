@@ -44,7 +44,10 @@ const AddPhaseDialog = ({ studyId, isOpen, onClose }: AddPhaseDialogProps) => {
         }])
         .select()
 
-      if (error) throw error
+      if (error) {
+        console.error('Error creating phase:', error)
+        throw error
+      }
       return data
     },
     onSuccess: () => {
