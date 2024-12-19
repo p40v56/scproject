@@ -28,7 +28,7 @@ export const PastAppointments = () => {
           title,
           date,
           description,
-          meeting_reports (
+          meeting_reports!left (
             id,
             file_path
           )
