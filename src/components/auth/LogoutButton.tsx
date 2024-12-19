@@ -9,12 +9,8 @@ const LogoutButton = () => {
 
   const handleLogout = async () => {
     try {
-      const { error } = await supabase.auth.signOut({
-        scope: 'local'
-      });
-      
-      if (error) throw error;
-      
+      // Always navigate and clear local state, even if the server-side logout fails
+      await supabase.auth.signOut();
       navigate("/");
       toast.success("Déconnexion réussie");
     } catch (error) {
