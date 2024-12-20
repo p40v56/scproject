@@ -5,12 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd"
 import AddPhaseDialog from "./phases/AddPhaseDialog"
-import PhaseItem from "./phases/PhaseItem"
 import { toast } from "sonner"
-import { Pencil } from "lucide-react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import PhaseListItem from "./phases/PhaseListItem"
+import EditPhaseDialog from "./phases/EditPhaseDialog"
 
 interface StudyPhasesSectionProps {
   studyId: string
@@ -60,6 +57,25 @@ const StudyPhasesSection = ({ studyId }: StudyPhasesSectionProps) => {
     }
   })
 
+  const deletePhaseMutation = useMutation({
+    mutationFn: async (phaseId: string) => {
+      const { error } = await supabase
+        .from('study_phases')
+        .delete()
+        .eq('id', phaseId)
+
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['study-phases', studyId] })
+      toast.success("Phase supprimée avec succès")
+    },
+    onError: (error) => {
+      console.error('Error deleting phase:', error)
+      toast.error("Erreur lors de la suppression de la phase")
+    }
+  })
+
   const updatePhaseOrderMutation = useMutation({
     mutationFn: async (updates: { id: string, order: number }[]) => {
       const { error } = await supabase
@@ -92,10 +108,8 @@ const StudyPhasesSection = ({ studyId }: StudyPhasesSectionProps) => {
     const [reorderedItem] = items.splice(result.source.index, 1)
     items.splice(result.destination.index, 0, reorderedItem)
 
-    // Update the local state immediately for a smoother UX
     queryClient.setQueryData(['study-phases', studyId], items)
 
-    // Update the order in the database
     try {
       await updatePhaseOrderMutation.mutateAsync(
         items.map((item, index) => ({
@@ -105,7 +119,6 @@ const StudyPhasesSection = ({ studyId }: StudyPhasesSectionProps) => {
       )
     } catch (error) {
       console.error('Error updating phases order:', error)
-      // Revert the optimistic update on error
       queryClient.invalidateQueries({ queryKey: ['study-phases', studyId] })
     }
   }
@@ -152,29 +165,14 @@ const StudyPhasesSection = ({ studyId }: StudyPhasesSectionProps) => {
                     index={index}
                   >
                     {(provided, snapshot) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        className={`relative transition-colors ${
-                          snapshot.isDragging ? "bg-muted" : ""
-                        }`}
-                      >
-                        <div className="absolute right-2 top-2 z-10">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setEditingPhase(phase)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <PhaseItem
-                          phase={phase}
-                          studyId={studyId}
-                          isDragging={snapshot.isDragging}
-                          dragHandleProps={provided.dragHandleProps}
-                        />
-                      </div>
+                      <PhaseListItem
+                        phase={phase}
+                        studyId={studyId}
+                        isDragging={snapshot.isDragging}
+                        dragHandleProps={provided.dragHandleProps}
+                        onEdit={setEditingPhase}
+                        onDelete={(phase) => deletePhaseMutation.mutate(phase.id)}
+                      />
                     )}
                   </Draggable>
                 ))}
@@ -190,64 +188,12 @@ const StudyPhasesSection = ({ studyId }: StudyPhasesSectionProps) => {
           onClose={() => setIsAddPhaseDialogOpen(false)}
         />
 
-        <Dialog open={!!editingPhase} onOpenChange={() => setEditingPhase(null)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Modifier la phase</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleEditSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="name">Nom</Label>
-                <Input 
-                  id="name" 
-                  name="name" 
-                  defaultValue={editingPhase?.name} 
-                  required 
-                />
-              </div>
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Input 
-                  id="description" 
-                  name="description" 
-                  defaultValue={editingPhase?.description} 
-                />
-              </div>
-              <div>
-                <Label htmlFor="progress">Progression (%)</Label>
-                <Input 
-                  id="progress" 
-                  name="progress" 
-                  type="number" 
-                  min="0" 
-                  max="100" 
-                  defaultValue={editingPhase?.progress} 
-                />
-              </div>
-              <div>
-                <Label htmlFor="start_date">Date de début</Label>
-                <Input 
-                  id="start_date" 
-                  name="start_date" 
-                  type="date" 
-                  defaultValue={editingPhase?.start_date ? new Date(editingPhase.start_date).toISOString().split('T')[0] : ''} 
-                />
-              </div>
-              <div>
-                <Label htmlFor="end_date">Date de fin</Label>
-                <Input 
-                  id="end_date" 
-                  name="end_date" 
-                  type="date" 
-                  defaultValue={editingPhase?.end_date ? new Date(editingPhase.end_date).toISOString().split('T')[0] : ''} 
-                />
-              </div>
-              <Button type="submit" className="w-full">
-                Mettre à jour
-              </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <EditPhaseDialog
+          phase={editingPhase}
+          isOpen={!!editingPhase}
+          onClose={() => setEditingPhase(null)}
+          onSubmit={handleEditSubmit}
+        />
       </CardContent>
     </Card>
   )
