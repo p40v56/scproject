@@ -1,9 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Progress } from "@/components/ui/progress"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { GripVertical, Trash } from "lucide-react"
+import { GripVertical } from "lucide-react"
 import { toast } from "sonner"
 
 interface Phase {
@@ -22,9 +21,10 @@ interface PhaseItemProps {
   studyId: string
   isDragging?: boolean
   dragHandleProps?: any
+  actions?: React.ReactNode
 }
 
-const PhaseItem = ({ phase, studyId, isDragging, dragHandleProps }: PhaseItemProps) => {
+const PhaseItem = ({ phase, studyId, isDragging, dragHandleProps, actions }: PhaseItemProps) => {
   const queryClient = useQueryClient()
 
   const updatePhaseMutation = useMutation({
@@ -56,25 +56,6 @@ const PhaseItem = ({ phase, studyId, isDragging, dragHandleProps }: PhaseItemPro
     },
   })
 
-  const deletePhaseMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('study_phases')
-        .delete()
-        .eq('id', id)
-
-      if (error) throw error
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['study-phases', studyId] })
-      toast.success('Phase supprimée avec succès')
-    },
-    onError: (error) => {
-      console.error('Error deleting phase:', error)
-      toast.error('Erreur lors de la suppression de la phase')
-    },
-  })
-
   return (
     <div className={`space-y-2 p-4 border rounded-lg ${isDragging ? 'bg-muted' : 'bg-card'}`}>
       <div className="flex items-center justify-between">
@@ -93,13 +74,7 @@ const PhaseItem = ({ phase, studyId, isDragging, dragHandleProps }: PhaseItemPro
         </div>
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">{phase.progress}%</span>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => deletePhaseMutation.mutate(phase.id)}
-          >
-            <Trash className="h-4 w-4" />
-          </Button>
+          {actions}
         </div>
       </div>
       <div className="flex items-center gap-4">
