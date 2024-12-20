@@ -8,7 +8,6 @@ import { useClientStudy } from "@/hooks/useClientStudy"
 import { 
   transformStudyPhases, 
   calculateOverallProgress, 
-  getUpcomingMilestones,
   getCurrentPhase 
 } from "@/utils/studyTransformations"
 
@@ -43,7 +42,21 @@ const StudyDetails = () => {
   const studyPhases = transformStudyPhases(study.study_phases || []) as Phase[]
   const currentPhase = getCurrentPhase(studyPhases)
   const overallProgress = calculateOverallProgress(studyPhases)
-  const nextMilestones = getUpcomingMilestones(study.study_meetings || [], study.end_date)
+
+  // Format upcoming meetings
+  const upcomingMeetings = (study.study_meetings || [])
+    .filter(meeting => new Date(meeting.date) > new Date())
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .map(meeting => ({
+      date: new Date(meeting.date).toLocaleDateString('fr-FR'),
+      time: new Date(meeting.date).toLocaleTimeString('fr-FR', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      }),
+      title: meeting.title,
+      description: meeting.status === 'pending' ? 'En attente de confirmation' : 'Confirmé',
+      type: 'meeting' as const
+    }))
 
   // Prepare consultant information
   const consultant = {
@@ -69,7 +82,7 @@ const StudyDetails = () => {
           </CardContent>
         </Card>
 
-        <StudyMilestones milestones={nextMilestones} />
+        <StudyMilestones milestones={upcomingMeetings} />
       </div>
 
       <Documents />
