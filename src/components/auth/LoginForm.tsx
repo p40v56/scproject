@@ -32,6 +32,9 @@ const LoginForm = () => {
         return;
       }
 
+      // Clear form
+      setEmail("");
+      setPassword("");
       toast.success("Connexion réussie");
     } catch (error) {
       toast.error("Une erreur est survenue lors de la connexion");
@@ -52,6 +55,9 @@ const LoginForm = () => {
       const { error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: window.location.origin,
+        },
       });
 
       if (error) {
@@ -59,6 +65,9 @@ const LoginForm = () => {
         return;
       }
 
+      // Clear form
+      setEmail("");
+      setPassword("");
       toast.success("Inscription réussie ! Vérifiez vos emails pour confirmer votre compte avant de vous connecter.");
     } catch (error) {
       toast.error("Une erreur est survenue lors de l'inscription");

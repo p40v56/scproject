@@ -1,5 +1,7 @@
 import { createContext, useContext, useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface AuthContextType {
   session: any;
@@ -19,8 +21,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
   const isMounted = useRef(true);
-  const initializationComplete = useRef(false);
 
   useEffect(() => {
     const fetchUserProfile = async (userId: string) => {
@@ -43,57 +45,55 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     };
 
-    const updateAuthState = async (newSession: any) => {
+    const handleAuthChange = async (event: string, currentSession: any) => {
       if (!isMounted.current) return;
 
-      try {
-        if (!newSession) {
-          setSession(null);
-          setUserProfile(null);
-        } else {
-          setSession(newSession);
-          const profile = await fetchUserProfile(newSession.user.id);
-          if (isMounted.current) {
-            setUserProfile(profile);
-          }
+      if (event === 'SIGNED_IN') {
+        setSession(currentSession);
+        const profile = await fetchUserProfile(currentSession.user.id);
+        if (isMounted.current) {
+          setUserProfile(profile);
         }
-      } finally {
-        if (isMounted.current && !initializationComplete.current) {
-          setIsLoading(false);
-          initializationComplete.current = true;
-        }
+      } else if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+        setSession(null);
+        setUserProfile(null);
+        navigate('/');
+      } else if (event === 'USER_UPDATED') {
+        setSession(currentSession);
+      }
+
+      if (isMounted.current) {
+        setIsLoading(false);
       }
     };
 
-    const initialize = async () => {
+    // Initialize auth state
+    const initializeAuth = async () => {
       try {
         const { data: { session: initialSession } } = await supabase.auth.getSession();
-        await updateAuthState(initialSession);
-      } catch (error) {
-        console.error('Error during initialization:', error);
-        if (isMounted.current) {
+        
+        if (initialSession) {
+          await handleAuthChange('SIGNED_IN', initialSession);
+        } else {
           setIsLoading(false);
-          initializationComplete.current = true;
         }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+        toast.error("Erreur d'authentification");
+        setIsLoading(false);
       }
     };
 
-    // Set up auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        if (initializationComplete.current) {
-          await updateAuthState(session);
-        }
-      }
-    );
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
 
-    initialize();
+    initializeAuth();
 
     return () => {
       isMounted.current = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [navigate]);
 
   return (
     <AuthContext.Provider value={{ session, userProfile, isLoading }}>
@@ -101,3 +101,5 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     </AuthContext.Provider>
   );
 };
+
+export default AuthProvider;
