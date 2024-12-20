@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card"
-import StudyProgress from "./StudyProgress"
+import StudyProgress, { Phase } from "./StudyProgress"
 import StudyHeader from "./study/StudyHeader"
 import StudyMilestones from "./study/StudyMilestones"
 import CallbackRequest from "./study/CallbackRequest"
@@ -40,7 +40,7 @@ const StudyDetails = () => {
   }
 
   // Transform study data
-  const studyPhases = transformStudyPhases(study.study_phases || [])
+  const studyPhases = transformStudyPhases(study.study_phases || []) as Phase[]
   const currentPhase = getCurrentPhase(studyPhases)
   const overallProgress = calculateOverallProgress(studyPhases)
   const nextMilestones = getUpcomingMilestones(study.study_meetings || [], study.end_date)

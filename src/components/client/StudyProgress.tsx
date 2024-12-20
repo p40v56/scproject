@@ -8,7 +8,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-interface Phase {
+export interface Phase {
   id: string;
   name: string;
   status: "completed" | "in-progress" | "pending";

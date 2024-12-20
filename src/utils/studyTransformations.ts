@@ -1,14 +1,20 @@
 type Phase = {
+  id: string;
   name: string;
   status: "completed" | "in-progress" | "pending";
   progress: number;
+  start_date?: string;
+  end_date?: string;
 }
 
 type RawPhase = {
+  id: string;
   name: string;
   status: string;
   progress: number;
   order: number;
+  start_date?: string;
+  end_date?: string;
 }
 
 type Meeting = {
@@ -22,11 +28,14 @@ export const transformStudyPhases = (phases: RawPhase[] = []): Phase[] => {
   return phases
     .sort((a, b) => (a.order || 0) - (b.order || 0))
     .map(phase => ({
+      id: phase.id,
       name: phase.name,
       status: phase.status === 'completed' ? 'completed' as const : 
              phase.status === 'in_progress' ? 'in-progress' as const : 
              'pending' as const,
-      progress: phase.progress || 0
+      progress: phase.progress || 0,
+      start_date: phase.start_date,
+      end_date: phase.end_date
     }))
 }
 
