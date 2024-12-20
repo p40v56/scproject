@@ -7,6 +7,10 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd"
 import AddPhaseDialog from "./phases/AddPhaseDialog"
 import PhaseItem from "./phases/PhaseItem"
 import { toast } from "sonner"
+import { Pencil } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 interface StudyPhasesSectionProps {
   studyId: string
@@ -14,6 +18,7 @@ interface StudyPhasesSectionProps {
 
 const StudyPhasesSection = ({ studyId }: StudyPhasesSectionProps) => {
   const [isAddPhaseDialogOpen, setIsAddPhaseDialogOpen] = useState(false)
+  const [editingPhase, setEditingPhase] = useState<any>(null)
   const queryClient = useQueryClient()
 
   const { data: phases = [], isLoading } = useQuery({
@@ -31,6 +36,28 @@ const StudyPhasesSection = ({ studyId }: StudyPhasesSectionProps) => {
       }
       return data
     },
+  })
+
+  const updatePhaseMutation = useMutation({
+    mutationFn: async (updates: any) => {
+      const { data, error } = await supabase
+        .from('study_phases')
+        .update(updates)
+        .eq('id', updates.id)
+        .select()
+
+      if (error) throw error
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['study-phases', studyId] })
+      setEditingPhase(null)
+      toast.success("Phase mise à jour avec succès")
+    },
+    onError: (error) => {
+      console.error('Error updating phase:', error)
+      toast.error("Erreur lors de la mise à jour de la phase")
+    }
   })
 
   const updatePhaseOrderMutation = useMutation({
@@ -83,6 +110,20 @@ const StudyPhasesSection = ({ studyId }: StudyPhasesSectionProps) => {
     }
   }
 
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    const formData = new FormData(e.target as HTMLFormElement)
+    const updates = {
+      id: editingPhase.id,
+      name: formData.get('name'),
+      description: formData.get('description'),
+      progress: parseInt(formData.get('progress') as string) || 0,
+      start_date: formData.get('start_date'),
+      end_date: formData.get('end_date')
+    }
+    updatePhaseMutation.mutate(updates)
+  }
+
   if (isLoading) {
     return <div>Chargement des phases...</div>
   }
@@ -114,10 +155,19 @@ const StudyPhasesSection = ({ studyId }: StudyPhasesSectionProps) => {
                       <div
                         ref={provided.innerRef}
                         {...provided.draggableProps}
-                        className={`transition-colors ${
+                        className={`relative transition-colors ${
                           snapshot.isDragging ? "bg-muted" : ""
                         }`}
                       >
+                        <div className="absolute right-2 top-2 z-10">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setEditingPhase(phase)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        </div>
                         <PhaseItem
                           phase={phase}
                           studyId={studyId}
@@ -139,6 +189,65 @@ const StudyPhasesSection = ({ studyId }: StudyPhasesSectionProps) => {
           isOpen={isAddPhaseDialogOpen}
           onClose={() => setIsAddPhaseDialogOpen(false)}
         />
+
+        <Dialog open={!!editingPhase} onOpenChange={() => setEditingPhase(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Modifier la phase</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="name">Nom</Label>
+                <Input 
+                  id="name" 
+                  name="name" 
+                  defaultValue={editingPhase?.name} 
+                  required 
+                />
+              </div>
+              <div>
+                <Label htmlFor="description">Description</Label>
+                <Input 
+                  id="description" 
+                  name="description" 
+                  defaultValue={editingPhase?.description} 
+                />
+              </div>
+              <div>
+                <Label htmlFor="progress">Progression (%)</Label>
+                <Input 
+                  id="progress" 
+                  name="progress" 
+                  type="number" 
+                  min="0" 
+                  max="100" 
+                  defaultValue={editingPhase?.progress} 
+                />
+              </div>
+              <div>
+                <Label htmlFor="start_date">Date de début</Label>
+                <Input 
+                  id="start_date" 
+                  name="start_date" 
+                  type="date" 
+                  defaultValue={editingPhase?.start_date ? new Date(editingPhase.start_date).toISOString().split('T')[0] : ''} 
+                />
+              </div>
+              <div>
+                <Label htmlFor="end_date">Date de fin</Label>
+                <Input 
+                  id="end_date" 
+                  name="end_date" 
+                  type="date" 
+                  defaultValue={editingPhase?.end_date ? new Date(editingPhase.end_date).toISOString().split('T')[0] : ''} 
+                />
+              </div>
+              <Button type="submit" className="w-full">
+                Mettre à jour
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   )
