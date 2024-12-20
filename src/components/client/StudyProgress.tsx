@@ -75,6 +75,15 @@ const StudyProgress = ({ phases }: StudyProgressProps) => {
     });
   };
 
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '';
+    return new Date(dateString).toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
   return (
     <div className="space-y-6">
       {phases.map((phase, index) => (
@@ -108,8 +117,8 @@ const StudyProgress = ({ phases }: StudyProgressProps) => {
           </div>
           {phase.start_date && phase.end_date && (
             <div className="flex justify-between text-sm text-muted-foreground">
-              <span>{new Date(phase.start_date).toLocaleDateString()}</span>
-              <span>{new Date(phase.end_date).toLocaleDateString()}</span>
+              <span>{formatDate(phase.start_date)}</span>
+              <span>{formatDate(phase.end_date)}</span>
             </div>
           )}
         </div>
