@@ -90,7 +90,7 @@ const StudyProgress = ({ phases }: StudyProgressProps) => {
                 variant="ghost"
                 size="icon"
                 onClick={() => setEditingPhase(phase)}
-                className="h-8 w-8"
+                className="h-8 w-8 hover:bg-accent hover:text-accent-foreground transition-colors"
               >
                 <Pencil className="h-4 w-4" />
               </Button>
@@ -102,7 +102,7 @@ const StudyProgress = ({ phases }: StudyProgressProps) => {
               className="h-3 rounded-full bg-gray-100" 
             />
             <div 
-              className="absolute top-0 left-0 h-3 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-300"
+              className="absolute top-0 left-0 h-3 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-300 ease-in-out"
               style={{ width: `${phase.progress}%` }}
             />
           </div>
@@ -116,7 +116,7 @@ const StudyProgress = ({ phases }: StudyProgressProps) => {
       ))}
 
       <Dialog open={!!editingPhase} onOpenChange={() => setEditingPhase(null)}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Modifier la phase</DialogTitle>
           </DialogHeader>
@@ -129,6 +129,7 @@ const StudyProgress = ({ phases }: StudyProgressProps) => {
                 id="name"
                 name="name"
                 defaultValue={editingPhase?.name}
+                className="w-full"
                 required
               />
             </div>
@@ -141,6 +142,7 @@ const StudyProgress = ({ phases }: StudyProgressProps) => {
                 name="start_date"
                 type="date"
                 defaultValue={editingPhase?.start_date?.split('T')[0]}
+                className="w-full"
               />
             </div>
             <div className="space-y-2">
@@ -152,9 +154,10 @@ const StudyProgress = ({ phases }: StudyProgressProps) => {
                 name="end_date"
                 type="date"
                 defaultValue={editingPhase?.end_date?.split('T')[0]}
+                className="w-full"
               />
             </div>
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-end gap-2 pt-4">
               <Button
                 type="button"
                 variant="outline"
