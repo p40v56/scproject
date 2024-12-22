@@ -15,6 +15,7 @@ export const PastAppointments = () => {
           title,
           date,
           description,
+          study_id,
           meeting_reports (
             id,
             file_path
