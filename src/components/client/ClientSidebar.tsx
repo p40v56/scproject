@@ -3,8 +3,6 @@ import {
   FileText,
   Calendar,
   Settings,
-  MessageSquare,
-  Bell,
 } from "lucide-react";
 import LogoutButton from "../auth/LogoutButton";
 
@@ -27,16 +25,6 @@ const ClientSidebar = () => {
       title: "Rendez-vous",
       icon: Calendar,
       path: "/client/appointments",
-    },
-    {
-      title: "Messages",
-      icon: MessageSquare,
-      path: "/client/messages",
-    },
-    {
-      title: "Notifications",
-      icon: Bell,
-      path: "/client/notifications",
     },
     {
       title: "Paramètres",

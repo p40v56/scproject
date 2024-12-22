@@ -5,8 +5,6 @@ import FirstLogin from "@/components/client/FirstLogin"
 import Documents from "@/components/client/Documents"
 import Appointments from "@/components/client/Appointments"
 import StudyDetails from "@/components/client/StudyDetails"
-import Messages from "@/components/client/Messages"
-import Notifications from "@/components/client/Notifications"
 import Settings from "@/components/client/Settings"
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { useQuery } from "@tanstack/react-query"
@@ -40,7 +38,6 @@ const ClientSpace = () => {
     }
   }, [profile])
 
-  // Attendre que le statut de première connexion soit déterminé
   if (showFirstLogin === null) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -63,8 +60,6 @@ const ClientSpace = () => {
             <Route path="/study" element={<StudyDetails />} />
             <Route path="/documents" element={<Documents />} />
             <Route path="/appointments" element={<Appointments />} />
-            <Route path="/messages" element={<Messages />} />
-            <Route path="/notifications" element={<Notifications />} />
             <Route path="/settings" element={<Settings />} />
           </Routes>
         </main>

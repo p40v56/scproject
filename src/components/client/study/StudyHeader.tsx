@@ -12,6 +12,16 @@ interface StudyHeaderProps {
 }
 
 const StudyHeader = ({ currentPhase, progress, consultant, budget }: StudyHeaderProps) => {
+  const formatBudget = (budget: string) => {
+    const num = parseInt(budget);
+    if (isNaN(num)) return '0 €';
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'EUR',
+      maximumFractionDigits: 0
+    }).format(num);
+  };
+
   return (
     <div className="grid gap-4 md:grid-cols-4">
       <Card>
@@ -37,7 +47,7 @@ const StudyHeader = ({ currentPhase, progress, consultant, budget }: StudyHeader
       <Card>
         <CardContent className="p-4 space-y-2">
           <p className="text-sm font-medium text-muted-foreground">Budget</p>
-          <p className="text-lg font-semibold">{budget}€</p>
+          <p className="text-lg font-semibold">{formatBudget(budget)}</p>
         </CardContent>
       </Card>
     </div>
