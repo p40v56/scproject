@@ -1,4 +1,5 @@
 import { Meeting } from "./types"
+import { MeetingReportDownload } from "./MeetingReportDownload"
 
 interface PastMeetingItemProps {
   meeting: Meeting
