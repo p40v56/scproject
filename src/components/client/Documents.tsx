@@ -67,18 +67,21 @@ const Documents = () => {
         throw error;
       }
 
-      // Créer un URL pour le fichier téléchargé
-      const url = window.URL.createObjectURL(data);
+      // Create a blob URL from the downloaded data
+      const blob = new Blob([data], { type: document.file_type });
+      const url = window.URL.createObjectURL(blob);
       
-      // Créer un lien temporaire pour le téléchargement
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = document.name;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      // Create a temporary anchor element for download
+      const a = window.document.createElement('a');
+      a.href = url;
+      a.download = document.name;
       
-      // Nettoyer l'URL créé
+      // Trigger download
+      window.document.body.appendChild(a);
+      a.click();
+      window.document.body.removeChild(a);
+      
+      // Clean up
       window.URL.revokeObjectURL(url);
       
       toast.success('Document téléchargé avec succès');
