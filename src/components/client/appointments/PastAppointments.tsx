@@ -52,10 +52,6 @@ export const PastAppointments = () => {
     }
   })
 
-  if (isLoading) {
-    return <div>Chargement...</div>
-  }
-
   const handleDownloadReport = async (filePath: string) => {
     try {
       console.log('Attempting to download report from path:', filePath)
@@ -69,25 +65,32 @@ export const PastAppointments = () => {
         return
       }
 
-      // Créer un URL pour le fichier téléchargé
-      const url = URL.createObjectURL(data)
+      // Create a blob URL from the downloaded data
+      const blob = new Blob([data])
+      const url = window.URL.createObjectURL(blob)
       
-      // Créer un lien temporaire pour le téléchargement
-      const link = document.createElement('a')
-      link.href = url
-      link.download = filePath.split('/').pop() || 'compte-rendu.pdf'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+      // Create a temporary anchor element for download
+      const a = window.document.createElement('a')
+      a.href = url
+      a.download = filePath.split('/').pop() || 'compte-rendu.pdf'
       
-      // Nettoyer l'URL
-      URL.revokeObjectURL(url)
+      // Trigger download
+      window.document.body.appendChild(a)
+      a.click()
+      window.document.body.removeChild(a)
+      
+      // Clean up
+      window.URL.revokeObjectURL(url)
       
       toast.success("Compte rendu téléchargé avec succès")
     } catch (error) {
       console.error('Download error:', error)
       toast.error("Erreur lors du téléchargement du compte rendu")
     }
+  }
+
+  if (isLoading) {
+    return <div>Chargement...</div>
   }
 
   return (
