@@ -1,26 +1,12 @@
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Download, FileText, FolderOpen, Upload, ChevronLeft } from "lucide-react";
-import { useState } from "react";
-import { ScrollArea } from "@/components/ui/scroll-area";
-
-type FileOrFolder = {
-  id: string;
-  name: string;
-  type: "file" | "folder";
-  category?: string;
-  lastModified: string;
-  size?: string;
-  path: string[];
-};
+import { useState } from "react"
+import { useToast } from "@/hooks/use-toast"
+import FileManagerHeader from "./FileManagerHeader"
+import FileManagerStats from "./FileManagerStats"
+import FileManagerTable from "./FileManagerTable"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { FileOrFolder } from "./types"
 
 const initialData: FileOrFolder[] = [
   {
@@ -110,139 +96,124 @@ const folderContents: Record<string, FileOrFolder[]> = {
 };
 
 export default function CommonIntranet() {
-  const [currentPath, setCurrentPath] = useState<string[]>([]);
-  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const [currentPath, setCurrentPath] = useState<string[]>([])
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set())
+  const [isNewFolderDialogOpen, setIsNewFolderDialogOpen] = useState(false)
+  const [newFolderName, setNewFolderName] = useState("")
+  const { toast } = useToast()
 
   const getCurrentItems = () => {
-    const pathKey = currentPath.join("/");
-    return pathKey === "" ? initialData : folderContents[pathKey] || [];
-  };
+    const pathKey = currentPath.join("/")
+    return pathKey === "" ? initialData : folderContents[pathKey] || []
+  }
 
   const handleNavigate = (item: FileOrFolder) => {
     if (item.type === "folder") {
-      setCurrentPath(item.path);
+      setCurrentPath(item.path)
     }
-  };
+  }
 
   const handleBack = () => {
-    setCurrentPath((prev) => prev.slice(0, -1));
-  };
+    setCurrentPath((prev) => prev.slice(0, -1))
+  }
 
   const handleSelect = (id: string) => {
     setSelectedItems((prev) => {
-      const newSet = new Set(prev);
+      const newSet = new Set(prev)
       if (newSet.has(id)) {
-        newSet.delete(id);
+        newSet.delete(id)
       } else {
-        newSet.add(id);
+        newSet.add(id)
       }
-      return newSet;
-    });
-  };
+      return newSet
+    })
+  }
+
+  const handleUpload = () => {
+    // TODO: Implement file upload functionality
+    toast({
+      title: "Upload",
+      description: "Cette fonctionnalité sera bientôt disponible",
+    })
+  }
+
+  const handleNewFolder = () => {
+    setIsNewFolderDialogOpen(true)
+  }
+
+  const handleCreateFolder = () => {
+    if (!newFolderName.trim()) {
+      toast({
+        title: "Erreur",
+        description: "Le nom du dossier ne peut pas être vide",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // TODO: Implement folder creation in the backend
+    toast({
+      title: "Dossier créé",
+      description: `Le dossier "${newFolderName}" a été créé avec succès`,
+    })
+
+    setNewFolderName("")
+    setIsNewFolderDialogOpen(false)
+  }
 
   const handleDownloadSelected = () => {
-    // In a real application, this would trigger actual file downloads
-    console.log("Downloading selected items:", Array.from(selectedItems));
-  };
+    // TODO: Implement download functionality
+    console.log("Downloading selected items:", Array.from(selectedItems))
+    toast({
+      title: "Téléchargement",
+      description: "Cette fonctionnalité sera bientôt disponible",
+    })
+  }
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div className="space-y-1">
-          <h2 className="text-2xl font-bold">Intranet Commun</h2>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`${currentPath.length === 0 ? "invisible" : ""}`}
-              onClick={handleBack}
-            >
-              <ChevronLeft className="h-4 w-4 mr-1" />
-              Retour
-            </Button>
-            <span>/{currentPath.join("/")}</span>
+      <FileManagerHeader
+        currentPath={currentPath}
+        selectedItems={selectedItems}
+        onBack={handleBack}
+        onUpload={handleUpload}
+        onNewFolder={handleNewFolder}
+        onDownloadSelected={handleDownloadSelected}
+      />
+
+      <FileManagerStats
+        totalDocuments={127}
+        usedSpace="2.1 GB"
+        lastUpdate="Aujourd'hui"
+      />
+
+      <FileManagerTable
+        items={getCurrentItems()}
+        selectedItems={selectedItems}
+        onSelect={handleSelect}
+        onNavigate={handleNavigate}
+      />
+
+      <Dialog open={isNewFolderDialogOpen} onOpenChange={setIsNewFolderDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nouveau dossier</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <Input
+              placeholder="Nom du dossier"
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+            />
           </div>
-        </div>
-        <div className="flex gap-2">
-          <Button>
-            <Upload className="mr-2 h-4 w-4" />
-            Importer
-          </Button>
-          <Button variant="outline">
-            <FolderOpen className="mr-2 h-4 w-4" />
-            Nouveau dossier
-          </Button>
-          {selectedItems.size > 0 && (
-            <Button variant="secondary" onClick={handleDownloadSelected}>
-              <Download className="mr-2 h-4 w-4" />
-              Télécharger ({selectedItems.size})
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsNewFolderDialogOpen(false)}>
+              Annuler
             </Button>
-          )}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white p-4 rounded-lg border shadow-sm">
-          <h3 className="font-semibold mb-2">Documents partagés</h3>
-          <p className="text-2xl font-bold">127</p>
-        </div>
-        <div className="bg-white p-4 rounded-lg border shadow-sm">
-          <h3 className="font-semibold mb-2">Espace utilisé</h3>
-          <p className="text-2xl font-bold">2.1 GB</p>
-        </div>
-        <div className="bg-white p-4 rounded-lg border shadow-sm">
-          <h3 className="font-semibold mb-2">Dernière mise à jour</h3>
-          <p className="text-2xl font-bold">Aujourd'hui</p>
-        </div>
-      </div>
-
-      <ScrollArea className="h-[calc(100vh-20rem)] border rounded-lg">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-12"></TableHead>
-              <TableHead>Nom</TableHead>
-              <TableHead>Dernière modification</TableHead>
-              <TableHead>Taille</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {getCurrentItems().map((item) => (
-              <TableRow key={item.id} className="cursor-pointer hover:bg-muted/50">
-                <TableCell>
-                  <Checkbox
-                    checked={selectedItems.has(item.id)}
-                    onCheckedChange={() => handleSelect(item.id)}
-                  />
-                </TableCell>
-                <TableCell
-                  className="font-medium"
-                  onClick={() => handleNavigate(item)}
-                >
-                  <div className="flex items-center gap-2">
-                    {item.type === "folder" ? (
-                      <FolderOpen className="h-4 w-4 text-blue-500" />
-                    ) : (
-                      <FileText className="h-4 w-4" />
-                    )}
-                    {item.name}
-                  </div>
-                </TableCell>
-                <TableCell>{item.lastModified}</TableCell>
-                <TableCell>{item.size || "-"}</TableCell>
-                <TableCell className="text-right">
-                  {item.type === "file" && (
-                    <Button variant="ghost" size="icon">
-                      <Download className="h-4 w-4" />
-                    </Button>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </ScrollArea>
+            <Button onClick={handleCreateFolder}>Créer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
-  );
+  )
 }
