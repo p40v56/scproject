@@ -80,8 +80,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        if (initializationComplete.current) {
+      async (event, session) => {
+        console.log("Auth state change event:", event);
+        if (event === 'SIGNED_OUT') {
+          // Ensure we clear all auth state on sign out
+          setSession(null);
+          setUserProfile(null);
+        } else if (initializationComplete.current) {
           await updateAuthState(session);
         }
       }
