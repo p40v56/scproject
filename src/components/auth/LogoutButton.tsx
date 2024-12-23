@@ -13,19 +13,24 @@ const LogoutButton = () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session) {
-        // Only attempt to sign out if we have a valid session
-        const { error } = await supabase.auth.signOut();
-        if (error) {
-          console.error('Error during logout:', error);
-          // Even if there's an error, we'll clear the local state
-          await supabase.auth.signOut({ scope: 'local' });
+        try {
+          // Try global sign out first
+          await supabase.auth.signOut({ scope: 'global' });
+        } catch (error) {
+          console.error('Error during global logout:', error);
+          try {
+            // If global fails, try local
+            await supabase.auth.signOut({ scope: 'local' });
+          } catch (error) {
+            console.error('Error during local logout:', error);
+          }
         }
-      } else {
-        // If no session exists, just clear local state
-        await supabase.auth.signOut({ scope: 'local' });
       }
       
-      // Always navigate away and show success message
+      // Always clear local state
+      await supabase.auth.signOut({ scope: 'local' });
+      
+      // Always navigate and show success message
       navigate("/");
       toast.success("Déconnexion réussie");
       

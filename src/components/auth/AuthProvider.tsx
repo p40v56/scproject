@@ -86,6 +86,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           // Ensure we clear all auth state on sign out
           setSession(null);
           setUserProfile(null);
+          initializationComplete.current = true;
+          setIsLoading(false);
         } else if (initializationComplete.current) {
           await updateAuthState(session);
         }
