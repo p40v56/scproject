@@ -3,6 +3,7 @@ import { FileManagerContext } from "./FileManagerContext"
 import { FileOrFolder } from "./types"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
+import { moveFile, moveFolder, deleteFile, deleteFolder, checkIsFolder } from "./utils/fileOperations"
 
 export const FileManagerProvider = ({ children }: { children: ReactNode }) => {
   const [currentPath, setCurrentPath] = useState<string[]>([])
@@ -40,7 +41,7 @@ export const FileManagerProvider = ({ children }: { children: ReactNode }) => {
       if (!files) return
 
       for (const file of Array.from(files)) {
-        const filePath = `${currentPath.join("/")}/${file.name}`
+        const filePath = `${currentPath.join("/")}/${file.name}`.replace(/^\/+/, "")
         const { error } = await supabase.storage
           .from("documents")
           .upload(filePath, file)
@@ -67,7 +68,7 @@ export const FileManagerProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const handleCreateFolder = async (name: string) => {
-    const folderPath = [...currentPath, name].join("/")
+    const folderPath = [...currentPath, name].join("/").replace(/^\/+/, "")
     const { error } = await supabase.storage
       .from("documents")
       .upload(`${folderPath}/.folder`, new Blob([]))
@@ -88,56 +89,21 @@ export const FileManagerProvider = ({ children }: { children: ReactNode }) => {
 
   const handleRename = async (oldPath: string, newName: string) => {
     try {
-      // Get the list of all files in the folder if it's a folder
-      const { data: files } = await supabase.storage
-        .from("documents")
-        .list(oldPath)
-
-      const isFolder = files && files.length > 0
+      const isFolder = await checkIsFolder(oldPath)
       const pathParts = oldPath.split("/")
       const parentPath = pathParts.slice(0, -1).join("/")
       const newPath = parentPath ? `${parentPath}/${newName}` : newName
 
       if (isFolder) {
-        // For folders, we need to move all contained files
-        for (const file of files) {
-          const oldFilePath = `${oldPath}/${file.name}`
-          const newFilePath = `${newPath}/${file.name}`
-          
-          const { error: moveError } = await supabase.storage
-            .from("documents")
-            .move(oldFilePath, newFilePath)
-
-          if (moveError) {
-            throw moveError
-          }
-        }
-
-        // Move the .folder file that marks this as a folder
-        const { error: folderMoveError } = await supabase.storage
-          .from("documents")
-          .move(`${oldPath}/.folder`, `${newPath}/.folder`)
-
-        if (folderMoveError) {
-          throw folderMoveError
-        }
+        await moveFolder(oldPath, newPath)
       } else {
-        // For single files, just move the file
-        const { error: moveError } = await supabase.storage
-          .from("documents")
-          .move(oldPath, newPath)
-
-        if (moveError) {
-          throw moveError
-        }
+        await moveFile(oldPath, newPath)
       }
 
       toast({
         title: "Success",
         description: "Renamed successfully",
       })
-
-      // Clear selection after renaming
       setSelectedItems(new Set())
     } catch (error: any) {
       toast({
@@ -149,7 +115,6 @@ export const FileManagerProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const handleDownloadSelected = async () => {
-    // Implementation will depend on whether we're downloading a single file or multiple files
     toast({
       title: "Coming soon",
       description: "This feature will be implemented soon",
@@ -159,55 +124,20 @@ export const FileManagerProvider = ({ children }: { children: ReactNode }) => {
   const handleDeleteSelected = async () => {
     const paths = Array.from(selectedItems)
     for (const path of paths) {
-      // First check if it's a folder by trying to list its contents
-      const { data: files } = await supabase.storage
-        .from("documents")
-        .list(path)
-
-      if (files && files.length > 0) {
-        // It's a folder, delete all contents first
-        for (const file of files) {
-          const filePath = `${path}/${file.name}`
-          const { error } = await supabase.storage
-            .from("documents")
-            .remove([filePath])
-          
-          if (error) {
-            toast({
-              title: "Error",
-              description: `Failed to delete ${filePath}: ${error.message}`,
-              variant: "destructive",
-            })
-            return
-          }
+      try {
+        const isFolder = await checkIsFolder(path)
+        if (isFolder) {
+          await deleteFolder(path)
+        } else {
+          await deleteFile(path)
         }
-        // Delete the .folder file
-        const { error } = await supabase.storage
-          .from("documents")
-          .remove([`${path}/.folder`])
-        
-        if (error) {
-          toast({
-            title: "Error",
-            description: `Failed to delete folder: ${error.message}`,
-            variant: "destructive",
-          })
-          return
-        }
-      } else {
-        // It's a single file
-        const { error } = await supabase.storage
-          .from("documents")
-          .remove([path])
-        
-        if (error) {
-          toast({
-            title: "Error",
-            description: `Failed to delete ${path}: ${error.message}`,
-            variant: "destructive",
-          })
-          return
-        }
+      } catch (error: any) {
+        toast({
+          title: "Error",
+          description: `Failed to delete ${path}: ${error.message}`,
+          variant: "destructive",
+        })
+        return
       }
     }
     setSelectedItems(new Set())
