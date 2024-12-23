@@ -10,21 +10,36 @@ import {
 } from "@/components/ui/table"
 import { Download, FileText, FolderOpen } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { useFileManager } from "./FileManagerContext"
 import { FileOrFolder } from "./types"
+import { useEffect, useState } from "react"
+import { supabase } from "@/integrations/supabase/client"
 
-interface FileManagerTableProps {
-  items: FileOrFolder[]
-  selectedItems: Set<string>
-  onSelect: (id: string) => void
-  onNavigate: (item: FileOrFolder) => void
-}
+export default function FileManagerTable() {
+  const { currentPath, selectedItems, handleSelect, handleNavigate } = useFileManager()
+  const [items, setItems] = useState<FileOrFolder[]>([])
 
-export default function FileManagerTable({
-  items,
-  selectedItems,
-  onSelect,
-  onNavigate,
-}: FileManagerTableProps) {
+  useEffect(() => {
+    const fetchItems = async () => {
+      const path = currentPath.join("/")
+      const { data, error } = await supabase.storage.from("documents").list(path)
+      
+      if (data) {
+        const items: FileOrFolder[] = data.map((item) => ({
+          id: item.id,
+          name: item.name,
+          type: item.metadata?.mimetype ? "file" : "folder",
+          lastModified: new Date(item.created_at).toLocaleString(),
+          size: item.metadata?.size ? `${Math.round(item.metadata.size / 1024)} KB` : undefined,
+          path: [...currentPath, item.name],
+        }))
+        setItems(items)
+      }
+    }
+
+    fetchItems()
+  }, [currentPath])
+
   return (
     <ScrollArea className="h-[calc(100vh-20rem)] border rounded-lg">
       <Table>
@@ -43,12 +58,12 @@ export default function FileManagerTable({
               <TableCell>
                 <Checkbox
                   checked={selectedItems.has(item.id)}
-                  onCheckedChange={() => onSelect(item.id)}
+                  onCheckedChange={() => handleSelect(item.id)}
                 />
               </TableCell>
               <TableCell
                 className="font-medium"
-                onClick={() => onNavigate(item)}
+                onClick={() => handleNavigate(item)}
               >
                 <div className="flex items-center gap-2">
                   {item.type === "folder" ? (

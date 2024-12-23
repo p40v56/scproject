@@ -1,28 +1,41 @@
-interface FileManagerStatsProps {
-  totalDocuments: number
-  usedSpace: string
-  lastUpdate: string
-}
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { FileText, HardDrive, Clock } from "lucide-react"
 
-export default function FileManagerStats({
-  totalDocuments,
-  usedSpace,
-  lastUpdate,
-}: FileManagerStatsProps) {
+export default function FileManagerStats() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-      <div className="bg-white p-4 rounded-lg border shadow-sm">
-        <h3 className="font-semibold mb-2">Documents partagés</h3>
-        <p className="text-2xl font-bold">{totalDocuments}</p>
-      </div>
-      <div className="bg-white p-4 rounded-lg border shadow-sm">
-        <h3 className="font-semibold mb-2">Espace utilisé</h3>
-        <p className="text-2xl font-bold">{usedSpace}</p>
-      </div>
-      <div className="bg-white p-4 rounded-lg border shadow-sm">
-        <h3 className="font-semibold mb-2">Dernière mise à jour</h3>
-        <p className="text-2xl font-bold">{lastUpdate}</p>
-      </div>
+    <div className="grid gap-4 md:grid-cols-3">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Documents totaux</CardTitle>
+          <FileText className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">127</div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Espace utilisé</CardTitle>
+          <HardDrive className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">2.1 GB</div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Dernière mise à jour</CardTitle>
+          <Clock className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">Aujourd'hui</div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

@@ -1,23 +1,21 @@
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, Download, FolderOpen, Upload } from "lucide-react"
+import { ChevronLeft, Download, FolderPlus, Upload, Trash2 } from "lucide-react"
+import { useFileManager } from "./FileManagerContext"
 
 interface FileManagerHeaderProps {
-  currentPath: string[]
-  selectedItems: Set<string>
-  onBack: () => void
-  onUpload: () => void
   onNewFolder: () => void
-  onDownloadSelected: () => void
 }
 
-export default function FileManagerHeader({
-  currentPath,
-  selectedItems,
-  onBack,
-  onUpload,
-  onNewFolder,
-  onDownloadSelected,
-}: FileManagerHeaderProps) {
+export default function FileManagerHeader({ onNewFolder }: FileManagerHeaderProps) {
+  const {
+    currentPath,
+    selectedItems,
+    handleBack,
+    handleUpload,
+    handleDownloadSelected,
+    handleDeleteSelected,
+  } = useFileManager()
+
   return (
     <div className="flex justify-between items-center">
       <div className="space-y-1">
@@ -27,7 +25,7 @@ export default function FileManagerHeader({
             variant="ghost"
             size="sm"
             className={`${currentPath.length === 0 ? "invisible" : ""}`}
-            onClick={onBack}
+            onClick={handleBack}
           >
             <ChevronLeft className="h-4 w-4 mr-1" />
             Retour
@@ -36,19 +34,25 @@ export default function FileManagerHeader({
         </div>
       </div>
       <div className="flex gap-2">
-        <Button onClick={onUpload}>
+        <Button onClick={handleUpload}>
           <Upload className="mr-2 h-4 w-4" />
           Importer
         </Button>
         <Button variant="outline" onClick={onNewFolder}>
-          <FolderOpen className="mr-2 h-4 w-4" />
+          <FolderPlus className="mr-2 h-4 w-4" />
           Nouveau dossier
         </Button>
         {selectedItems.size > 0 && (
-          <Button variant="secondary" onClick={onDownloadSelected}>
-            <Download className="mr-2 h-4 w-4" />
-            Télécharger ({selectedItems.size})
-          </Button>
+          <>
+            <Button variant="secondary" onClick={handleDownloadSelected}>
+              <Download className="mr-2 h-4 w-4" />
+              Télécharger ({selectedItems.size})
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteSelected}>
+              <Trash2 className="mr-2 h-4 w-4" />
+              Supprimer ({selectedItems.size})
+            </Button>
+          </>
         )}
       </div>
     </div>
