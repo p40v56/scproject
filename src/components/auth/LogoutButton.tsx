@@ -15,15 +15,24 @@ const LogoutButton = () => {
       if (session) {
         // Only attempt to sign out if we have a valid session
         const { error } = await supabase.auth.signOut();
-        if (error) throw error;
+        if (error) {
+          console.error('Error during logout:', error);
+          // Even if there's an error, we'll clear the local state
+          await supabase.auth.signOut({ scope: 'local' });
+        }
+      } else {
+        // If no session exists, just clear local state
+        await supabase.auth.signOut({ scope: 'local' });
       }
       
-      // Always clear local state and redirect, regardless of session status
+      // Always navigate away and show success message
       navigate("/");
       toast.success("Déconnexion réussie");
+      
     } catch (error) {
       console.error('Error during logout:', error);
-      // Even if there's an error, we'll clear the local state and redirect
+      // Even if there's an error, clear local state and redirect
+      await supabase.auth.signOut({ scope: 'local' });
       navigate("/");
       toast.success("Déconnexion réussie");
     }
