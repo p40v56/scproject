@@ -1,7 +1,11 @@
-import { FileText, Download } from "lucide-react"
+import { FileText, Download, Trash2, Edit2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { supabase } from "@/integrations/supabase/client"
+import { useState } from "react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { format } from "date-fns"
 
 interface DocumentFile {
   id: string;
@@ -9,6 +13,7 @@ interface DocumentFile {
   file_path: string;
   file_type: string;
   category: string;
+  created_at: string;
 }
 
 interface DocumentCategoryProps {
@@ -17,6 +22,9 @@ interface DocumentCategoryProps {
 }
 
 const DocumentCategory = ({ title, documents }: DocumentCategoryProps) => {
+  const [editingDoc, setEditingDoc] = useState<DocumentFile | null>(null)
+  const [newName, setNewName] = useState("")
+
   const handleDownload = async (document: DocumentFile) => {
     try {
       const { data, error } = await supabase.storage
@@ -25,7 +33,6 @@ const DocumentCategory = ({ title, documents }: DocumentCategoryProps) => {
 
       if (error) throw error
 
-      // Create a download link
       const url = window.URL.createObjectURL(data)
       const link = window.document.createElement('a')
       link.href = url
@@ -35,6 +42,53 @@ const DocumentCategory = ({ title, documents }: DocumentCategoryProps) => {
     } catch (error) {
       console.error('Error downloading document:', error)
       toast.error('Erreur lors du téléchargement du document')
+    }
+  }
+
+  const handleDelete = async (document: DocumentFile) => {
+    try {
+      // Delete from storage
+      const { error: storageError } = await supabase.storage
+        .from('documents')
+        .remove([document.file_path])
+
+      if (storageError) throw storageError
+
+      // Delete from database
+      const { error: dbError } = await supabase
+        .from('documents')
+        .delete()
+        .eq('id', document.id)
+
+      if (dbError) throw dbError
+
+      toast.success('Document supprimé avec succès')
+      // Refresh the page to update the list
+      window.location.reload()
+    } catch (error) {
+      console.error('Error deleting document:', error)
+      toast.error('Erreur lors de la suppression du document')
+    }
+  }
+
+  const handleUpdate = async () => {
+    if (!editingDoc || !newName.trim()) return
+
+    try {
+      const { error } = await supabase
+        .from('documents')
+        .update({ name: newName.trim() })
+        .eq('id', editingDoc.id)
+
+      if (error) throw error
+
+      toast.success('Document mis à jour avec succès')
+      setEditingDoc(null)
+      // Refresh the page to update the list
+      window.location.reload()
+    } catch (error) {
+      console.error('Error updating document:', error)
+      toast.error('Erreur lors de la mise à jour du document')
     }
   }
 
@@ -51,18 +105,37 @@ const DocumentCategory = ({ title, documents }: DocumentCategoryProps) => {
             <div>
               <p className="font-medium">{doc.name}</p>
               <p className="text-sm text-muted-foreground">
-                {doc.file_type}
+                {format(new Date(doc.created_at), "dd/MM/yyyy 'à' HH:mm")}
               </p>
             </div>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleDownload(doc)}
-          >
-            <Download className="w-4 h-4 mr-2" />
-            Télécharger
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleDownload(doc)}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Télécharger
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setEditingDoc(doc)
+                setNewName(doc.name)
+              }}
+            >
+              <Edit2 className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleDelete(doc)}
+            >
+              <Trash2 className="w-4 h-4 text-red-500" />
+            </Button>
+          </div>
         </div>
       ))}
       {documents.length === 0 && (
@@ -70,6 +143,29 @@ const DocumentCategory = ({ title, documents }: DocumentCategoryProps) => {
           Aucun document dans cette catégorie
         </p>
       )}
+
+      <Dialog open={!!editingDoc} onOpenChange={() => setEditingDoc(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Modifier le nom du document</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <Input
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              placeholder="Nouveau nom du document"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingDoc(null)}>
+              Annuler
+            </Button>
+            <Button onClick={handleUpdate}>
+              Sauvegarder
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
