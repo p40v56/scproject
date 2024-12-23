@@ -22,4 +22,5 @@ export type FileManagerContextType = {
   handleDownloadSelected: () => void
   handleCreateFolder: (name: string) => void
   handleDeleteSelected: () => void
+  handleRename: (oldPath: string, newName: string) => void
 }

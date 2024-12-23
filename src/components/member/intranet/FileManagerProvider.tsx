@@ -19,13 +19,13 @@ export const FileManagerProvider = ({ children }: { children: ReactNode }) => {
     setCurrentPath((prev) => prev.slice(0, -1))
   }
 
-  const handleSelect = (id: string) => {
+  const handleSelect = (path: string) => {
     setSelectedItems((prev) => {
       const newSet = new Set(prev)
-      if (newSet.has(id)) {
-        newSet.delete(id)
+      if (newSet.has(path)) {
+        newSet.delete(path)
       } else {
-        newSet.add(id)
+        newSet.add(path)
       }
       return newSet
     })
@@ -86,6 +86,34 @@ export const FileManagerProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
+  const handleRename = async (oldPath: string, newName: string) => {
+    const pathParts = oldPath.split("/")
+    const parentPath = pathParts.slice(0, -1).join("/")
+    const newPath = parentPath ? `${parentPath}/${newName}` : newName
+
+    // First, copy the file/folder to the new path
+    const { error: moveError } = await supabase.storage
+      .from("documents")
+      .move(oldPath, newPath)
+
+    if (moveError) {
+      toast({
+        title: "Error",
+        description: `Failed to rename: ${moveError.message}`,
+        variant: "destructive",
+      })
+      return
+    }
+
+    toast({
+      title: "Success",
+      description: "Renamed successfully",
+    })
+
+    // Clear selection after renaming
+    setSelectedItems(new Set())
+  }
+
   const handleDownloadSelected = async () => {
     // Implementation will depend on whether we're downloading a single file or multiple files
     toast({
@@ -128,6 +156,7 @@ export const FileManagerProvider = ({ children }: { children: ReactNode }) => {
         handleDownloadSelected,
         handleCreateFolder,
         handleDeleteSelected,
+        handleRename,
       }}
     >
       {children}

@@ -8,16 +8,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Download, FileText, FolderOpen } from "lucide-react"
+import { Download, FileText, FolderOpen, Pencil } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useFileManager } from "./FileManagerContext"
 import { FileOrFolder } from "./types"
 import { useEffect, useState } from "react"
 import { supabase } from "@/integrations/supabase/client"
+import { Input } from "@/components/ui/input"
 
 export default function FileManagerTable() {
-  const { currentPath, selectedItems, handleSelect, handleNavigate } = useFileManager()
+  const { currentPath, selectedItems, handleSelect, handleNavigate, handleRename } = useFileManager()
   const [items, setItems] = useState<FileOrFolder[]>([])
+  const [editingItem, setEditingItem] = useState<string | null>(null)
+  const [newName, setNewName] = useState("")
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -26,7 +29,7 @@ export default function FileManagerTable() {
       
       if (data) {
         const items: FileOrFolder[] = data.map((item) => ({
-          id: item.id,
+          id: `${currentPath.join("/")}/${item.name}`,
           name: item.name,
           type: item.metadata?.mimetype ? "file" : "folder",
           lastModified: new Date(item.created_at).toLocaleString(),
@@ -39,6 +42,19 @@ export default function FileManagerTable() {
 
     fetchItems()
   }, [currentPath])
+
+  const handleStartEdit = (item: FileOrFolder) => {
+    setEditingItem(item.id)
+    setNewName(item.name)
+  }
+
+  const handleFinishEdit = async (item: FileOrFolder) => {
+    if (newName && newName !== item.name) {
+      await handleRename(item.path.join("/"), newName)
+    }
+    setEditingItem(null)
+    setNewName("")
+  }
 
   return (
     <ScrollArea className="h-[calc(100vh-20rem)] border rounded-lg">
@@ -57,8 +73,8 @@ export default function FileManagerTable() {
             <TableRow key={item.id} className="cursor-pointer hover:bg-muted/50">
               <TableCell>
                 <Checkbox
-                  checked={selectedItems.has(item.id)}
-                  onCheckedChange={() => handleSelect(item.id)}
+                  checked={selectedItems.has(item.path.join("/"))}
+                  onCheckedChange={() => handleSelect(item.path.join("/"))}
                 />
               </TableCell>
               <TableCell
@@ -71,12 +87,37 @@ export default function FileManagerTable() {
                   ) : (
                     <FileText className="h-4 w-4" />
                   )}
-                  {item.name}
+                  {editingItem === item.id ? (
+                    <Input
+                      value={newName}
+                      onChange={(e) => setNewName(e.target.value)}
+                      onBlur={() => handleFinishEdit(item)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          handleFinishEdit(item)
+                        }
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      autoFocus
+                    />
+                  ) : (
+                    item.name
+                  )}
                 </div>
               </TableCell>
               <TableCell>{item.lastModified}</TableCell>
               <TableCell>{item.size || "-"}</TableCell>
               <TableCell className="text-right">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleStartEdit(item)
+                  }}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
                 {item.type === "file" && (
                   <Button variant="ghost" size="icon">
                     <Download className="h-4 w-4" />
