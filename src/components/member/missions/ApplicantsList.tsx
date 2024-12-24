@@ -33,8 +33,8 @@ const ApplicantsList = ({ missionId }: ApplicantsListProps) => {
       const { data, error } = await supabase
         .from('mission_applications')
         .select(`
-          id as application_id,
-          status as application_status,
+          id,
+          status,
           resume_url,
           cover_letter,
           student:profiles!mission_applications_student_id_fkey (
@@ -53,8 +53,8 @@ const ApplicantsList = ({ missionId }: ApplicantsListProps) => {
 
       return data.map((app: any) => ({
         ...app.student,
-        application_id: app.application_id,
-        application_status: app.application_status,
+        application_id: app.id,
+        application_status: app.status,
         resume_url: app.resume_url,
         cover_letter: app.cover_letter,
       }))
