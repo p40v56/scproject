@@ -4,6 +4,8 @@ export interface Meeting {
   date: string
   description: string | null
   study_id: string
+  location: string | null
+  status: string
   meeting_reports: {
     id: string
     file_path: string
