@@ -18,7 +18,8 @@ export const PastAppointments = () => {
           study_id,
           meeting_reports (
             id,
-            file_path
+            file_path,
+            created_at
           )
         `)
         .lt('date', new Date().toISOString())

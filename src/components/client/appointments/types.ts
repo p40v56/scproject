@@ -7,6 +7,7 @@ export interface Meeting {
   meeting_reports: {
     id: string
     file_path: string
+    created_at: string
   } | null
   meeting_reschedule_requests?: {
     id: string
