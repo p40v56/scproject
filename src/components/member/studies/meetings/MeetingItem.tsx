@@ -157,14 +157,14 @@ const MeetingItem = ({ meeting, isPast, onUploadReport, showUploadButton = true 
             </div>
           )}
         </div>
-        {showUploadButton && isPast && !meeting.meeting_reports && (
+        {showUploadButton && isPast && (
           <Button
             variant="outline"
             size="sm"
             onClick={() => onUploadReport(meeting.id)}
           >
             <FileText className="w-4 h-4 mr-2" />
-            Ajouter un compte rendu
+            {meeting.meeting_reports ? "Modifier le compte rendu" : "Ajouter un compte rendu"}
           </Button>
         )}
       </div>
