@@ -3,6 +3,7 @@ import { FileText, Download, Clock } from "lucide-react"
 import { toast } from "sonner"
 import { supabase } from "@/integrations/supabase/client"
 import { Badge } from "@/components/ui/badge"
+import { useQueryClient } from "@tanstack/react-query"
 
 interface Meeting {
   id: string
@@ -29,6 +30,8 @@ interface MeetingsListProps {
 }
 
 const MeetingsList = ({ meetings, onUploadReport, showUploadButton = true }: MeetingsListProps) => {
+  const queryClient = useQueryClient()
+
   const handleDownload = async (filePath: string, meetingTitle: string) => {
     try {
       const { data, error } = await supabase.storage
@@ -53,15 +56,36 @@ const MeetingsList = ({ meetings, onUploadReport, showUploadButton = true }: Mee
     }
   }
 
-  const getPendingRescheduleRequest = (meeting: Meeting) => {
-    return meeting.meeting_reschedule_requests?.find(request => request.status === 'pending')
+  const handleRescheduleResponse = async (requestId: string, status: 'accepted' | 'rejected') => {
+    try {
+      const { error } = await supabase
+        .from('meeting_reschedule_requests')
+        .update({ status })
+        .eq('id', requestId)
+
+      if (error) throw error
+
+      // Refresh the meetings data
+      await queryClient.invalidateQueries({ queryKey: ['study-meetings'] })
+
+      toast.success(`Demande de report ${status === 'accepted' ? 'acceptée' : 'refusée'}`)
+    } catch (error) {
+      console.error('Error updating reschedule request:', error)
+      toast.error('Erreur lors de la mise à jour de la demande')
+    }
   }
+
+  const isPastMeeting = (date: string) => new Date(date) < new Date()
 
   return (
     <div className="space-y-4">
       {meetings?.map((meeting) => {
-        const pendingRequest = getPendingRescheduleRequest(meeting)
-        
+        const pendingRequest = meeting.meeting_reschedule_requests?.find(
+          request => request.status === 'pending'
+        )
+        const meetingDate = new Date(meeting.date)
+        const isPast = isPastMeeting(meeting.date)
+
         return (
           <div key={meeting.id} className="p-4 border rounded-lg space-y-2">
             <div className="flex justify-between items-start">
@@ -73,7 +97,7 @@ const MeetingsList = ({ meetings, onUploadReport, showUploadButton = true }: Mee
                   </p>
                 )}
                 <p className="text-sm text-muted-foreground">
-                  {new Date(meeting.date).toLocaleDateString('fr-FR', {
+                  {meetingDate.toLocaleDateString('fr-FR', {
                     day: 'numeric',
                     month: 'long',
                     year: 'numeric',
@@ -81,25 +105,44 @@ const MeetingsList = ({ meetings, onUploadReport, showUploadButton = true }: Mee
                     minute: '2-digit'
                   })}
                 </p>
+
                 {pendingRequest && (
-                  <div className="mt-2 flex items-center gap-2">
+                  <div className="mt-2 space-y-2">
                     <Badge variant="secondary" className="flex items-center gap-1">
                       <Clock className="w-3 h-3" />
                       Demande de report en attente
                     </Badge>
-                    <span className="text-sm text-muted-foreground">
-                      pour le {new Date(pendingRequest.requested_date).toLocaleDateString('fr-FR', {
+                    <div className="text-sm">
+                      <p>Nouvelle date souhaitée: {new Date(pendingRequest.requested_date).toLocaleDateString('fr-FR', {
                         day: 'numeric',
                         month: 'long',
                         year: 'numeric',
                         hour: '2-digit',
                         minute: '2-digit'
-                      })}
-                    </span>
+                      })}</p>
+                      {pendingRequest.reason && (
+                        <p className="text-muted-foreground">Motif: {pendingRequest.reason}</p>
+                      )}
+                      <div className="mt-2 flex gap-2">
+                        <Button 
+                          size="sm" 
+                          onClick={() => handleRescheduleResponse(pendingRequest.id, 'accepted')}
+                        >
+                          Accepter
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleRescheduleResponse(pendingRequest.id, 'rejected')}
+                        >
+                          Refuser
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
-              {showUploadButton && (
+              {showUploadButton && isPast && (
                 <Button
                   variant="outline"
                   size="sm"
