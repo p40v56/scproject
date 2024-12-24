@@ -68,21 +68,29 @@ export const FileManagerProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const handleCreateFolder = async (name: string) => {
-    const folderPath = [...currentPath, name].join("/").replace(/^\/+/, "")
-    const { error } = await supabase.storage
-      .from("documents")
-      .upload(`${folderPath}/.folder`, new Blob([]))
+    try {
+      const folderPath = [...currentPath, name].join("/").replace(/^\/+/, "")
+      const { error } = await supabase.storage
+        .from("documents")
+        .upload(`${folderPath}/.folder`, new Blob([]))
 
-    if (error) {
+      if (error) {
+        toast({
+          title: "Error",
+          description: `Failed to create folder: ${error.message}`,
+          variant: "destructive",
+        })
+      } else {
+        toast({
+          title: "Success",
+          description: "Folder created successfully",
+        })
+      }
+    } catch (error: any) {
       toast({
         title: "Error",
         description: `Failed to create folder: ${error.message}`,
         variant: "destructive",
-      })
-    } else {
-      toast({
-        title: "Success",
-        description: "Folder created successfully",
       })
     }
   }
@@ -115,10 +123,32 @@ export const FileManagerProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const handleDownloadSelected = async () => {
-    toast({
-      title: "Coming soon",
-      description: "This feature will be implemented soon",
-    })
+    const paths = Array.from(selectedItems)
+    for (const path of paths) {
+      try {
+        const { data, error } = await supabase.storage
+          .from("documents")
+          .download(path)
+
+        if (error) throw error
+
+        // Create a download link
+        const url = window.URL.createObjectURL(data)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = path.split('/').pop() || 'download'
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+      } catch (error: any) {
+        toast({
+          title: "Error",
+          description: `Failed to download ${path}: ${error.message}`,
+          variant: "destructive",
+        })
+      }
+    }
   }
 
   const handleDeleteSelected = async () => {
@@ -131,6 +161,10 @@ export const FileManagerProvider = ({ children }: { children: ReactNode }) => {
         } else {
           await deleteFile(path)
         }
+        toast({
+          title: "Success",
+          description: `${path.split('/').pop()} deleted successfully`,
+        })
       } catch (error: any) {
         toast({
           title: "Error",
@@ -141,10 +175,6 @@ export const FileManagerProvider = ({ children }: { children: ReactNode }) => {
       }
     }
     setSelectedItems(new Set())
-    toast({
-      title: "Success",
-      description: "Selected items deleted successfully",
-    })
   }
 
   return (
