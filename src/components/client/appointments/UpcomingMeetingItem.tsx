@@ -18,6 +18,14 @@ export const UpcomingMeetingItem = ({
     req => req.status === 'pending'
   )
 
+  // Find the latest accepted reschedule request
+  const latestAcceptedRequest = meeting.meeting_reschedule_requests
+    ?.filter(req => req.status === 'accepted')
+    .sort((a, b) => new Date(b.requested_date).getTime() - new Date(a.requested_date).getTime())[0]
+
+  // Use the latest accepted reschedule date if available, otherwise use original date
+  const displayDate = latestAcceptedRequest ? latestAcceptedRequest.requested_date : meeting.date
+
   return (
     <div className="flex flex-col space-y-2 p-4 border rounded-lg">
       <div className="flex justify-between items-start">
@@ -46,9 +54,11 @@ export const UpcomingMeetingItem = ({
                       Nouvelle date souhaitée: {new Date(request.requested_date).toLocaleDateString()} à{" "}
                       {new Date(request.requested_date).toLocaleTimeString()}
                     </p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Motif: {request.reason}
-                    </p>
+                    {request.reason && (
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Motif: {request.reason}
+                      </p>
+                    )}
                     <p className="text-sm font-medium mt-1">
                       Statut: En attente de confirmation
                     </p>
@@ -57,13 +67,23 @@ export const UpcomingMeetingItem = ({
               ))}
             </div>
           )}
+          
+          {latestAcceptedRequest && (
+            <div className="mt-2 p-2 bg-green-50 rounded-md">
+              <p className="text-sm font-medium text-green-700">Report accepté</p>
+              <p className="text-sm text-green-600">
+                Nouvelle date: {new Date(latestAcceptedRequest.requested_date).toLocaleDateString()} à{" "}
+                {new Date(latestAcceptedRequest.requested_date).toLocaleTimeString()}
+              </p>
+            </div>
+          )}
         </div>
         <div className="text-right">
           <p className="font-medium">
-            {new Date(meeting.date).toLocaleDateString()}
+            {new Date(displayDate).toLocaleDateString()}
           </p>
           <p className="text-sm text-muted-foreground">
-            {new Date(meeting.date).toLocaleTimeString()}
+            {new Date(displayDate).toLocaleTimeString()}
           </p>
         </div>
       </div>

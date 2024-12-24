@@ -81,8 +81,15 @@ const MeetingsList = ({ meetings, onUploadReport, showUploadButton = true }: Mee
         const pendingRequest = meeting.meeting_reschedule_requests?.find(
           request => request.status === 'pending'
         )
-        const meetingDate = new Date(meeting.date)
-        const isPast = isPastMeeting(meeting.date)
+        
+        // Find the latest accepted reschedule request
+        const latestAcceptedRequest = meeting.meeting_reschedule_requests
+          ?.filter(req => req.status === 'accepted')
+          .sort((a, b) => new Date(b.requested_date).getTime() - new Date(a.requested_date).getTime())[0]
+
+        // Use the latest accepted reschedule date if available, otherwise use original date
+        const displayDate = latestAcceptedRequest ? latestAcceptedRequest.requested_date : meeting.date
+        const isPast = isPastMeeting(displayDate)
 
         return (
           <div key={meeting.id} className="p-4 border rounded-lg space-y-2">
@@ -95,7 +102,7 @@ const MeetingsList = ({ meetings, onUploadReport, showUploadButton = true }: Mee
                   </p>
                 )}
                 <p className="text-sm text-muted-foreground">
-                  {meetingDate.toLocaleDateString('fr-FR', {
+                  {new Date(displayDate).toLocaleDateString('fr-FR', {
                     day: 'numeric',
                     month: 'long',
                     year: 'numeric',
@@ -103,6 +110,21 @@ const MeetingsList = ({ meetings, onUploadReport, showUploadButton = true }: Mee
                     minute: '2-digit'
                   })}
                 </p>
+
+                {latestAcceptedRequest && (
+                  <div className="mt-2 p-2 bg-green-50 rounded-md">
+                    <p className="text-sm font-medium text-green-700">Report accepté</p>
+                    <p className="text-sm text-green-600">
+                      Nouvelle date: {new Date(latestAcceptedRequest.requested_date).toLocaleDateString('fr-FR', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                  </div>
+                )}
 
                 {pendingRequest && (
                   <div className="mt-2 space-y-2">
@@ -154,9 +176,7 @@ const MeetingsList = ({ meetings, onUploadReport, showUploadButton = true }: Mee
 
             {meeting.meeting_reports && (
               <div className="mt-4">
-                <div
-                  className="flex items-center justify-between p-2 bg-muted rounded-md"
-                >
+                <div className="flex items-center justify-between p-2 bg-muted rounded-md">
                   <div className="flex items-center gap-2">
                     <FileText className="w-4 h-4 text-blue-600" />
                     <span className="text-sm">
