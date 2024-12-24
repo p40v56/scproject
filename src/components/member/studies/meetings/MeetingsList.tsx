@@ -14,7 +14,7 @@ interface Meeting {
     id: string
     file_path: string
     created_at: string
-  }[] | null
+  } | null
   meeting_reschedule_requests: {
     id: string
     requested_date: string
@@ -65,9 +65,7 @@ const MeetingsList = ({ meetings, onUploadReport, showUploadButton = true }: Mee
 
       if (error) throw error
 
-      // Refresh the meetings data
       await queryClient.invalidateQueries({ queryKey: ['study-meetings'] })
-
       toast.success(`Demande de report ${status === 'accepted' ? 'acceptée' : 'refusée'}`)
     } catch (error) {
       console.error('Error updating reschedule request:', error)
@@ -142,7 +140,7 @@ const MeetingsList = ({ meetings, onUploadReport, showUploadButton = true }: Mee
                   </div>
                 )}
               </div>
-              {showUploadButton && isPast && (
+              {showUploadButton && isPast && !meeting.meeting_reports && (
                 <Button
                   variant="outline"
                   size="sm"
@@ -154,29 +152,25 @@ const MeetingsList = ({ meetings, onUploadReport, showUploadButton = true }: Mee
               )}
             </div>
 
-            {meeting.meeting_reports && meeting.meeting_reports.length > 0 && (
-              <div className="mt-4 space-y-2">
-                <h5 className="text-sm font-medium">Comptes rendus</h5>
-                {meeting.meeting_reports.map((report) => (
-                  <div
-                    key={report.id}
-                    className="flex items-center justify-between p-2 bg-muted rounded-md"
-                  >
-                    <div className="flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-blue-600" />
-                      <span className="text-sm">
-                        Compte rendu du {new Date(report.created_at).toLocaleDateString('fr-FR')}
-                      </span>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDownload(report.file_path, meeting.title)}
-                    >
-                      <Download className="w-4 h-4" />
-                    </Button>
+            {meeting.meeting_reports && (
+              <div className="mt-4">
+                <div
+                  className="flex items-center justify-between p-2 bg-muted rounded-md"
+                >
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-blue-600" />
+                    <span className="text-sm">
+                      Compte rendu du {new Date(meeting.meeting_reports.created_at).toLocaleDateString('fr-FR')}
+                    </span>
                   </div>
-                ))}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDownload(meeting.meeting_reports.file_path, meeting.title)}
+                  >
+                    <Download className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             )}
           </div>

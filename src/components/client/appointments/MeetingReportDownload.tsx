@@ -1,76 +1,57 @@
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { FileText } from "lucide-react"
-import { supabase } from "@/integrations/supabase/client"
+import { Download, FileText } from "lucide-react"
 import { toast } from "sonner"
+import { supabase } from "@/integrations/supabase/client"
 
 interface MeetingReportDownloadProps {
-  meetingReports: {
+  meetingReport: {
     id: string
     file_path: string
-  }[]
+    created_at: string
+  }
   meetingTitle: string
 }
 
-export const MeetingReportDownload = ({ meetingReports, meetingTitle }: MeetingReportDownloadProps) => {
-  const handleDownloadReport = async (filePath: string) => {
+export const MeetingReportDownload = ({ meetingReport, meetingTitle }: MeetingReportDownloadProps) => {
+  const handleDownload = async () => {
     try {
-      console.log('Attempting to download report from path:', filePath)
       const { data, error } = await supabase.storage
         .from('documents')
-        .download(filePath)
-      
-      if (error) {
-        console.error('Download error:', error)
-        toast.error("Erreur lors du téléchargement du compte rendu")
-        return
-      }
+        .download(meetingReport.file_path)
 
-      const blob = new Blob([data])
-      const url = window.URL.createObjectURL(blob)
-      
-      const a = window.document.createElement('a')
-      a.href = url
-      a.download = filePath.split('/').pop() || 'compte-rendu.pdf'
-      
-      window.document.body.appendChild(a)
-      a.click()
-      window.document.body.removeChild(a)
-      
-      window.URL.revokeObjectURL(url)
-      
-      toast.success("Compte rendu téléchargé avec succès")
+      if (error) throw error
+
+      const url = URL.createObjectURL(data)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `compte-rendu-${meetingTitle}.${meetingReport.file_path.split('.').pop()}`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+
+      toast.success('Document téléchargé avec succès')
     } catch (error) {
-      console.error('Download error:', error)
-      toast.error("Erreur lors du téléchargement du compte rendu")
+      console.error('Error downloading document:', error)
+      toast.error('Erreur lors du téléchargement du document')
     }
   }
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <FileText className="w-4 h-4 mr-2" />
-          Voir le compte rendu
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Compte rendu - {meetingTitle}</DialogTitle>
-        </DialogHeader>
-        <div className="mt-4">
-          {meetingReports.map((report) => (
-            <Button
-              key={report.id}
-              variant="outline"
-              className="w-full"
-              onClick={() => handleDownloadReport(report.file_path)}
-            >
-              Télécharger le compte rendu
-            </Button>
-          ))}
-        </div>
-      </DialogContent>
-    </Dialog>
+    <div className="flex items-center justify-between p-2 bg-muted rounded-md">
+      <div className="flex items-center gap-2">
+        <FileText className="w-4 h-4 text-blue-600" />
+        <span className="text-sm">
+          Compte rendu du {new Date(meetingReport.created_at).toLocaleDateString('fr-FR')}
+        </span>
+      </div>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={handleDownload}
+      >
+        <Download className="w-4 h-4" />
+      </Button>
+    </div>
   )
 }

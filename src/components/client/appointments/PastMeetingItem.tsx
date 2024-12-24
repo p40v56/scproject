@@ -26,9 +26,9 @@ export const PastMeetingItem = ({ meeting }: PastMeetingItemProps) => {
           </p>
         </div>
       </div>
-      {meeting.meeting_reports && meeting.meeting_reports.length > 0 ? (
+      {meeting.meeting_reports ? (
         <MeetingReportDownload 
-          meetingReports={meeting.meeting_reports}
+          meetingReport={meeting.meeting_reports}
           meetingTitle={meeting.title}
         />
       ) : (
