@@ -37,7 +37,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     },
   });
 
-  useAuthRedirect(userProfile, initializationComplete);
+  // Only call useAuthRedirect after initialization is complete
+  if (initializationComplete.current) {
+    useAuthRedirect(userProfile);
+  }
 
   return (
     <AuthContext.Provider value={{ session, userProfile, isLoading }}>

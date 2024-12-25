@@ -58,8 +58,7 @@ export const useAuthStateChange = ({
       }
     };
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
-
+    // Initialize auth state
     const initializeAuth = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
@@ -78,6 +77,8 @@ export const useAuthStateChange = ({
         initializationComplete.current = true;
       }
     };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
 
     initializeAuth();
 

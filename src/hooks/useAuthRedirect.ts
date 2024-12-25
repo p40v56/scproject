@@ -4,15 +4,10 @@ import { Tables } from '@/integrations/supabase/types';
 
 type Profile = Tables<"profiles">;
 
-export const useAuthRedirect = (
-  userProfile: Profile | null,
-  initializationComplete: React.MutableRefObject<boolean>
-) => {
+export const useAuthRedirect = (userProfile: Profile | null) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!initializationComplete.current) return;
-
     if (userProfile) {
       switch (userProfile.user_type) {
         case 'client':
@@ -28,8 +23,6 @@ export const useAuthRedirect = (
           navigate('/alumni');
           break;
       }
-    } else {
-      navigate('/');
     }
-  }, [userProfile, navigate, initializationComplete]);
+  }, [userProfile, navigate]);
 };
