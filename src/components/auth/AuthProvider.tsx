@@ -2,7 +2,6 @@ import { createContext, useContext, useState } from "react";
 import { Session } from "@supabase/supabase-js";
 import { Tables } from "@/integrations/supabase/types";
 import { useAuthStateChange } from "@/hooks/useAuthStateChange";
-import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { toast } from "sonner";
 
 type Profile = Tables<"profiles">;
@@ -28,7 +27,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [userProfile, setUserProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const { initializationComplete } = useAuthStateChange({
+  useAuthStateChange({
     setSession,
     setUserProfile,
     setIsLoading,
@@ -36,11 +35,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       toast.error(error.message);
     },
   });
-
-  // Only call useAuthRedirect after initialization is complete
-  if (initializationComplete.current) {
-    useAuthRedirect(userProfile);
-  }
 
   return (
     <AuthContext.Provider value={{ session, userProfile, isLoading }}>
