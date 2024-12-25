@@ -293,12 +293,15 @@ export type Database = {
           campus: string | null
           created_at: string
           current_school_year: string | null
+          date_of_birth: string | null
           email: string | null
           first_name: string | null
           has_driver_license: boolean | null
+          home_address: string | null
           id: string
           last_name: string | null
           membership_paid_date: string | null
+          phone_number: string | null
           roles: string[] | null
           specialization: string | null
           study_year: string | null
@@ -310,12 +313,15 @@ export type Database = {
           campus?: string | null
           created_at?: string
           current_school_year?: string | null
+          date_of_birth?: string | null
           email?: string | null
           first_name?: string | null
           has_driver_license?: boolean | null
+          home_address?: string | null
           id: string
           last_name?: string | null
           membership_paid_date?: string | null
+          phone_number?: string | null
           roles?: string[] | null
           specialization?: string | null
           study_year?: string | null
@@ -327,12 +333,15 @@ export type Database = {
           campus?: string | null
           created_at?: string
           current_school_year?: string | null
+          date_of_birth?: string | null
           email?: string | null
           first_name?: string | null
           has_driver_license?: boolean | null
+          home_address?: string | null
           id?: string
           last_name?: string | null
           membership_paid_date?: string | null
+          phone_number?: string | null
           roles?: string[] | null
           specialization?: string | null
           study_year?: string | null
