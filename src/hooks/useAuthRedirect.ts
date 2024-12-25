@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Profile } from '@/integrations/supabase/types';
+import { Tables } from '@/integrations/supabase/types';
+
+type Profile = Tables<"profiles">;
 
 export const useAuthRedirect = (
   userProfile: Profile | null,

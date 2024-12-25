@@ -1,17 +1,21 @@
 import { useEffect, useRef } from 'react';
 import { AuthError, Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { Profile } from '@/integrations/supabase/types';
+import { Tables } from '@/integrations/supabase/types';
+
+type Profile = Tables<"profiles">;
 
 interface UseAuthStateChangeProps {
   setSession: (session: Session | null) => void;
   setUserProfile: (profile: Profile | null) => void;
+  setIsLoading: (isLoading: boolean) => void;
   onError?: (error: AuthError) => void;
 }
 
 export const useAuthStateChange = ({
   setSession,
   setUserProfile,
+  setIsLoading,
   onError
 }: UseAuthStateChangeProps) => {
   const initializationComplete = useRef(false);
@@ -40,6 +44,7 @@ export const useAuthStateChange = ({
       if (event === 'SIGNED_OUT') {
         setSession(null);
         setUserProfile(null);
+        setIsLoading(false);
         initializationComplete.current = true;
         return;
       }
@@ -48,6 +53,7 @@ export const useAuthStateChange = ({
         const profile = await fetchProfile(session.user);
         setSession(session);
         setUserProfile(profile);
+        setIsLoading(false);
         initializationComplete.current = true;
       }
     };
@@ -68,6 +74,7 @@ export const useAuthStateChange = ({
         console.error('Error initializing auth:', error);
         onError?.(error as AuthError);
       } finally {
+        setIsLoading(false);
         initializationComplete.current = true;
       }
     };
@@ -77,7 +84,7 @@ export const useAuthStateChange = ({
     return () => {
       subscription.unsubscribe();
     };
-  }, [setSession, setUserProfile, onError]);
+  }, [setSession, setUserProfile, setIsLoading, onError]);
 
   return { initializationComplete };
 };
