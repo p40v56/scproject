@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         const { data, error } = await supabase
           .from('profiles')
-          .select('user_type, roles')
+          .select('*')
           .eq('id', userId)
           .single();
 
@@ -65,10 +65,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     };
 
+    // Initialize auth state
     const initialize = async () => {
       try {
+        // Get initial session
         const { data: { session: initialSession } } = await supabase.auth.getSession();
-        await updateAuthState(initialSession);
+        
+        // If we have a session, try to refresh it
+        if (initialSession?.refresh_token) {
+          const { data: { session: refreshedSession }, error: refreshError } = 
+            await supabase.auth.refreshSession();
+            
+          if (refreshError) {
+            console.error('Error refreshing session:', refreshError);
+            // Clear invalid session
+            await supabase.auth.signOut();
+            setSession(null);
+            setUserProfile(null);
+          } else {
+            await updateAuthState(refreshedSession);
+          }
+        } else {
+          await updateAuthState(initialSession);
+        }
       } catch (error) {
         console.error('Error during initialization:', error);
         if (isMounted.current) {
@@ -82,13 +101,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log("Auth state change event:", event);
-        if (event === 'SIGNED_OUT') {
-          // Ensure we clear all auth state on sign out
+        if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
           setSession(null);
           setUserProfile(null);
           initializationComplete.current = true;
           setIsLoading(false);
-        } else if (initializationComplete.current) {
+        } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           await updateAuthState(session);
         }
       }
