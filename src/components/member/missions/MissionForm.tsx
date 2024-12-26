@@ -30,6 +30,7 @@ const missionSchema = z.object({
   description: z.string().min(10, "La description doit faire au moins 10 caractères"),
   study_id: z.string().nullable(),
   study_phase_id: z.string().nullable(),
+  status: z.enum(["open", "in-progress", "closed"]),
 })
 
 type MissionFormProps = {
@@ -48,6 +49,7 @@ export default function MissionForm({ onSubmit, initialData, mode = "create" }: 
       description: "",
       study_id: null,
       study_phase_id: null,
+      status: "open",
     },
   })
 
@@ -195,6 +197,29 @@ export default function MissionForm({ onSubmit, initialData, mode = "create" }: 
               <FormControl>
                 <Textarea {...field} />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="status"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Statut</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un statut" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="open">Ouverte</SelectItem>
+                  <SelectItem value="in-progress">En cours</SelectItem>
+                  <SelectItem value="closed">Fermée</SelectItem>
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
