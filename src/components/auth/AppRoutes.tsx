@@ -11,6 +11,7 @@ const AppRoutes = () => {
   const { session, userProfile, isLoading } = useAuth();
   console.log("Auth state:", { session, userProfile, isLoading });
 
+  // Show loading spinner while checking auth state
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -19,6 +20,7 @@ const AppRoutes = () => {
     );
   }
 
+  // If no session, only show public routes
   if (!session) {
     return (
       <Routes>
@@ -28,6 +30,7 @@ const AppRoutes = () => {
     );
   }
 
+  // If we have a session but no profile, something went wrong
   if (!userProfile) {
     console.error("No user profile found for authenticated user");
     return (
