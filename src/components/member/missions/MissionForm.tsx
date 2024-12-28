@@ -28,9 +28,19 @@ export default function MissionForm({ onSubmit, initialData, mode = "create" }: 
     },
   });
 
+  const handleSubmit = (data: MissionFormValues) => {
+    // Convert "none" to null for the backend
+    const formattedData = {
+      ...data,
+      study_id: data.study_id === "none" ? null : data.study_id,
+      study_phase_id: data.study_id === "none" ? null : data.study_phase_id,
+    };
+    onSubmit(formattedData);
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <MissionBasicFields form={form} />
         <MissionStudyFields form={form} />
         <MissionStatusFields form={form} />
