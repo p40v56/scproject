@@ -54,12 +54,12 @@ export const MissionStudyFields = ({ form }: MissionStudyFieldsProps) => {
               <FormControl>
                 <SelectTrigger>
                   <SelectValue 
-                    placeholder={hasAssociatedStudy ? undefined : "Sélectionner une étude"} 
+                    placeholder="Sélectionner une étude"
                   />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                {!hasAssociatedStudy && <SelectItem value="none">Aucune</SelectItem>}
+                <SelectItem value="none">Aucune</SelectItem>
                 {studies?.map((study) => (
                   <SelectItem key={study.id} value={study.id}>
                     {study.title}
