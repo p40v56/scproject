@@ -62,7 +62,7 @@ export default function MissionsList() {
           study_level: data.studyLevel,
           compensation: parseFloat(data.compensation),
           description: data.description,
-          status: 'open',
+          status: data.status,
           study_id: data.study_id === 'none' ? null : data.study_id,
           study_phase_id: data.study_phase_id === 'none' ? null : data.study_phase_id
         }]);
@@ -92,6 +92,7 @@ export default function MissionsList() {
           study_level: data.studyLevel,
           compensation: parseFloat(data.compensation),
           description: data.description,
+          status: data.status,
           study_id: data.study_id === 'none' ? null : data.study_id,
           study_phase_id: data.study_phase_id === 'none' ? null : data.study_phase_id
         })

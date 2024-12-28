@@ -55,6 +55,9 @@ export const MissionActions = ({
               studyLevel: mission.study_level,
               compensation: mission.compensation.toString(),
               description: mission.description || "",
+              study_id: mission.study_id || null,
+              study_phase_id: mission.study_phase_id || null,
+              status: mission.status,
             }}
           />
         </DialogContent>
