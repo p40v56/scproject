@@ -36,6 +36,8 @@ export const MissionStudyFields = ({ form }: MissionStudyFieldsProps) => {
     enabled: !!form.watch('study_id')
   });
 
+  const hasAssociatedStudy = form.watch('study_id') && form.watch('study_id') !== 'none';
+
   return (
     <>
       <FormField
@@ -44,14 +46,20 @@ export const MissionStudyFields = ({ form }: MissionStudyFieldsProps) => {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Étude associée</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value || undefined}>
+            <Select 
+              onValueChange={field.onChange} 
+              value={field.value || undefined}
+              defaultValue={field.value}
+            >
               <FormControl>
                 <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner une étude" />
+                  <SelectValue 
+                    placeholder={hasAssociatedStudy ? undefined : "Sélectionner une étude"} 
+                  />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                <SelectItem value="none">Aucune</SelectItem>
+                {!hasAssociatedStudy && <SelectItem value="none">Aucune</SelectItem>}
                 {studies?.map((study) => (
                   <SelectItem key={study.id} value={study.id}>
                     {study.title}
@@ -64,7 +72,7 @@ export const MissionStudyFields = ({ form }: MissionStudyFieldsProps) => {
         )}
       />
 
-      {form.watch('study_id') && form.watch('study_id') !== 'none' && (
+      {hasAssociatedStudy && (
         <FormField
           control={form.control}
           name="study_phase_id"
