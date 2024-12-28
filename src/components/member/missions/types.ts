@@ -16,11 +16,13 @@ export type Applicant = {
   selected_at: string | null;
 };
 
+export type MissionStatus = "open" | "in-progress" | "closed";
+
 export type Mission = {
   id: string;
   title: string;
   study_level: string;
-  status: "open" | "closed" | "in-progress";
+  status: MissionStatus;
   applicants: Applicant[];
   postedDate: string;
   compensation: number;

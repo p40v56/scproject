@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useState } from "react";
+import type { Mission, MissionStatus } from "../types";
 
 export const useMissionsList = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -38,7 +39,9 @@ export const useMissionsList = () => {
         study: mission.study || null,
         study_phase: mission.study_phase || null,
         study_phase_id: mission.study_phase_id,
-      }));
+        // Ensure status is one of the allowed values
+        status: (mission.status as MissionStatus) || "open"
+      })) as Mission[];
     }
   });
 
@@ -51,7 +54,7 @@ export const useMissionsList = () => {
           study_level: data.studyLevel,
           compensation: parseFloat(data.compensation),
           description: data.description,
-          status: data.status,
+          status: data.status as MissionStatus,
           study_id: data.study_id === 'none' ? null : data.study_id,
           study_phase_id: data.study_phase_id === 'none' ? null : data.study_phase_id
         }]);
@@ -81,7 +84,7 @@ export const useMissionsList = () => {
           study_level: data.studyLevel,
           compensation: parseFloat(data.compensation),
           description: data.description,
-          status: data.status,
+          status: data.status as MissionStatus,
           study_id: data.study_id === 'none' ? null : data.study_id,
           study_phase_id: data.study_phase_id === 'none' ? null : data.study_phase_id
         })
