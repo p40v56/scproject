@@ -16,6 +16,8 @@ const roleDescriptions: Record<string, { title: string; description: string; per
       "Accès aux documents et livrables",
       "Planification et gestion des rendez-vous",
       "Consultation de l'historique des échanges",
+      "Accès au système de paiement",
+      "Possibilité de laisser des avis",
     ],
   },
   student: {
@@ -27,6 +29,8 @@ const roleDescriptions: Record<string, { title: string; description: string; per
       "Accès aux ressources pédagogiques",
       "Communication avec l'équipe encadrante",
       "Suivi des missions en cours",
+      "Gestion du profil étudiant",
+      "Accès aux formations",
     ],
   },
   alumni: {
@@ -38,6 +42,8 @@ const roleDescriptions: Record<string, { title: string; description: string; per
       "Consultation des offres d'emploi dédiées",
       "Mentorat et networking",
       "Accès aux ressources et actualités du réseau",
+      "Publication d'articles et de témoignages",
+      "Participation aux programmes de mentorat",
     ],
   },
   member: {
@@ -56,6 +62,8 @@ const roleDescriptions: Record<string, { title: string; description: string; per
       "Gestion des études assignées",
       "Communication avec les clients",
       "Suivi de l'avancement",
+      "Gestion des équipes projet",
+      "Reporting et analyses",
     ],
   },
   moderator: {
@@ -65,6 +73,7 @@ const roleDescriptions: Record<string, { title: string; description: string; per
       "Gestion des études",
       "Modération des contenus",
       "Accès aux statistiques",
+      "Gestion des utilisateurs",
     ],
   },
   treasurer: {
@@ -74,6 +83,7 @@ const roleDescriptions: Record<string, { title: string; description: string; per
       "Gestion de la facturation",
       "Suivi des transactions",
       "Gestion des dons",
+      "Reporting financier",
     ],
   },
   commercial: {
@@ -83,6 +93,7 @@ const roleDescriptions: Record<string, { title: string; description: string; per
       "Création des comptes clients",
       "Gestion des études",
       "Attribution des chargés d'études",
+      "Suivi commercial",
     ],
   },
   hr: {
@@ -92,6 +103,7 @@ const roleDescriptions: Record<string, { title: string; description: string; per
       "Gestion du recrutement",
       "Publication des offres",
       "Gestion des candidatures",
+      "Formation des membres",
     ],
   },
   quality: {
@@ -101,6 +113,7 @@ const roleDescriptions: Record<string, { title: string; description: string; per
       "Consultation des retours clients",
       "Analyse des questionnaires",
       "Suivi des indicateurs",
+      "Amélioration des processus",
     ],
   },
   secretary: {
@@ -110,6 +123,7 @@ const roleDescriptions: Record<string, { title: string; description: string; per
       "Modération des Alumni",
       "Publication d'articles",
       "Gestion du répertoire",
+      "Organisation des événements",
     ],
   },
   admin: {
@@ -119,6 +133,7 @@ const roleDescriptions: Record<string, { title: string; description: string; per
       "Navigation inter-entités",
       "Modification complète de l'entité",
       "Gestion des accès",
+      "Configuration système",
     ],
   },
   "super-admin": {
@@ -128,6 +143,7 @@ const roleDescriptions: Record<string, { title: string; description: string; per
       "Accès absolu à tous les modules",
       "Modification sur toutes les entités",
       "Gestion système complète",
+      "Configuration avancée",
     ],
   },
 };
