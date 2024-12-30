@@ -9,7 +9,7 @@ import PrivateRoute from "./PrivateRoute";
 
 const AppRoutes = () => {
   const { session, userProfile, isLoading } = useAuth();
-  console.log("Auth state:", { session, userProfile, isLoading });
+  console.log("AppRoutes render:", { session, userProfile, isLoading });
 
   // Show loading spinner while checking auth state
   if (isLoading) {
@@ -22,6 +22,7 @@ const AppRoutes = () => {
 
   // If no session, only show public routes
   if (!session) {
+    console.log("No session, showing public routes only");
     return (
       <Routes>
         <Route path="/" element={<Index />} />
@@ -30,7 +31,7 @@ const AppRoutes = () => {
     );
   }
 
-  // If we have a session but no profile, something went wrong
+  // If we have a session but no profile, show error
   if (!userProfile) {
     console.error("No user profile found for authenticated user");
     return (
@@ -59,6 +60,8 @@ const AppRoutes = () => {
     }
   };
 
+  console.log("Rendering private routes for user type:", userProfile.user_type);
+  
   return (
     <Routes>
       <Route path="/" element={<Navigate to={getRedirectPath()} replace />} />
