@@ -12,9 +12,25 @@ interface RoleDetailsProps {
 }
 
 export const RoleDetails = ({ role }: RoleDetailsProps) => {
-  const roleInfo = roleDescriptions[role];
+  // Convert role to lowercase to match the keys in roleDescriptions
+  const normalizedRole = role.toLowerCase();
+  
+  // Map user types to their corresponding role keys
+  const roleMapping: Record<string, string> = {
+    'étudiant': 'student',
+    'alumni': 'alumni',
+    'client': 'client',
+    'membre': 'member'
+  };
 
-  if (!roleInfo) return null;
+  // Get the correct role key
+  const mappedRole = roleMapping[normalizedRole] || normalizedRole;
+  const roleInfo = roleDescriptions[mappedRole];
+
+  if (!roleInfo) {
+    console.log('No role info found for:', role, 'mapped to:', mappedRole);
+    return null;
+  }
 
   return (
     <Card>
