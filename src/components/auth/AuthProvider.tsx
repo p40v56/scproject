@@ -43,7 +43,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return data;
       } catch (error) {
         console.error('Error fetching profile:', error);
-        toast.error("Erreur lors du chargement du profil");
+        if (mounted) {
+          toast.error("Erreur lors du chargement du profil");
+        }
         return null;
       }
     };
@@ -51,9 +53,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Initialize auth state
     const initializeAuth = async () => {
       try {
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
         console.log("Initial session check:", currentSession);
         
+        if (error) {
+          // If there's an error getting the session, clear it
+          await supabase.auth.signOut();
+          if (mounted) {
+            setSession(null);
+            setUserProfile(null);
+            setIsLoading(false);
+          }
+          return;
+        }
+
         if (mounted) {
           setSession(currentSession);
           
@@ -69,9 +82,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
+        // On error, clear the session and try to sign out
+        await supabase.auth.signOut();
         if (mounted) {
-          toast.error("Erreur lors de l'initialisation de l'authentification");
+          setSession(null);
+          setUserProfile(null);
           setIsLoading(false);
+          toast.error("Erreur lors de l'initialisation de l'authentification");
         }
       }
     };
@@ -82,7 +99,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       if (!mounted) return;
 
-      if (event === 'SIGNED_OUT') {
+      if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+        setSession(null);
+        setUserProfile(null);
+        setIsLoading(false);
+        return;
+      }
+
+      // Handle refresh token errors
+      if (event === 'TOKEN_REFRESHED' && !newSession) {
+        console.log('Token refresh failed, signing out');
+        await supabase.auth.signOut();
         setSession(null);
         setUserProfile(null);
         setIsLoading(false);
