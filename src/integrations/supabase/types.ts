@@ -9,6 +9,51 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      callback_requests: {
+        Row: {
+          client_id: string
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          reason: string
+          status: Database["public"]["Enums"]["callback_status"] | null
+          study_id: string
+        }
+        Insert: {
+          client_id: string
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          reason: string
+          status?: Database["public"]["Enums"]["callback_status"] | null
+          study_id: string
+        }
+        Update: {
+          client_id?: string
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          reason?: string
+          status?: Database["public"]["Enums"]["callback_status"] | null
+          study_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "callback_requests_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "callback_requests_study_id_fkey"
+            columns: ["study_id"]
+            isOneToOne: false
+            referencedRelation: "studies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           category: string
@@ -513,6 +558,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      callback_status: "pending" | "completed"
       user_type: "client" | "student" | "alumni" | "member"
     }
     CompositeTypes: {

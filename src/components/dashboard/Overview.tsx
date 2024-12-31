@@ -1,7 +1,11 @@
 import React from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { BarChart3, Users, FileText, TrendingUp } from "lucide-react"
+import { BarChart3, Users, FileText, TrendingUp, Phone } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { supabase } from "@/integrations/supabase/client"
+import { Button } from "@/components/ui/button"
+import { useToast } from "@/hooks/use-toast"
 
 const stats = [
   {
@@ -35,6 +39,59 @@ const stats = [
 ]
 
 const Overview = () => {
+  const { toast } = useToast()
+  const queryClient = useQueryClient()
+
+  const { data: callbackRequests } = useQuery({
+    queryKey: ['callback-requests'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('callback_requests')
+        .select(`
+          *,
+          profiles:client_id(first_name, last_name)
+        `)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      return data
+    },
+  })
+
+  const markCallCompleted = useMutation({
+    mutationFn: async (requestId: string) => {
+      const { data, error } = await supabase
+        .from('callback_requests')
+        .update({ 
+          status: 'completed',
+          completed_at: new Date().toISOString()
+        })
+        .eq('id', requestId)
+        .select()
+
+      if (error) throw error
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['callback-requests'] })
+      toast({
+        title: "Appel marqué comme effectué",
+        description: "Le statut a été mis à jour avec succès",
+      })
+    },
+  })
+
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
   return (
     <div className="space-y-8">
       <h1 className="text-2xl font-bold">Vue d'ensemble</h1>
@@ -78,19 +135,36 @@ const Overview = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Activité récente</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Phone className="h-5 w-5" />
+              Demandes de rappel
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center gap-4">
-                  <div className="w-2 h-2 bg-green-600 rounded-full" />
-                  <div>
-                    <p className="font-medium">Action {i}</p>
-                    <p className="text-sm text-muted-foreground">Il y a {i}h</p>
+              {callbackRequests?.length === 0 ? (
+                <p className="text-muted-foreground">Aucune demande de rappel en attente</p>
+              ) : (
+                callbackRequests?.map((request) => (
+                  <div key={request.id} className="flex items-start justify-between gap-4 p-4 bg-muted rounded-lg">
+                    <div className="space-y-1">
+                      <p className="font-medium">
+                        {request.profiles?.first_name} {request.profiles?.last_name}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Demande du {formatDate(request.created_at)}
+                      </p>
+                      <p className="text-sm mt-2">{request.reason}</p>
+                    </div>
+                    <Button 
+                      size="sm"
+                      onClick={() => markCallCompleted.mutate(request.id)}
+                    >
+                      Marquer comme effectué
+                    </Button>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </CardContent>
         </Card>

@@ -3,12 +3,69 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Phone } from "lucide-react"
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/hooks/use-toast"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { supabase } from "@/integrations/supabase/client"
+import { useAuth } from "@/components/auth/AuthProvider"
 
 const CallbackRequest = () => {
   const [showCallbackForm, setShowCallbackForm] = useState(false)
   const [callbackReason, setCallbackReason] = useState("")
   const { toast } = useToast()
+  const { session } = useAuth()
+  const queryClient = useQueryClient()
+
+  // Fetch latest callback request
+  const { data: latestRequest, isLoading } = useQuery({
+    queryKey: ['callback-request'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('callback_requests')
+        .select('*')
+        .eq('client_id', session?.user?.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (error) throw error
+      return data
+    },
+    enabled: !!session?.user?.id,
+  })
+
+  const createCallbackRequest = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase
+        .from('callback_requests')
+        .insert([
+          {
+            client_id: session?.user?.id,
+            reason: callbackReason,
+            status: 'pending'
+          }
+        ])
+        .select()
+
+      if (error) throw error
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['callback-request'] })
+      toast({
+        title: "Demande envoyée",
+        description: "Nous vous recontacterons dans les plus brefs délais",
+      })
+      setShowCallbackForm(false)
+      setCallbackReason("")
+    },
+    onError: () => {
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de l'envoi de votre demande",
+        variant: "destructive",
+      })
+    }
+  })
 
   const handleCallbackRequest = () => {
     if (callbackReason.trim().length < 10) {
@@ -20,12 +77,21 @@ const CallbackRequest = () => {
       return
     }
 
-    toast({
-      title: "Demande envoyée",
-      description: "Nous vous recontacterons dans les plus brefs délais",
+    createCallbackRequest.mutate()
+  }
+
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     })
-    setShowCallbackForm(false)
-    setCallbackReason("")
+  }
+
+  if (isLoading) {
+    return <div>Chargement...</div>
   }
 
   return (
@@ -37,33 +103,45 @@ const CallbackRequest = () => {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {!showCallbackForm ? (
-          <Button onClick={() => setShowCallbackForm(true)}>
-            Demander à être rappelé
-          </Button>
-        ) : (
+        {latestRequest && latestRequest.status === 'pending' ? (
           <div className="space-y-4">
-            <Textarea
-              placeholder="Décrivez brièvement la raison de votre demande..."
-              value={callbackReason}
-              onChange={(e) => setCallbackReason(e.target.value)}
-              className="min-h-[100px]"
-            />
-            <div className="flex gap-2">
-              <Button onClick={handleCallbackRequest}>
-                Envoyer la demande
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  setShowCallbackForm(false)
-                  setCallbackReason("")
-                }}
-              >
-                Annuler
-              </Button>
+            <div className="bg-muted p-4 rounded-lg">
+              <p className="font-medium">Demande de rappel effectuée</p>
+              <p className="text-sm text-muted-foreground">
+                Le {formatDate(latestRequest.created_at)}
+              </p>
+              <p className="mt-2 text-sm">Raison : {latestRequest.reason}</p>
             </div>
           </div>
+        ) : (
+          !showCallbackForm ? (
+            <Button onClick={() => setShowCallbackForm(true)}>
+              Demander à être rappelé
+            </Button>
+          ) : (
+            <div className="space-y-4">
+              <Textarea
+                placeholder="Décrivez brièvement la raison de votre demande..."
+                value={callbackReason}
+                onChange={(e) => setCallbackReason(e.target.value)}
+                className="min-h-[100px]"
+              />
+              <div className="flex gap-2">
+                <Button onClick={handleCallbackRequest}>
+                  Envoyer la demande
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setShowCallbackForm(false)
+                    setCallbackReason("")
+                  }}
+                >
+                  Annuler
+                </Button>
+              </div>
+            </div>
+          )
         )}
       </CardContent>
     </Card>
