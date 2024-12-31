@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useEffect } from "react"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -9,7 +10,7 @@ export const CallbackRequestsList = () => {
   const { toast } = useToast()
   const queryClient = useQueryClient()
 
-  const { data: callbackRequests } = useQuery({
+  const { data: callbackRequests, isLoading } = useQuery({
     queryKey: ['callback-requests'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -26,6 +27,29 @@ export const CallbackRequestsList = () => {
       return data
     },
   })
+
+  // Set up real-time subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel('callback-requests-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'callback_requests'
+        },
+        () => {
+          // Refetch data when changes occur
+          queryClient.invalidateQueries({ queryKey: ['callback-requests'] })
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [queryClient])
 
   const markCallCompleted = useMutation({
     mutationFn: async (requestId: string) => {
@@ -50,6 +74,24 @@ export const CallbackRequestsList = () => {
     },
   })
 
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Phone className="h-5 w-5" />
+            Demandes de rappel
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <p className="text-muted-foreground">Chargement...</p>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -60,10 +102,10 @@ export const CallbackRequestsList = () => {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {callbackRequests?.length === 0 ? (
+          {!callbackRequests || callbackRequests.length === 0 ? (
             <p className="text-muted-foreground">Aucune demande de rappel en attente</p>
           ) : (
-            callbackRequests?.map((request) => (
+            callbackRequests.map((request) => (
               <CallbackRequestCard
                 key={request.id}
                 request={request}
