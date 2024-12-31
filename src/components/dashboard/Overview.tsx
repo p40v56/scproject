@@ -49,7 +49,8 @@ const Overview = () => {
         .from('callback_requests')
         .select(`
           *,
-          profiles:client_id(first_name, last_name)
+          profiles:client_id(first_name, last_name),
+          studies(title)
         `)
         .eq('status', 'pending')
         .order('created_at', { ascending: false })
@@ -155,6 +156,11 @@ const Overview = () => {
                         Demande du {formatDate(request.created_at)}
                       </p>
                       <p className="text-sm mt-2">{request.reason}</p>
+                      {request.studies && (
+                        <p className="text-sm text-muted-foreground">
+                          Pour l'étude : {request.studies.title}
+                        </p>
+                      )}
                     </div>
                     <Button 
                       size="sm"
