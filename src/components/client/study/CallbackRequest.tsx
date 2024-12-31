@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { useAuth } from "@/components/auth/AuthProvider"
+import { useClientStudy } from "@/hooks/useClientStudy"
 
 const CallbackRequest = () => {
   const [showCallbackForm, setShowCallbackForm] = useState(false)
@@ -14,6 +15,7 @@ const CallbackRequest = () => {
   const { toast } = useToast()
   const { session } = useAuth()
   const queryClient = useQueryClient()
+  const { data: study } = useClientStudy()
 
   // Fetch latest callback request
   const { data: latestRequest, isLoading } = useQuery({
@@ -35,11 +37,14 @@ const CallbackRequest = () => {
 
   const createCallbackRequest = useMutation({
     mutationFn: async () => {
+      if (!study?.id) throw new Error("No study ID available")
+      
       const { data, error } = await supabase
         .from('callback_requests')
         .insert([
           {
             client_id: session?.user?.id,
+            study_id: study.id, // Add the study_id here
             reason: callbackReason,
             status: 'pending'
           }
