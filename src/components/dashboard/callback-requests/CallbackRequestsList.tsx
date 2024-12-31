@@ -13,6 +13,7 @@ export const CallbackRequestsList = () => {
   const { data: callbackRequests, isLoading } = useQuery({
     queryKey: ['callback-requests'],
     queryFn: async () => {
+      console.log("Fetching callback requests...")
       const { data, error } = await supabase
         .from('callback_requests')
         .select(`
@@ -23,13 +24,19 @@ export const CallbackRequestsList = () => {
         .eq('status', 'pending')
         .order('created_at', { ascending: false })
 
-      if (error) throw error
+      if (error) {
+        console.error("Error fetching callback requests:", error)
+        throw error
+      }
+      
+      console.log("Callback requests data:", data)
       return data
     },
   })
 
   // Set up real-time subscription
   useEffect(() => {
+    console.log("Setting up real-time subscription for callback requests")
     const channel = supabase
       .channel('callback-requests-changes')
       .on(
@@ -39,14 +46,15 @@ export const CallbackRequestsList = () => {
           schema: 'public',
           table: 'callback_requests'
         },
-        () => {
-          // Refetch data when changes occur
+        (payload) => {
+          console.log("Received real-time update:", payload)
           queryClient.invalidateQueries({ queryKey: ['callback-requests'] })
         }
       )
       .subscribe()
 
     return () => {
+      console.log("Cleaning up real-time subscription")
       supabase.removeChannel(channel)
     }
   }, [queryClient])
