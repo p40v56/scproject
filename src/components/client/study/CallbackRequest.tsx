@@ -19,11 +19,16 @@ const CallbackRequest = () => {
 
   // Fetch latest callback request
   const { data: latestRequest, isLoading } = useQuery({
-    queryKey: ['callback-request'],
+    queryKey: ['callback-request', session?.user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('callback_requests')
-        .select('*')
+        .select(`
+          *,
+          studies (
+            title
+          )
+        `)
         .eq('client_id', session?.user?.id)
         .order('created_at', { ascending: false })
         .limit(1)
@@ -44,7 +49,7 @@ const CallbackRequest = () => {
         .insert([
           {
             client_id: session?.user?.id,
-            study_id: study.id, // Add the study_id here
+            study_id: study.id,
             reason: callbackReason,
             status: 'pending'
           }
@@ -111,11 +116,16 @@ const CallbackRequest = () => {
         {latestRequest && latestRequest.status === 'pending' ? (
           <div className="space-y-4">
             <div className="bg-muted p-4 rounded-lg">
-              <p className="font-medium">Demande de rappel effectuée</p>
+              <p className="font-medium">Demande de rappel en attente</p>
               <p className="text-sm text-muted-foreground">
                 Le {formatDate(latestRequest.created_at)}
               </p>
               <p className="mt-2 text-sm">Raison : {latestRequest.reason}</p>
+              {latestRequest.studies && (
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Pour l'étude : {latestRequest.studies.title}
+                </p>
+              )}
             </div>
           </div>
         ) : (
