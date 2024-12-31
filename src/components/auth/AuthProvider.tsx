@@ -28,6 +28,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
     console.log("AuthProvider mounted");
     
     const fetchProfile = async (userId: string) => {
@@ -50,22 +51,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Initialize auth state
     const initializeAuth = async () => {
       try {
-        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
         console.log("Initial session check:", currentSession);
         
-        if (error) throw error;
-
-        setSession(currentSession);
-        
-        if (currentSession?.user) {
-          const profile = await fetchProfile(currentSession.user.id);
-          setUserProfile(profile);
+        if (mounted) {
+          setSession(currentSession);
+          
+          if (currentSession?.user) {
+            const profile = await fetchProfile(currentSession.user.id);
+            if (mounted) {
+              setUserProfile(profile);
+              setIsLoading(false);
+            }
+          } else {
+            setIsLoading(false);
+          }
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
-        toast.error("Erreur lors de l'initialisation de l'authentification");
-      } finally {
-        setIsLoading(false);
+        if (mounted) {
+          toast.error("Erreur lors de l'initialisation de l'authentification");
+          setIsLoading(false);
+        }
       }
     };
 
@@ -73,6 +80,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
       console.log("Auth state change:", event, newSession?.user?.id);
       
+      if (!mounted) return;
+
       if (event === 'SIGNED_OUT') {
         setSession(null);
         setUserProfile(null);
@@ -83,8 +92,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (newSession?.user && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
         setSession(newSession);
         const profile = await fetchProfile(newSession.user.id);
-        setUserProfile(profile);
-        setIsLoading(false);
+        if (mounted) {
+          setUserProfile(profile);
+          setIsLoading(false);
+        }
       }
     });
 
@@ -94,6 +105,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Cleanup
     return () => {
       console.log("AuthProvider cleanup");
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []); // Empty dependency array as we only want this to run once
